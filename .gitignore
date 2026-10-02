@@ -38,3 +38,6 @@ yarn-error.log*
 
 # Artefak berkas uji e2e
 /e2e/.tmp
+
+.vercel
+.env*

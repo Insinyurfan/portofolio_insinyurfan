@@ -29,12 +29,19 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+/**
+ * Judul di sini SENGAJA berupa string biasa, tanpa `template`.
+ *
+ * `title.template` berlaku untuk segment ANAK, dan app/(public)/layout.tsx
+ * adalah salah satunya. Ketika root juga punya template, `title.default`
+ * milik (public) ikut dibungkus — hasilnya "Nama — Portofolio — Portofolio".
+ *
+ * Jadi template hanya didefinisikan di (public)/layout.tsx, yang memang tahu
+ * nama pemiliknya. Judul di sini hanya dipakai route di luar grup itu.
+ */
 export const metadata: Metadata = {
   metadataBase: new URL(env.siteUrl),
-  title: {
-    default: "Portofolio — CV Digital",
-    template: "%s — Portofolio",
-  },
+  title: "Portofolio — CV Digital",
   description:
     "Portofolio dan curriculum vitae digital berisi proyek, pengalaman, keahlian, dan pencapaian.",
 };
