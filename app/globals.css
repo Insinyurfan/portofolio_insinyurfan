@@ -173,3 +173,95 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* ===========================================================================
+ * TOKEN DASHBOARD ADMIN
+ *
+ * Dilingkupi di bawah .admin-root, BUKAN di :root.
+ *
+ * Alasannya nyata, bukan teoretis: menjalankan `npx shadcn init` pada proyek
+ * ini menimpa --accent publik dari #04704f (hijau zamrud) menjadi
+ * oklch(0.97 0 0), dan kegagalannya muncul sebagai warna salah di halaman
+ * publik — jauh dari tempat perubahannya dilakukan. Melingkupi token membuat
+ * kedua gaya hidup berdampingan tanpa saling tahu.
+ *
+ * Admin sengaja tampil netral dan fungsional, tidak mengikuti arah bento grid
+ * halaman publik.
+ * ===========================================================================*/
+
+.admin-root {
+  --adm-bg: #f7f8f8;
+  --adm-panel: #ffffff;
+  --adm-panel-muted: #f1f3f3;
+  --adm-border: #dfe3e3;
+  --adm-border-strong: #7e8a89;
+  --adm-fg: #14191a;
+  --adm-fg-muted: #4c5555;
+  --adm-fg-subtle: #5e6a69;
+  --adm-primary: #0f6b52;
+  --adm-primary-hover: #0b5641;
+  --adm-primary-fg: #ffffff;
+  --adm-danger: #9b1c1c;
+  --adm-danger-hover: #7f1616;
+  --adm-danger-fg: #ffffff;
+  --adm-danger-soft: #fdeaea;
+  --adm-warning-soft: #fdf3e3;
+  --adm-warning-fg: #7a4a06;
+  --adm-success-soft: #e6f4ee;
+  --adm-success-fg: #0b5641;
+  --adm-ring: #0f6b52;
+  --adm-overlay: rgb(20 25 26 / 0.6);
+
+  background-color: var(--adm-bg);
+  color: var(--adm-fg);
+}
+
+.dark .admin-root {
+  --adm-bg: #0d1112;
+  --adm-panel: #161c1d;
+  --adm-panel-muted: #1e2627;
+  --adm-border: #2a3334;
+  --adm-border-strong: #63726f;
+  --adm-fg: #e9eded;
+  --adm-fg-muted: #a8b4b3;
+  --adm-fg-subtle: #8c9a98;
+  --adm-primary: #4cd6a4;
+  --adm-primary-hover: #74e3bb;
+  --adm-primary-fg: #06241a;
+  --adm-danger: #f3a3a3;
+  --adm-danger-hover: #f8c2c2;
+  --adm-danger-fg: #2b0a0a;
+  --adm-danger-soft: #2a1414;
+  --adm-warning-soft: #2b2112;
+  --adm-warning-fg: #f0c88a;
+  --adm-success-soft: #122a21;
+  --adm-success-fg: #7fe9b6;
+  --adm-ring: #4cd6a4;
+  --adm-overlay: rgb(3 6 6 / 0.72);
+}
+
+@theme inline {
+  --color-adm-bg: var(--adm-bg);
+  --color-adm-panel: var(--adm-panel);
+  --color-adm-panel-muted: var(--adm-panel-muted);
+  --color-adm-border: var(--adm-border);
+  --color-adm-border-strong: var(--adm-border-strong);
+  --color-adm-fg: var(--adm-fg);
+  --color-adm-fg-muted: var(--adm-fg-muted);
+  --color-adm-fg-subtle: var(--adm-fg-subtle);
+  --color-adm-primary: var(--adm-primary);
+  --color-adm-primary-hover: var(--adm-primary-hover);
+  --color-adm-primary-fg: var(--adm-primary-fg);
+  --color-adm-danger: var(--adm-danger);
+  --color-adm-danger-hover: var(--adm-danger-hover);
+  --color-adm-danger-fg: var(--adm-danger-fg);
+  --color-adm-danger-soft: var(--adm-danger-soft);
+  --color-adm-warning-soft: var(--adm-warning-soft);
+  --color-adm-warning-fg: var(--adm-warning-fg);
+  --color-adm-success-soft: var(--adm-success-soft);
+  --color-adm-success-fg: var(--adm-success-fg);
+  --color-adm-ring: var(--adm-ring);
+  --color-adm-overlay: var(--adm-overlay);
+
+  --radius-adm: 0.625rem;
+}

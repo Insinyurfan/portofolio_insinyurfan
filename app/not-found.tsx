@@ -8,6 +8,8 @@ export const metadata: Metadata = {
 };
 
 export default function NotFound() {
+  // 404 untuk alamat yang tidak cocok route mana pun. Tanpa navbar, karena
+  // berada di luar route group (public).
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-20 sm:px-6">
       <p className="font-heading text-6xl font-bold text-accent">404</p>

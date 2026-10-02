@@ -23,3 +23,16 @@ export type AchievementCategory = Enums<"achievement_category">;
 export type SkillGroup = SkillCategory & {
   skills: Skill[];
 };
+
+/** Tabel yang punya kolom sort_order dan dapat diurutkan lewat tombol naik/turun. */
+export const ORDERABLE_TABLES = [
+  "social_links",
+  "education",
+  "skill_categories",
+  "skills",
+  "experiences",
+  "projects",
+  "achievements",
+] as const;
+
+export type OrderableTable = (typeof ORDERABLE_TABLES)[number];

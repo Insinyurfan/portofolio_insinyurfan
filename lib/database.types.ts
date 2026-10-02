@@ -163,6 +163,7 @@ export type Database = {
           created_at: string
           id: string
           is_published: boolean
+          is_read: boolean
           sender_email: string
           sender_name: string
           subject: string | null
@@ -173,6 +174,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_published?: boolean
+          is_read?: boolean
           sender_email: string
           sender_name: string
           subject?: string | null
@@ -183,6 +185,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_published?: boolean
+          is_read?: boolean
           sender_email?: string
           sender_name?: string
           subject?: string | null
@@ -437,7 +440,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      swap_sort_order: {
+        Args: { p_direction: number; p_id: string; p_table: string }
+        Returns: boolean
+      }
     }
     Enums: {
       achievement_category: "certificate" | "award"

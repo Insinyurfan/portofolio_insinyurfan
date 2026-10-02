@@ -1,0 +1,220 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus, X } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
+
+import { ItemList } from "@/components/admin/item-list";
+import {
+  Button,
+  Checkbox,
+  Field,
+  Input,
+  Panel,
+  Textarea,
+} from "@/components/admin/ui";
+import { useAksi } from "@/components/admin/use-aksi";
+import { simpanPendidikanAction } from "@/app/admin/actions-content";
+import { educationSchema } from "@/lib/schemas";
+import { formatRentangTahun } from "@/lib/format";
+import type { Education } from "@/lib/types";
+
+type Nilai = z.input<typeof educationSchema>;
+/** Hasil setelah transform zod — inilah bentuk yang diterima aksi server. */
+type Keluaran = z.output<typeof educationSchema>;
+
+const KOSONG: Nilai = {
+  id: null,
+  institution: "",
+  major: "",
+  degree: "",
+  start_year: new Date().getFullYear(),
+  end_year: "",
+  gpa: "",
+  description: "",
+  sort_order: 0,
+  is_published: true,
+};
+
+export function EducationManager({ items }: { items: Education[] }) {
+  const { jalankan, sedangBerjalan } = useAksi();
+  const [terbuka, setTerbuka] = useState(false);
+
+  const form = useForm<Nilai, unknown, Keluaran>({
+    resolver: zodResolver(educationSchema),
+    defaultValues: KOSONG,
+  });
+  const { register, handleSubmit, reset, setError, formState, getValues } = form;
+
+  function buka(item?: Education) {
+    reset(
+      item
+        ? {
+            id: item.id,
+            institution: item.institution,
+            major: item.major ?? "",
+            degree: item.degree ?? "",
+            start_year: item.start_year,
+            end_year: item.end_year ?? "",
+            gpa: item.gpa ?? "",
+            description: item.description ?? "",
+            sort_order: item.sort_order,
+            is_published: item.is_published,
+          }
+        : { ...KOSONG, sort_order: items.length + 1 },
+    );
+    setTerbuka(true);
+  }
+
+  async function simpan() {
+    // Nilai MENTAH form: server yang mem-parse dan mentransformnya.
+    const nilai = getValues();
+
+    const ok = await jalankan(() => simpanPendidikanAction(nilai), {
+      onFieldError: (fields) => {
+        for (const [k, p] of Object.entries(fields)) {
+          setError(k as keyof Nilai, { message: p });
+        }
+      },
+    });
+    if (ok) {
+      setTerbuka(false);
+      reset(KOSONG);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {terbuka ? (
+        <Panel>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-semibold text-adm-fg">
+              {getValues("id") ? "Sunting pendidikan" : "Pendidikan baru"}
+            </h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTerbuka(false)}
+              aria-label="Tutup form"
+            >
+              <X aria-hidden="true" />
+            </Button>
+          </div>
+
+          <form onSubmit={handleSubmit(() => simpan())} noValidate className="space-y-4">
+            <Field
+              id="institution"
+              label="Institusi"
+              required
+              error={formState.errors.institution?.message}
+            >
+              {(a) => <Input {...a} {...register("institution")} />}
+            </Field>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                id="major"
+                label="Jurusan"
+                error={formState.errors.major?.message}
+              >
+                {(a) => <Input {...a} {...register("major")} />}
+              </Field>
+              <Field
+                id="degree"
+                label="Jenjang"
+                hint="Misalnya S1, D3, SMA."
+                error={formState.errors.degree?.message}
+              >
+                {(a) => <Input {...a} {...register("degree")} />}
+              </Field>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field
+                id="start_year"
+                label="Tahun mulai"
+                required
+                error={formState.errors.start_year?.message}
+              >
+                {(a) => <Input {...a} {...register("start_year")} type="number" />}
+              </Field>
+              <Field
+                id="end_year"
+                label="Tahun selesai"
+                hint="Kosongkan bila masih berjalan."
+                error={formState.errors.end_year?.message}
+              >
+                {(a) => <Input {...a} {...register("end_year")} type="number" />}
+              </Field>
+              <Field
+                id="gpa"
+                label="IPK"
+                hint="Opsional, 0–4."
+                error={formState.errors.gpa?.message}
+              >
+                {(a) => (
+                  <Input {...a} {...register("gpa")} type="number" step="0.01" />
+                )}
+              </Field>
+            </div>
+
+            <Field
+              id="description"
+              label="Deskripsi"
+              error={formState.errors.description?.message}
+            >
+              {(a) => <Textarea {...a} {...register("description")} />}
+            </Field>
+
+            <label className="flex items-center gap-2 text-sm text-adm-fg">
+              <Checkbox {...register("is_published")} />
+              Tampilkan di halaman publik
+            </label>
+
+            <div className="flex gap-2">
+              <Button type="submit" disabled={sedangBerjalan}>
+                {sedangBerjalan ? "Menyimpan…" : "Simpan"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setTerbuka(false)}
+                disabled={sedangBerjalan}
+              >
+                Batal
+              </Button>
+            </div>
+          </form>
+        </Panel>
+      ) : (
+        <Button onClick={() => buka()}>
+          <Plus aria-hidden="true" />
+          Tambah pendidikan
+        </Button>
+      )}
+
+      <ItemList
+        tabel="education"
+        items={items.map((i) => ({
+          id: i.id,
+          judul: i.institution,
+          keterangan: [
+            [i.degree, i.major].filter(Boolean).join(" · "),
+            formatRentangTahun(i.start_year, i.end_year),
+          ]
+            .filter(Boolean)
+            .join(" — "),
+          is_published: i.is_published,
+        }))}
+        onSunting={(id) => {
+          const item = items.find((i) => i.id === id);
+          if (item) buka(item);
+        }}
+        emptyTitle="Belum ada riwayat pendidikan"
+        emptyDescription="Tambahkan jenjang pendidikan Anda agar timeline di halaman Pendidikan terisi."
+        emptyAction={<Button onClick={() => buka()}>Tambah pendidikan</Button>}
+      />
+    </div>
+  );
+}

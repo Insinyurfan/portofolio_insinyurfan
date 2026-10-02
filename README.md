@@ -4,8 +4,8 @@ Website portofolio pribadi berbasis CMS. Seluruh isinya diambil dari database,
 tidak ada konten yang ditulis langsung di kode, sehingga nanti bisa dikelola
 lewat dashboard admin tanpa perlu mendeploy ulang.
 
-Repositori ini saat ini memuat **fondasi proyek dan halaman publik**. Dashboard
-admin dan form kontak dibangun di change berikutnya (lihat `openspec/changes/`).
+Repositori ini memuat **halaman publik** dan **dashboard admin**. Form kontak
+publik dan fitur rating dibangun di change berikutnya (lihat `openspec/changes/`).
 
 ## Isi
 
@@ -16,6 +16,7 @@ admin dan form kontak dibangun di change berikutnya (lihat `openspec/changes/`).
 - [Perintah yang tersedia](#perintah-yang-tersedia)
 - [Struktur folder](#struktur-folder)
 - [Catatan penting](#catatan-penting)
+- [Dashboard admin](#dashboard-admin)
 - [Deploy ke Vercel](#deploy-ke-vercel)
 
 ## Teknologi
@@ -27,6 +28,8 @@ admin dan form kontak dibangun di change berikutnya (lihat `openspec/changes/`).
 | Styling | Tailwind CSS v4 (token di `app/globals.css`) |
 | Database & Storage | Supabase (PostgreSQL + Storage) |
 | Tema | `next-themes` (terang/gelap berbasis class) |
+| Auth admin | Supabase Auth, sesi cookie lewat `@supabase/ssr` |
+| Form & validasi | `react-hook-form` + `zod` (skema sama di klien dan server) |
 | Ikon | `lucide-react` (UI) + `react-icons` (lambang platform) |
 | Deploy | Vercel |
 
@@ -163,34 +166,52 @@ Buka <http://localhost:3000>.
 | `npm run check:revalidate` | Memastikan semua route publik memakai periode revalidasi yang sama |
 | `npm run db:reset` | Supabase lokal: migrasi + seed dari nol |
 | `npm run db:push` | Menerapkan migrasi ke proyek remote yang ter-link |
+| `npm run db:check` | Menjalankan pemeriksaan RLS terhadap database |
 | `npm run db:types` | Menghasilkan ulang `lib/database.types.ts` |
 
 ## Struktur folder
 
 ```
 app/                      Route App Router
-  layout.tsx              Shell: bahasa, font, tema, navbar, footer, skip link
-  page.tsx                Beranda — hero, animasi ketik role, proyek pilihan
-  tentang/ pendidikan/    Halaman profil
-  keahlian/ pengalaman/
-  pencapaian/ kontak/
-  proyek/                 Daftar proyek + filter tech stack
-  proyek/[slug]/          Detail proyek
+  layout.tsx              Root: bahasa, font, provider tema — TANPA navbar
+  (public)/               Route group situs publik (tidak masuk ke URL)
+    layout.tsx            Navbar, footer, tautan lompat ke konten
+    page.tsx              Beranda — hero, animasi ketik role, proyek pilihan
+    tentang/ pendidikan/  Halaman profil
+    keahlian/ pengalaman/
+    pencapaian/ kontak/
+    proyek/               Daftar proyek + filter tech stack
+    proyek/[slug]/        Detail proyek
+  admin/                  Dashboard admin, layout sidebar sendiri
+    login/                Halaman masuk
+    actions-content.ts    Seluruh aksi tulis, lewat withAdminAction
   sitemap.ts robots.ts    SEO
   not-found.tsx           Halaman 404
-  globals.css             SATU sumber kebenaran token warna/tipografi/radius
+  globals.css             Token publik + token admin (dilingkup .admin-root)
+
+proxy.ts                  Proteksi route /admin (dulu bernama middleware.ts)
 
 components/
   layout/                 Navbar, footer, toggle tema, ikon sosial
   home/                   Animasi ketik role
   projects/               Kartu proyek, filter tech stack
   achievements/           Grid pencapaian + pratinjau gambar
-  ui/                     Primitif: kartu, badge, tombol, timeline, empty state
+  ui/                     Primitif publik: kartu, badge, tombol, timeline
+  admin/                  Primitif admin, sidebar, toast, dialog konfirmasi
+    managers/             Satu manager per jenis konten
 
 lib/
   env.ts                  Validasi variabel lingkungan (satu tempat)
-  supabase/server.ts      Klien Supabase anon khusus server
-  queries.ts              Semua pembacaan publik — SELALU memfilter is_published
+  auth.ts                 requireAdmin() — otorisasi setiap aksi tulis
+  schemas.ts              Skema zod, dipakai klien DAN server
+  supabase/server.ts      Klien anon khusus server (halaman publik)
+  supabase/session.ts     Klien sadar sesi (dashboard admin)
+  supabase/browser.ts     Klien peramban (hanya form login)
+  queries.ts              Pembacaan publik — SELALU memfilter is_published
+  queries-admin.ts        Pembacaan admin — termasuk baris draf
+  admin/action.ts         withAdminAction: auth → validasi → handler → revalidasi
+  admin/revalidate.ts     Peta entitas → halaman publik terdampak
+  admin/storage.ts        Unggah, hapus, konversi URL ↔ path Storage
   format.ts               Tanggal id-ID, label enum bahasa Indonesia
   constants.ts            REVALIDATE, nama bucket, item navigasi
   database.types.ts       Tipe skema (hasil generate)
@@ -200,6 +221,7 @@ supabase/
   migrations/             Skema berversi
   seed.sql                Data contoh (idempoten)
   tests/rls_checks.sql    Pemeriksaan RLS dan constraint
+  tests/admin_checks.sql  Pemeriksaan fungsi pengurutan dan kolom pesan
 
 scripts/                  Pemeriksa kontras dan konsistensi revalidasi
 ```
@@ -225,6 +247,72 @@ policy `authenticated` di `supabase/migrations/20261002120600_rls.sql`.
 `app/globals.css`. Itu yang menegakkan aturan satu warna aksen dan membuat
 `npm run check:contrast` berlaku untuk seluruh situs sekaligus.
 
+## Dashboard admin
+
+Dashboard ada di `/admin` dan hanya bisa diakses oleh **satu** akun.
+
+### Dua langkah wajib di Supabase
+
+Keduanya tidak bisa dilakukan dari kode:
+
+1. **Matikan signup.** Project Settings → Authentication → matikan "Allow new
+   users to sign up". Tanpa ini, siapa pun bisa mendaftar dan langsung
+   memperoleh hak tulis penuh — lihat peringatan keamanan di bawah.
+2. **Buat akun admin.** Authentication → Users → Add user. Isi email dan
+   password, centang konfirmasi email.
+
+### Variabel lingkungan tambahan
+
+| Variabel | Keterangan |
+| --- | --- |
+| `ADMIN_EMAIL` | Email akun admin dari langkah 2. **Tanpa** awalan `NEXT_PUBLIC_`. |
+
+> `ADMIN_EMAIL` tidak boleh berawalan `NEXT_PUBLIC_`. Kalau diberi awalan itu,
+> nilainya ikut masuk ke bundel JavaScript yang dikirim ke peramban, sehingga
+> allowlist admin terlihat semua pengunjung. Pemeriksaannya harus di server.
+
+### Peringatan keamanan yang perlu dipahami
+
+**Row Level Security di proyek ini mengizinkan SETIAP pengguna terautentikasi
+menulis ke semua tabel.** Itu sesuai untuk portofolio satu pemilik, dan itulah
+sebabnya signup harus dimatikan.
+
+Konsekuensinya: **jangan membuat pengguna Supabase lain** untuk tujuan apa pun
+sebelum mempersempit policy `authenticated` di
+`supabase/migrations/20261002120600_rls.sql`. Allowlist `ADMIN_EMAIL` hanya
+berlaku di lapisan aplikasi — ia tidak menghalangi pemegang kredensial pengguna
+Supabase lain untuk menulis langsung lewat API Supabase.
+
+### Masuk
+
+Buka `/admin`; Anda akan dialihkan ke `/admin/login`. Setelah masuk, Anda
+dibawa kembali ke halaman yang semula dituju.
+
+### Yang bisa dikelola
+
+| Halaman | Isi |
+| --- | --- |
+| `/admin` | Ringkasan: jumlah proyek, pesan belum dibaca, rating menunggu |
+| `/admin/profil` | Nama, bio, daftar role, foto, berkas CV, status open-to-work |
+| `/admin/tautan-sosial` | Ikon sosial di beranda dan footer |
+| `/admin/pendidikan` | Timeline pendidikan |
+| `/admin/keahlian` | Kategori beserta keahlian di dalamnya |
+| `/admin/pengalaman` | Kerja, magang, organisasi, freelance |
+| `/admin/proyek` | Proyek, slug, tech stack, galeri, featured |
+| `/admin/pencapaian` | Sertifikat dan penghargaan |
+| `/admin/pesan` | Inbox pesan (terisi setelah form kontak publik dibuat) |
+| `/admin/rating` | Moderasi rating (idem) |
+
+Setiap item punya toggle terbit, tombol naik/turun untuk urutan, dan konfirmasi
+sebelum dihapus. Perubahan langsung tercermin di halaman publik — tidak perlu
+menunggu periode revalidasi lima menit.
+
+### Unggahan berkas
+
+Gambar dibatasi 5 MB (JPG, PNG, WebP, AVIF, GIF, SVG), CV dibatasi 10 MB dan
+hanya PDF. Batas ini ditegakkan di server, bukan hanya oleh atribut form.
+Berkas lama otomatis dihapus dari Storage setelah penggantinya tersimpan.
+
 ## Deploy ke Vercel
 
 1. Push repositori ini ke GitHub, GitLab, atau Bitbucket.
@@ -239,16 +327,20 @@ policy `authenticated` di `supabase/migrations/20261002120600_rls.sql`.
    | `NEXT_PUBLIC_SUPABASE_URL` | URL proyek Supabase Anda |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Kunci `anon` proyek Supabase Anda |
    | `NEXT_PUBLIC_SITE_URL` | URL produksi tanpa garis miring di akhir |
+   | `ADMIN_EMAIL` | Email akun admin — **tanpa** awalan `NEXT_PUBLIC_` |
 
-   Ketiganya wajib. Build akan gagal dengan pesan yang menyebut nama variabel
+   Keempatnya wajib. Build akan gagal dengan pesan yang menyebut nama variabel
    yang kurang kalau salah satu belum diatur — itu memang disengaja.
 
 4. Pastikan migrasi sudah diterapkan ke proyek Supabase produksi
-   (`npx supabase db push`), dan signup sudah dinonaktifkan.
+   (`npx supabase db push`), signup sudah dinonaktifkan, dan akun admin sudah
+   dibuat.
 5. Deploy. Setelah selesai, periksa:
    - halaman publik menampilkan konten dari database,
    - `/sitemap.xml` memuat domain produksi Anda, bukan `localhost`,
-   - `/robots.txt` dapat diambil dan menunjuk sitemap yang benar.
+   - `/robots.txt` dapat diambil dan menunjuk sitemap yang benar,
+   - `/admin` mengalihkan ke halaman masuk saat belum ada sesi,
+   - login dengan akun admin berhasil, dan email selain `ADMIN_EMAIL` ditolak.
 
 > `NEXT_PUBLIC_SITE_URL` dipakai untuk URL kanonik, tag Open Graph, dan
 > sitemap. Kalau nanti Anda memasang custom domain, perbarui variabel ini ke

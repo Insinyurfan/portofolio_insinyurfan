@@ -183,6 +183,16 @@ export function Timeline({ children }: { children: ReactNode }) {
   return <ol className="relative space-y-4">{children}</ol>;
 }
 
+/**
+ * Isi satu entri timeline.
+ *
+ * Merender `<div>`, BUKAN `<li>`: elemen daftarnya sudah disediakan pemanggil
+ * (`<Reveal as="li">`). Ketika komponen ini juga merender `<li>`, hasilnya
+ * `<li>` di dalam `<li>` — HTML tidak sah. Parser peramban memindahkan elemen
+ * yang bersarang salah itu, sehingga DOM-nya berbeda dari yang dirender React
+ * dan hydration gagal. Gejalanya hanya muncul di build produksi, di halaman
+ * Pendidikan dan Pengalaman.
+ */
 export function TimelineItem({
   children,
   meta,
@@ -191,7 +201,7 @@ export function TimelineItem({
   meta?: ReactNode;
 }) {
   return (
-    <li className="relative rounded-card border border-border-subtle bg-surface-raised p-5 shadow-card sm:p-6 sm:pl-14">
+    <div className="relative rounded-card border border-border-subtle bg-surface-raised p-5 shadow-card sm:p-6 sm:pl-14">
       {/* Titik penanda disembunyikan di layar sempit supaya tidak memakan ruang baca. */}
       <span
         aria-hidden="true"
@@ -201,6 +211,6 @@ export function TimelineItem({
         <p className="mb-2 text-sm font-medium text-text-subtle">{meta}</p>
       ) : null}
       {children}
-    </li>
+    </div>
   );
 }

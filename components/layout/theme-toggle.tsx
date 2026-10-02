@@ -3,18 +3,26 @@
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 
+import { useMounted } from "@/lib/use-mounted";
+
 /**
  * Toggle terang/gelap.
  *
- * Sebelum hidrasi, next-themes belum tahu tema yang berlaku dan
- * `resolvedTheme` masih undefined. Itu dipakai langsung sebagai penanda
- * "belum siap", jadi tidak perlu state mounted sendiri — dan placeholder
- * berukuran sama mencegah pergeseran tata letak.
+ * Tema yang berlaku hanya diketahui di peramban, jadi sebelum terpasang
+ * komponen ini merender placeholder berukuran sama — itu mencegah pergeseran
+ * tata letak.
+ *
+ * Penanda terpasang diambil dari `useMounted`, yang memakai
+ * `useSyncExternalStore`. Memeriksa `resolvedTheme === undefined` saja TIDAK
+ * cukup: next-themes sudah mengetahui temanya pada render pertama di klien,
+ * sehingga server mengirim `<span>` sementara klien merender `<button>` —
+ * dan React melaporkannya sebagai hydration mismatch.
  */
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
+  const sudahTerpasang = useMounted();
 
-  if (resolvedTheme === undefined) {
+  if (!sudahTerpasang) {
     return <span className="size-9" aria-hidden="true" />;
   }
 

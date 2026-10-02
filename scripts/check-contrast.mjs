@@ -92,6 +92,26 @@ const PAIRS = [
   ["focus", "surface-raised", "large"],
 ];
 
+/** Pasangan token dashboard admin, dilingkup di bawah .admin-root. */
+const PAIRS_ADMIN = [
+  ["adm-fg", "adm-bg", "normal"],
+  ["adm-fg", "adm-panel", "normal"],
+  ["adm-fg-muted", "adm-panel", "normal"],
+  ["adm-fg-subtle", "adm-panel", "normal"],
+  ["adm-fg", "adm-panel-muted", "normal"],
+  ["adm-fg-muted", "adm-panel-muted", "normal"],
+  ["adm-primary", "adm-panel", "normal"],
+  ["adm-primary-fg", "adm-primary", "normal"],
+  ["adm-primary-fg", "adm-primary-hover", "normal"],
+  ["adm-danger", "adm-panel", "normal"],
+  ["adm-danger-fg", "adm-danger", "normal"],
+  ["adm-danger", "adm-danger-soft", "normal"],
+  ["adm-warning-fg", "adm-warning-soft", "normal"],
+  ["adm-success-fg", "adm-success-soft", "normal"],
+  ["adm-border-strong", "adm-panel", "large"],
+  ["adm-ring", "adm-panel", "large"],
+];
+
 const AMBANG = { normal: 4.5, large: 3 };
 
 const css = await readFile(CSS_PATH, "utf8");
@@ -100,11 +120,21 @@ const themes = {
   gelap: parseTokens(css, ".dark"),
 };
 
+const themesAdmin = {
+  "admin-terang": parseTokens(css, ".admin-root"),
+  "admin-gelap": parseTokens(css, ".dark .admin-root"),
+};
+
 let gagal = 0;
 const baris = [];
 
-for (const [namaTema, tokens] of Object.entries(themes)) {
-  for (const [fg, bg, level] of PAIRS) {
+const semua = [
+  ...Object.entries(themes).map(([n, t]) => [n, t, PAIRS]),
+  ...Object.entries(themesAdmin).map(([n, t]) => [n, t, PAIRS_ADMIN]),
+];
+
+for (const [namaTema, tokens, pasangan] of semua) {
+  for (const [fg, bg, level] of pasangan) {
     const warnaFg = tokens[fg];
     const warnaBg = tokens[bg];
 
@@ -122,8 +152,8 @@ for (const [namaTema, tokens] of Object.entries(themes)) {
     baris.push(
       [
         lulus ? "LULUS" : "GAGAL",
-        namaTema.padEnd(6),
-        `${fg} / ${bg}`.padEnd(42),
+        String(namaTema).padEnd(12),
+        `${fg} / ${bg}`.padEnd(40),
         `${rasio.toFixed(2)}:1`.padStart(8),
         `(min ${ambang})`,
       ].join("  "),
