@@ -19,31 +19,11 @@ import { join } from "node:path";
 
 import pg from "pg";
 
+import { bacaEnvLokal } from "./env-lokal.mjs";
+
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
-/** Pembaca .env sederhana — cukup untuk berkas yang ditulis tangan. */
-async function muatEnv() {
-  let isi;
-  try {
-    isi = await readFile(join(ROOT, ".env.local"), "utf8");
-  } catch {
-    return;
-  }
-
-  for (const baris of isi.split(/\r?\n/)) {
-    const t = baris.trim();
-    if (t === "" || t.startsWith("#")) continue;
-
-    const eq = t.indexOf("=");
-    if (eq < 0) continue;
-
-    const kunci = t.slice(0, eq).trim();
-    const nilai = t.slice(eq + 1).trim();
-    if (!(kunci in process.env)) process.env[kunci] = nilai;
-  }
-}
-
-await muatEnv();
+const envLokal = bacaEnvLokal(new URL("../.env.local", import.meta.url));
 
 const berkas = process.argv[2];
 if (!berkas) {
@@ -51,7 +31,8 @@ if (!berkas) {
   process.exit(1);
 }
 
-const connectionString = process.env.SUPABASE_DB_URL;
+const connectionString =
+  process.env.SUPABASE_DB_URL ?? envLokal.SUPABASE_DB_URL;
 if (!connectionString) {
   console.error(
     "SUPABASE_DB_URL belum diisi di .env.local.\n" +

@@ -3,10 +3,11 @@
  * keahlian, pengalaman masih berjalan, IPK, sitemap, dan regresi publik.
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright";
+import { bacaEnvLokal } from "../scripts/env-lokal.mjs";
 
 const PORT = process.argv[2] ?? "3020";
 const BASE = `http://localhost:${PORT}`;
@@ -14,13 +15,7 @@ const BASE = `http://localhost:${PORT}`;
 const TMP = fileURLToPath(new URL("./.tmp/", import.meta.url));
 mkdirSync(TMP, { recursive: true });
 
-const e = {};
-for (const l of readFileSync(new URL("../.env.local", import.meta.url), "utf8").split(/\r?\n/)) {
-  const t = l.trim();
-  if (!t || t.startsWith("#")) continue;
-  const eq = t.indexOf("=");
-  if (eq > 0) e[t.slice(0, eq).trim()] = t.slice(eq + 1).trim();
-}
+const e = bacaEnvLokal(new URL("../.env.local", import.meta.url));
 
 // Gambar PNG 1x1 untuk uji unggah.
 const PNG = Buffer.from(

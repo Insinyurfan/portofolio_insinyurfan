@@ -18,7 +18,8 @@
     "db:seed": "node scripts/run-sql.mjs supabase/seed.sql",
     "e2e:publik": "node e2e/publik.mjs",
     "e2e:admin": "node e2e/admin-auth.mjs",
-    "e2e:admin-konten": "node e2e/admin-konten.mjs"
+    "e2e:admin-konten": "node e2e/admin-konten.mjs",
+    "e2e:produksi": "node e2e/produksi.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "5.9.1",

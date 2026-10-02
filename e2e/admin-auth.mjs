@@ -6,19 +6,13 @@
  * dan apakah perubahan langsung tercermin di halaman publik.
  */
 
-import { readFileSync } from "node:fs";
 import { chromium } from "playwright";
+import { bacaEnvLokal } from "../scripts/env-lokal.mjs";
 
 const PORT = process.argv[2] ?? "3020";
 const BASE = `http://localhost:${PORT}`;
 
-const e = {};
-for (const l of readFileSync(new URL("../.env.local", import.meta.url), "utf8").split(/\r?\n/)) {
-  const t = l.trim();
-  if (!t || t.startsWith("#")) continue;
-  const eq = t.indexOf("=");
-  if (eq > 0) e[t.slice(0, eq).trim()] = t.slice(eq + 1).trim();
-}
+const e = bacaEnvLokal(new URL("../.env.local", import.meta.url));
 
 let gagal = 0;
 const cek = (nama, lulus, catatan = "") => {
