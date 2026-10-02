@@ -1,0 +1,175 @@
+@import "tailwindcss";
+
+/*
+ * Dark mode berbasis class, dikendalikan next-themes.
+ * Lihat design.md → "next-themes untuk tema, bukan toggle buatan sendiri".
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * SATU SUMBER KEBENARAN UNTUK WARNA.
+ *
+ * Komponen tidak boleh memakai nilai warna lepas (hex, rgb, atau utilitas
+ * warna bawaan Tailwind seperti text-emerald-600). Semuanya lewat token di
+ * bawah, karena itulah yang menegakkan aturan "tepat satu warna aksen" di
+ * spesifikasi site-shell dan membuat pemeriksaan kontras berlaku untuk
+ * seluruh situs sekaligus.
+ *
+ * Rasio kontras setiap pasangan diperiksa di scripts/check-contrast.mjs.
+ */
+:root {
+  /* Permukaan */
+  --surface: #f6f9f7;
+  --surface-raised: #ffffff;
+  --surface-sunken: #eaf0ed;
+
+  /* Garis */
+  --border-subtle: #dde6e1;
+  --border-strong: #7a8b83;
+
+  /* Teks */
+  --text: #0d1714;
+  --text-muted: #44544e;
+  --text-subtle: #5a6b64;
+
+  /* Aksen tunggal: hijau zamrud */
+  --accent: #04704f;
+  --accent-hover: #045c41;
+  --accent-contrast: #ffffff;
+  --accent-soft: #e3f2eb;
+  --accent-soft-text: #034b36;
+
+  /* Fokus */
+  --focus: #04704f;
+
+  /* Latar gelap di belakang modal */
+  --overlay: rgb(13 23 20 / 0.66);
+}
+
+:root:not([data-theme="light"]) {
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+  }
+}
+
+.dark {
+  color-scheme: dark;
+
+  --surface: #0a1210;
+  --surface-raised: #121d19;
+  --surface-sunken: #060c0a;
+
+  --border-subtle: #22302a;
+  --border-strong: #5a7468;
+
+  --text: #e9f1ed;
+  --text-muted: #a7bab2;
+  --text-subtle: #8ba199;
+
+  --accent: #4ade9f;
+  --accent-hover: #6ee7b3;
+  --accent-contrast: #04231a;
+  --accent-soft: #10291f;
+  --accent-soft-text: #7fe9b6;
+
+  --focus: #4ade9f;
+  --overlay: rgb(3 7 6 / 0.78);
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-text: var(--accent-soft-text);
+
+  --color-focus: var(--focus);
+  --color-overlay: var(--overlay);
+
+  /* Tipografi: judul tegas, teks isi tenang */
+  --font-heading: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Kartu bersudut membulat */
+  --radius-card: 1.25rem;
+  --radius-card-lg: 1.75rem;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgb(13 23 20 / 0.04), 0 8px 24px -12px rgb(13 23 20 / 0.10);
+  --shadow-card-hover: 0 2px 4px rgb(13 23 20 / 0.06), 0 16px 40px -16px rgb(13 23 20 / 0.16);
+}
+
+@layer base {
+  * {
+    border-color: var(--border-subtle);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--surface);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  /* Indikator fokus yang terlihat jelas di kedua tema. */
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Hormati permintaan mengurangi gerak secara global. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility bento-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+
+  @media (width >= 48rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+
+  @media (width >= 64rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

@@ -1,0 +1,13 @@
+# Normalkan akhir baris: simpan sebagai LF di repositori.
+# Tanpa ini, repo yang di-clone di Windows bisa tampak "seluruh berkas berubah".
+* text=auto eol=lf
+
+# Berkas biner jangan disentuh.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

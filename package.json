@@ -1,0 +1,45 @@
+{
+  "name": "portofolio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "check:contrast": "node scripts/check-contrast.mjs",
+    "check:revalidate": "node scripts/check-revalidate.mjs",
+    "db:types": "supabase gen types typescript --project-id guxpvjuwovmgjdwawcfr --schema public > lib/database.types.ts",
+    "db:reset": "supabase db reset",
+    "db:push": "supabase db push",
+    "postinstall": "prisma skills sync || exit 0",
+    "db:check": "node scripts/run-sql.mjs supabase/tests/rls_checks.sql",
+    "db:seed": "node scripts/run-sql.mjs supabase/seed.sql"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.117.2",
+    "lucide-react": "1.50.0",
+    "next": "16.3.8",
+    "next-themes": "0.4.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-icons": "5.7.0",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "26.6.4",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.8",
+    "pg": "8.23.1",
+    "postcss": "8.5.28",
+    "prisma": "^8.0.0-rc.19",
+    "supabase": "2.119.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "6.0.3"
+  }
+}
