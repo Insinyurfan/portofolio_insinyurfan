@@ -9,19 +9,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ lanjut?: string }>;
-}) {
-  const { lanjut } = await searchParams;
-
-  // Hanya path internal yang diterima sebagai tujuan, supaya parameter ini
-  // tidak bisa dipakai mengarahkan orang ke situs lain.
-  const tujuan =
-    lanjut && lanjut.startsWith("/admin") && !lanjut.startsWith("//")
-      ? lanjut
-      : "/admin";
-
-  return <LoginForm tujuan={tujuan} />;
+/**
+ * Halaman ini hanya dicapai lewat alamat rahasia ADMIN_LOGIN_PATH; proxy.ts
+ * yang me-rewrite-nya ke sini, dan menolak akses langsung ke /admin/login.
+ *
+ * Tujuan setelah masuk tidak ditentukan di sini: masukAction() membacanya
+ * sendiri dari cookie httpOnly yang disetel proxy, sehingga alamat halaman
+ * admin tidak ikut terlihat di bilah alamat maupun di payload halaman ini.
+ */
+export default function LoginPage() {
+  return <LoginForm />;
 }

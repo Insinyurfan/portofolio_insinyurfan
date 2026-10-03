@@ -128,26 +128,31 @@ try {
     await page.waitForTimeout(400);
     cek("tautan lompat berfungsi", page.url().includes("#konten-utama"));
 
-    // Filter proyek dapat dioperasikan keyboard dan status terpilih diumumkan.
+    // Filter proyek kini berupa TAUTAN ke halaman tersendiri, bukan tombol yang
+    // menyaring di peramban. Itu yang membuat /proyek kembali bisa di-cache
+    // sebagai halaman statis; konsekuensinya status terpilih diumumkan lewat
+    // aria-current, bukan aria-pressed.
     await page.goto(`${BASE}/proyek`, { waitUntil: "load" });
     await page.waitForTimeout(500);
-    const tombolFilter = page.getByRole("button", { name: "React", exact: true });
-    await tombolFilter.focus();
+    const tautanFilter = page.getByRole("link", { name: "React", exact: true });
+    await tautanFilter.focus();
     cek(
-      "tombol filter dapat difokus",
-      await tombolFilter.evaluate((el) => el === document.activeElement),
+      "tautan filter dapat difokus",
+      await tautanFilter.evaluate((el) => el === document.activeElement),
     );
     await page.keyboard.press("Enter");
-    await page.waitForTimeout(900);
+    await page.waitForURL(/\/proyek\/tech\//, { timeout: 15000 });
+    await page.waitForTimeout(400);
     cek(
-      "status filter terpilih diumumkan lewat aria-pressed",
-      (await tombolFilter.getAttribute("aria-pressed")) === "true",
-      String(await tombolFilter.getAttribute("aria-pressed")),
+      "tautan terfilter punya alamatnya sendiri",
+      new URL(page.url()).pathname === "/proyek/tech/react",
+      new URL(page.url()).pathname,
     );
+    const filterAktif = page.getByRole("link", { name: "React", exact: true });
     cek(
-      "tautan terfilter tercermin di URL",
-      page.url().includes("tech=React"),
-      page.url().split("/").pop(),
+      "status filter terpilih diumumkan lewat aria-current",
+      (await filterAktif.getAttribute("aria-current")) === "page",
+      String(await filterAktif.getAttribute("aria-current")),
     );
 
     // Preview pencapaian: buka dengan keyboard, tutup dengan Escape.

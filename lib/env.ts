@@ -12,8 +12,7 @@ type EnvName =
   | "NEXT_PUBLIC_SITE_URL"
   | "ADMIN_EMAIL"
   | "RATE_LIMIT_SALT"
-  | "RESEND_API_KEY"
-  | "RESEND_FROM_EMAIL";
+  | "ADMIN_LOGIN_PATH";
 
 const KETERANGAN: Record<EnvName, string> = {
   NEXT_PUBLIC_SUPABASE_URL:
@@ -26,10 +25,8 @@ const KETERANGAN: Record<EnvName, string> = {
     "email satu-satunya akun admin yang boleh masuk ke dashboard",
   RATE_LIMIT_SALT:
     "garam acak untuk hash pengenal pengirim pada pembatasan laju form publik",
-  RESEND_API_KEY:
-    "kunci API Resend untuk notifikasi email saat ada pesan baru (opsional)",
-  RESEND_FROM_EMAIL:
-    "alamat pengirim notifikasi email, misalnya Portofolio <noreply@domain-anda.com> (opsional)",
+  ADMIN_LOGIN_PATH:
+    "potongan alamat rahasia untuk halaman masuk admin, misalnya masuk-7f3a9",
 };
 
 /**
@@ -50,15 +47,8 @@ const NILAI: Record<EnvName, string | undefined> = {
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   ADMIN_EMAIL: process.env.ADMIN_EMAIL,
   RATE_LIMIT_SALT: process.env.RATE_LIMIT_SALT,
-  RESEND_API_KEY: process.env.RESEND_API_KEY,
-  RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+  ADMIN_LOGIN_PATH: process.env.ADMIN_LOGIN_PATH,
 };
-
-/** Nilai opsional: kosong berarti fiturnya dilewati, bukan error. */
-function opsional(nama: EnvName): string | null {
-  const nilai = NILAI[nama];
-  return nilai === undefined || nilai.trim() === "" ? null : nilai.trim();
-}
 
 function wajib(nama: EnvName): string {
   const nilai = NILAI[nama];
@@ -126,18 +116,30 @@ export function rateLimitSalt(): string {
 }
 
 /**
- * Konfigurasi layanan email, atau null bila belum disetel.
+ * Alamat halaman masuk admin, misalnya "/masuk-7f3a9".
  *
- * Sengaja opsional: form kontak harus tetap berfungsi penuh tanpa ini, dan
- * ketidakhadirannya dicatat sebagai keterangan, bukan kegagalan.
+ * Alamat `/admin` sendiri dialihkan ke beranda bagi siapa pun yang belum
+ * masuk, sehingga pemindai otomatis yang mencoba `/admin` tidak menemukan
+ * form masuk sama sekali.
+ *
+ * Perlu dinyatakan jujur: ini MENGURANGI KEBISINGAN, bukan menambah keamanan.
+ * Yang benar-benar menjaga dashboard tetaplah pemeriksaan sesi di proxy.ts dan
+ * requireAdmin() di setiap aksi tulis. Siapa pun yang menemukan alamat ini
+ * tetap tidak bisa masuk tanpa kredensial yang sah.
  */
-export function konfigurasiEmail(): { apiKey: string; from: string } | null {
-  const apiKey = opsional("RESEND_API_KEY");
-  const from = opsional("RESEND_FROM_EMAIL");
+export function adminLoginPath(): string {
+  const nilai = wajib("ADMIN_LOGIN_PATH").replaceAll("/", "").trim();
 
-  if (!apiKey || !from) return null;
-  return { apiKey, from };
+  if (!/^[a-z0-9][a-z0-9-]*$/i.test(nilai)) {
+    throw new Error(
+      "ADMIN_LOGIN_PATH harus berupa satu potongan alamat berisi huruf, angka, " +
+        `dan tanda hubung saja — tanpa garis miring. Contoh: "masuk-7f3a9".`,
+    );
+  }
+
+  return `/${nilai}`;
 }
+
 
 /** URL absolut dari path relatif, untuk kanonik/Open Graph/sitemap. */
 export function absoluteUrl(path = "/"): string {

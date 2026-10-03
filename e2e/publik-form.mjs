@@ -14,6 +14,7 @@ import { readFileSync } from "node:fs";
 import pg from "pg";
 import { chromium } from "playwright";
 
+import { loginPath } from "./helpers.mjs";
 import { bacaEnvLokal } from "../scripts/env-lokal.mjs";
 
 const PORT = process.argv[2] ?? "3040";
@@ -309,7 +310,7 @@ try {
   console.log("\n— Moderasi rating → beranda —");
 
   const adm = await ctx.newPage();
-  await adm.goto(`${BASE}/admin/login`, { waitUntil: "load" });
+  await adm.goto(`${BASE}${loginPath()}`, { waitUntil: "load" });
   await adm.getByLabel("Email").fill(e.ADMIN_EMAIL);
   await adm.getByLabel("Password").fill(e.ADMIN_TEMP_PASSWORD);
   await adm.getByRole("button", { name: "Masuk" }).click();

@@ -187,20 +187,24 @@ app/                      Route App Router
     keahlian/ pengalaman/
     pencapaian/ kontak/
     proyek/               Daftar proyek + filter tech stack
+    proyek/tech/[tech]/   Daftar yang tersaring — satu halaman statis per tech
     proyek/[slug]/        Detail proyek
-  admin/                  Dashboard admin, layout sidebar sendiri
-    login/                Halaman masuk
+  admin/                  Dashboard admin
+    (dashboard)/          Halaman dashboard + layout sidebar
+    login/                Halaman masuk, layout sendiri tanpa sidebar
+    actions-auth.ts       Masuk dan keluar (Server Action)
     actions-content.ts    Seluruh aksi tulis, lewat withAdminAction
   sitemap.ts robots.ts    SEO
   not-found.tsx           Halaman 404
   globals.css             Token publik + token admin (dilingkup .admin-root)
 
-proxy.ts                  Proteksi route /admin (dulu bernama middleware.ts)
+proxy.ts                  Proteksi route /admin + alamat masuk rahasia
+                          (dulu bernama middleware.ts)
 
 components/
   layout/                 Navbar, footer, toggle tema, ikon sosial
   home/                   Animasi ketik role
-  projects/               Kartu proyek, filter tech stack
+  projects/               Kartu proyek, grid, filter tech stack (tautan, tanpa JS)
   achievements/           Grid pencapaian + pratinjau gambar
   ui/                     Primitif publik: kartu, badge, tombol, timeline
   admin/                  Primitif admin, sidebar, toast, dialog konfirmasi
@@ -213,7 +217,6 @@ lib/
   schemas.ts              Skema zod, dipakai klien DAN server
   supabase/server.ts      Klien anon khusus server (halaman publik)
   supabase/session.ts     Klien sadar sesi (dashboard admin)
-  supabase/browser.ts     Klien peramban (hanya form login)
   queries.ts              Pembacaan publik — SELALU memfilter is_published
   queries-admin.ts        Pembacaan admin — termasuk baris draf
   admin/action.ts         withAdminAction: auth → validasi → handler → revalidasi
@@ -221,7 +224,6 @@ lib/
   admin/storage.ts        Unggah, hapus, konversi URL ↔ path Storage
   public/action.ts        withPublicAction: honeypot → batas laju → validasi
   public/sender.ts        Hash pengenal pengirim (bukan alamat IP mentah)
-  public/email.ts         Notifikasi email, kegagalannya tidak pernah ke pengunjung
   format.ts               Tanggal id-ID, label enum bahasa Indonesia
   constants.ts            REVALIDATE, nama bucket, item navigasi
   database.types.ts       Tipe skema (hasil generate)
@@ -249,19 +251,17 @@ dibaca kode di luar daftar ini.
 | `NEXT_PUBLIC_SITE_URL` | ya | ya | URL situs Anda, tanpa garis miring di akhir |
 | `ADMIN_EMAIL` | ya | **tidak** | Email akun admin yang Anda buat di Supabase Authentication |
 | `RATE_LIMIT_SALT` | ya | **tidak** | Hasilkan sendiri: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
-| `RESEND_API_KEY` | tidak | **tidak** | [resend.com](https://resend.com) → API Keys |
-| `RESEND_FROM_EMAIL` | tidak | **tidak** | Alamat pengirim terverifikasi di Resend, misalnya `Portofolio <noreply@domain-anda.com>` |
+| `ADMIN_LOGIN_PATH` | ya | **tidak** | Pilih sendiri, huruf/angka/tanda hubung saja — misalnya `masuk-7f3a9c21` |
 
 **Awalan `NEXT_PUBLIC_` menentukan segalanya.** Variabel dengan awalan itu
-ikut masuk ke bundel JavaScript yang dikirim ke setiap pengunjung. Empat
+ikut masuk ke bundel JavaScript yang dikirim ke setiap pengunjung. Tiga
 variabel terbawah **tidak boleh** diberi awalan itu: `ADMIN_EMAIL` akan
 membocorkan allowlist admin, `RATE_LIMIT_SALT` akan membuat hash pengenal
-pengirim dapat dibalik, dan kunci Resend akan dapat dipakai siapa pun untuk
-mengirim email atas nama Anda.
+pengirim dapat dibalik, dan `ADMIN_LOGIN_PATH` akan mengumumkan alamat yang
+justru dimaksudkan untuk tidak diketahui.
 
-Yang wajib akan menggagalkan aplikasi dengan pesan yang menyebut nama
-variabelnya kalau belum diisi. Yang opsional tidak: tanpa kredensial Resend,
-form kontak tetap berfungsi penuh dan notifikasi emailnya saja yang dilewati.
+Keenamnya wajib. Aplikasi akan gagal dengan pesan yang menyebut nama
+variabelnya kalau salah satu belum diisi — termasuk saat build di Vercel.
 
 Tiga variabel lain mungkin ada di `.env.local` Anda — `SUPABASE_DB_URL`,
 `SUPABASE_ACCESS_TOKEN`, dan `ADMIN_TEMP_PASSWORD`. Ketiganya **hanya untuk
@@ -288,6 +288,20 @@ policy `authenticated` di `supabase/migrations/20261002120600_rls.sql`.
 **Jangan tulis nilai warna lepas di komponen.** Semua warna lewat token di
 `app/globals.css`. Itu yang menegakkan aturan satu warna aksen dan membuat
 `npm run check:contrast` berlaku untuk seluruh situs sekaligus.
+
+**Filter tech stack adalah tautan ke halaman tersendiri, bukan parameter
+alamat.** `/proyek/tech/react`, bukan `/proyek?tech=React`. Ini soal kecepatan,
+bukan selera: membaca `searchParams` memaksa Next merender halaman secara
+dinamis pada setiap kunjungan, sehingga `/proyek` tidak pernah masuk cache CDN.
+Terukur di produksi — `/proyek` menjawab dalam 1232 ms dengan
+`X-Vercel-Cache: MISS`, sementara setiap halaman lain sekitar 200 ms dengan
+`HIT`. Sekarang `/proyek` dan setiap `/proyek/tech/*` adalah halaman statis yang
+dibangun saat build, dan filternya tidak mengirim JavaScript sama sekali.
+
+Konsekuensi yang perlu diingat: menambah tech stack baru pada proyek berarti
+ada alamat `/proyek/tech/*` baru. Halamannya dibuat saat permintaan pertama
+(`dynamicParams`) lalu ikut di-cache, jadi tidak perlu build ulang — tetapi
+slug yang tidak dikenal menjawab 404, bukan daftar kosong.
 
 ## Dashboard admin
 
@@ -327,8 +341,28 @@ Supabase lain untuk menulis langsung lewat API Supabase.
 
 ### Masuk
 
-Buka `/admin`; Anda akan dialihkan ke `/admin/login`. Setelah masuk, Anda
-dibawa kembali ke halaman yang semula dituju.
+Halaman masuk berada di alamat yang Anda tentukan sendiri lewat
+`ADMIN_LOGIN_PATH` — misalnya `/masuk-7f3a9c21`. Alamat `/admin` dan semua di
+bawahnya **dialihkan ke beranda** bagi siapa pun yang belum masuk, dan
+`/admin/login` tidak dapat dibuka langsung. Pemindai otomatis yang mencoba
+`/admin` tidak menemukan form masuk sama sekali.
+
+Halaman admin yang semula Anda tuju tetap diingat — lewat cookie `httpOnly`
+berumur sepuluh menit, bukan lewat parameter alamat, supaya alamat dashboard
+tidak ikut terlihat di bilah alamat beranda. Setelah masuk Anda diantar ke
+sana. Setelah keluar, Anda dikembalikan ke beranda.
+
+Perlu dinyatakan jujur: menyembunyikan alamat ini **mengurangi kebisingan bot,
+bukan menambah keamanan**. Yang benar-benar menjaga dashboard adalah
+pemeriksaan sesi di `proxy.ts` dan `requireAdmin()` di setiap aksi tulis.
+Siapa pun yang menemukan alamatnya tetap tidak bisa masuk tanpa kredensial
+yang sah.
+
+Autentikasinya dikerjakan Server Action, bukan klien Supabase di peramban.
+Itu bukan pilihan gaya: cookie sesi harus ikut di respons HTTP yang sama
+dengan pengalihannya, kalau tidak proxy belum melihat sesi itu dan
+memantulkan admin kembali ke beranda. Efek sampingnya menyenangkan —
+`@supabase/supabase-js` tidak lagi ikut ke bundel peramban sama sekali.
 
 ### Yang bisa dikelola
 
@@ -376,15 +410,12 @@ Batasnya sengaja longgar: beberapa pengunjung bisa berbagi satu alamat IP di
 kantor, kampus, atau jaringan seluler, dan kuota yang ketat akan memblokir
 orang yang tidak bersalah. Ubah nilainya di `lib/public/action.ts` bila perlu.
 
-### Notifikasi email
+### Pesan masuk
 
-Opsional. Isi `RESEND_API_KEY` dan `RESEND_FROM_EMAIL` untuk menerima email
-setiap kali ada pesan baru. Menekan balas di email itu mengarah langsung ke
-pengirim pesan.
-
-Kegagalan layanan email **tidak pernah** merusak alur pengunjung: pesannya
-sudah tersimpan sebelum email dikirim, kegagalannya dicatat di log server, dan
-hitungan "pesan belum dibaca" di dashboard tetap menjadi sumber kebenaran.
+Tidak ada notifikasi email, dan itu disengaja — tidak ada layanan pihak
+ketiga, kunci API, maupun domain pengirim yang perlu diurus. Pesan baru
+dibaca di `/admin/pesan`, dan hitungan "pesan belum dibaca" di dashboard
+adalah satu-satunya sumber kebenaran.
 
 ### Apa yang BISA dan TIDAK BISA dilakukan pengunjung
 
@@ -420,11 +451,11 @@ Supabase langsung. Jalankan `npm run db:check:public` untuk membuktikannya.
    | `NEXT_PUBLIC_SITE_URL` | URL produksi tanpa garis miring di akhir |
    | `ADMIN_EMAIL` | Email akun admin — **tanpa** awalan `NEXT_PUBLIC_` |
    | `RATE_LIMIT_SALT` | Nilai acak panjang — **tanpa** awalan `NEXT_PUBLIC_` |
+   | `ADMIN_LOGIN_PATH` | Alamat rahasia halaman masuk — **tanpa** awalan `NEXT_PUBLIC_` |
 
-   Kelimanya wajib. Build akan gagal dengan pesan yang menyebut nama variabel
+   Keenamnya wajib. Build akan gagal dengan pesan yang menyebut nama variabel
    yang kurang kalau salah satu belum diatur — itu memang disengaja.
 
-   Opsional, untuk notifikasi email: `RESEND_API_KEY` dan `RESEND_FROM_EMAIL`.
    Daftar lengkapnya ada di [Variabel lingkungan](#variabel-lingkungan).
 
    Jangan menambahkan `SUPABASE_DB_URL`, `SUPABASE_ACCESS_TOKEN`, maupun

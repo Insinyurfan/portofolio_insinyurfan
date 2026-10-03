@@ -7,6 +7,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright";
+import { loginPath } from "./helpers.mjs";
 import { bacaEnvLokal } from "../scripts/env-lokal.mjs";
 
 const PORT = process.argv[2] ?? "3020";
@@ -38,7 +39,7 @@ const pub = await ctx.newPage();
 
 try {
   // Login.
-  await page.goto(`${BASE}/admin/login`, { waitUntil: "load" });
+  await page.goto(`${BASE}${loginPath()}`, { waitUntil: "load" });
   await page.getByLabel("Email").fill(e.ADMIN_EMAIL);
   await page.getByLabel("Password").fill(e.ADMIN_TEMP_PASSWORD);
   await page.getByRole("button", { name: "Masuk" }).click();

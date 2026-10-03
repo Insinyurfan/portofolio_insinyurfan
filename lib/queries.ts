@@ -263,3 +263,38 @@ export async function getApprovedRatings(): Promise<Rating[]> {
   laporkan("getApprovedRatings", error);
   return data ?? [];
 }
+
+/**
+ * Mengubah nama tech stack menjadi potongan alamat yang aman untuk URL.
+ *
+ * "Next.js" → "nextjs", "Tailwind CSS" → "tailwind-css".
+ */
+export function techKeSlug(tech: string): string {
+  return tech
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * Seluruh tech stack yang dipakai proyek terbit, beserta slug-nya.
+ *
+ * Dipakai `generateStaticParams` untuk membuat satu halaman statis per tech
+ * stack, sehingga halaman proyek yang terfilter ikut di-cache CDN alih-alih
+ * dirender ulang setiap kunjungan.
+ */
+export async function getTechStackSlugs(): Promise<
+  Array<{ tech: string; slug: string }>
+> {
+  const projects = await getProjects();
+
+  const peta = new Map<string, string>();
+  for (const tech of collectTechStack(projects)) {
+    const slug = techKeSlug(tech);
+    if (slug !== "" && !peta.has(slug)) peta.set(slug, tech);
+  }
+
+  return [...peta.entries()].map(([slug, tech]) => ({ tech, slug }));
+}

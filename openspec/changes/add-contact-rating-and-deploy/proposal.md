@@ -27,14 +27,12 @@ Change ini bergantung pada `setup-portfolio-public-site` dan `add-admin-dashboar
 - Tombol "Pratinjau CV" membuka berkas PDF di modal tanpa meninggalkan halaman, berdampingan dengan tombol unduh yang sudah ada.
 - Modal menyediakan jalan keluar yang jelas dan tautan buka di tab baru bagi peranti yang tidak dapat menampilkan PDF inline.
 
-**Notifikasi email ke admin**
-- Email dikirim ke alamat admin setelah pesan baru tersimpan, memuat nama pengirim, email, subjek, dan isi pesan.
-- Kegagalan pengiriman email tidak pernah membatalkan penyimpanan pesan maupun memunculkan error bagi pengunjung.
 
 **Kesiapan deploy**
 - Daftar variabel lingkungan yang lengkap untuk Vercel, pemeriksaan build sebelum deploy, dan panduan menghubungkan custom domain beserta akibatnya terhadap URL kanonik, Open Graph, dan sitemap.
 
 **Non-goals**
+- **Notifikasi email ke admin.** Semula termasuk ruang lingkup, lalu dicabut atas permintaan pemilik di tengah implementasi: "tidak perlu deh notif ke email, tidak butuh sampai bisa kirim email". Konsekuensinya seluruh capability `admin-email-notifications`, modul `lib/public/email.ts`, dependensi `resend`, dan variabel `RESEND_API_KEY` serta `RESEND_FROM_EMAIL` dihapus. Pesan baru dibaca di `/admin/pesan`, dan hitungan belum dibaca di dashboard menjadi satu-satunya sumber kebenaran.
 - Balasan pesan dari dalam dashboard; admin menjawab lewat aplikasi email sendiri.
 - Verifikasi email pengirim, CAPTCHA, dan tanda tangan bot pihak ketiga.
 - Halaman rating tersendiri, pagination daftar rating, dan penyuntingan rating oleh pengunjung.
@@ -47,10 +45,11 @@ Change ini bergantung pada `setup-portfolio-public-site` dan `add-admin-dashboar
 - `public-site/contact-form`: Form kontak publik di `/kontak` — validasi, penyimpanan ke `messages`, honeypot, pembatasan laju, dan keadaan berhasil maupun gagal.
 - `public-site/ratings`: Section rating di beranda — rata-rata, jumlah, daftar rating yang disetujui, form pengiriman, dan penanda sudah mengirim di peramban.
 - `public-site/cv-preview`: Pratinjau berkas CV di modal beserta jalur unduh dan jalur cadangan bila PDF tidak dapat ditampilkan inline.
-- `admin-email-notifications`: Pemberitahuan email ke admin saat pesan baru masuk, dengan kegagalan pengiriman yang tidak merusak alur pengunjung.
 - `deployment`: Kesiapan rilis — variabel lingkungan Vercel, pemeriksaan build, dan panduan custom domain beserta pengaruhnya pada URL kanonik dan sitemap.
 
 ### Modified Capabilities
+- `public-site/projects`: filter tech stack berpindah dari parameter alamat `?tech=` ke alamat tersendiri `/proyek/tech/[tech]`. Penyimpangan dari rencana, diputuskan saat implementasi: membaca `searchParams` memaksa `/proyek` dirender dinamis pada setiap kunjungan, dan terukur di produksi halaman itu menjawab 1232 ms dengan `X-Vercel-Cache: MISS` sementara halaman lain sekitar 200 ms dengan `HIT`. Sekarang keduanya halaman statis dan filternya tidak mengirim JavaScript sama sekali.
+- `admin-auth`: proteksi route berubah bentuk. `/admin` dan seluruh turunannya dialihkan ke **beranda** bagi yang belum masuk — bukan ke halaman masuk — dan halaman masuk pindah ke alamat rahasia dari `ADMIN_LOGIN_PATH`. Diminta pemilik setelah melihat perilaku serupa di situs lain. Dicatat jujur di spec dan README: ini mengurangi kebisingan bot, BUKAN menambah keamanan. Autentikasinya sekaligus dipindahkan dari klien Supabase peramban ke Server Action, karena cookie sesi harus ikut di respons yang sama dengan pengalihannya.
 - `portfolio-content-model`: RLS dibuka terbatas — publik boleh `INSERT` ke `messages` dan `ratings`, dan boleh `SELECT` rating yang sudah disetujui; sisanya tetap tertutup. Ditambah tabel penghitung pembatasan laju beserta fungsinya, dan pernyataan bahwa kedua tabel itu kini memang dipakai halaman publik.
 - `public-site/profile-pages`: `/kontak` kini memuat form kontak; larangan "tidak ada form" dicabut.
 - `public-site/home`: hero mendapat tombol pratinjau CV di samping tombol unduh.
@@ -58,10 +57,10 @@ Change ini bergantung pada `setup-portfolio-public-site` dan `add-admin-dashboar
 
 ## Impact
 
-- **Kode**: section baru di beranda; form di `/kontak`; dua Server Action publik yang menulis sebagai pengunjung tanpa autentikasi — jalur tulis pertama di situs yang tidak melewati `requireAdmin()`; modal pratinjau PDF; satu modul pembatasan laju; satu modul pengiriman email.
-- **Dependensi baru**: pustaka pengiriman email. Skema validasi, pustaka form, dan komponen modal sudah ada dari change sebelumnya.
+- **Kode**: section baru di beranda; form di `/kontak`; dua Server Action publik yang menulis sebagai pengunjung tanpa autentikasi — jalur tulis pertama di situs yang tidak melewati `requireAdmin()`; modal pratinjau PDF; satu modul pembatasan laju.
+- **Dependensi baru**: tidak ada. Skema validasi, pustaka form, dan komponen modal sudah ada dari change sebelumnya.
 - **Migrasi database**: policy RLS baru untuk `anon` pada `messages` dan `ratings`, tabel penghitung pembatasan laju, dan fungsi pembatasan laju yang atomik.
-- **Variabel lingkungan baru**: kunci API layanan email dan alamat pengirim. Keduanya bersifat server, tidak boleh berawalan `NEXT_PUBLIC_`.
+- **Variabel lingkungan baru**: `RATE_LIMIT_SALT` dan `ADMIN_LOGIN_PATH`. Keduanya wajib, bersifat server, dan tidak boleh berawalan `NEXT_PUBLIC_`.
 - **Beranda**: kini bergantung pada data rating, sehingga revalidasi beranda ikut dipicu saat admin menyetujui atau mencabut persetujuan rating.
 - **Permukaan keamanan**: ini perubahan paling sensitif dari ketiga change. Sebelum ini tidak ada cara bagi orang luar menulis apa pun ke database.
 - **Prasyarat**: `setup-portfolio-public-site` dan `add-admin-dashboard` harus sudah diimplementasi dan diarsipkan lebih dulu, agar keempat delta di atas punya spec induk untuk digabung.

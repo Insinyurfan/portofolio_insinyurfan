@@ -2,13 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LogIn } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { masukAction } from "@/app/admin/actions-auth";
 import { Button, Field, Input, Panel } from "@/components/admin/ui";
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 const loginSchema = z.object({
   email: z
@@ -25,6 +24,13 @@ type LoginInput = z.infer<typeof loginSchema>;
  * Form login admin.
  *
  * Catatan yang disengaja:
+ *   - Autentikasinya dikerjakan Server Action, bukan klien Supabase peramban.
+ *     Alasannya ada di app/admin/actions-auth.ts: cookie sesi harus ikut di
+ *     respons yang sama dengan pengalihannya, kalau tidak proxy belum melihat
+ *     sesi itu dan memantulkan admin kembali ke beranda. Efek sampingnya
+ *     menyenangkan — @supabase/ssr tidak lagi ikut ke bundel peramban.
+ *   - Tujuan setelah masuk ditentukan di server lewat cookie httpOnly, jadi
+ *     komponen ini tidak perlu (dan tidak boleh) menerimanya sebagai prop.
  *   - Pesan error selalu generik ("email atau password salah"), tidak pernah
  *     menyebut apakah emailnya terdaftar. Itu mencegah form ini dipakai untuk
  *     menebak alamat email mana yang punya akun.
@@ -32,8 +38,7 @@ type LoginInput = z.infer<typeof loginSchema>;
  *   - Validasi kosong terjadi di klien, jadi tidak ada permintaan autentikasi
  *     yang dikirim untuk form yang jelas belum lengkap.
  */
-export function LoginForm({ tujuan }: { tujuan: string }) {
-  const router = useRouter();
+export function LoginForm() {
   const [errorUmum, setErrorUmum] = useState<string | null>(null);
 
   const {
@@ -50,23 +55,12 @@ export function LoginForm({ tujuan }: { tujuan: string }) {
   async function onSubmit(nilai: LoginInput) {
     setErrorUmum(null);
 
-    const supabase = createBrowserSupabaseClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: nilai.email,
-      password: nilai.password,
-    });
+    // Saat berhasil, aksinya mengalihkan dan tidak pernah kembali ke sini.
+    const hasil = await masukAction(nilai);
 
-    if (error) {
-      setErrorUmum("Email atau password salah. Silakan coba lagi.");
-      setValue("password", "");
-      setFocus("password");
-      return;
-    }
-
-    // Pindah ke tujuan semula; refresh supaya Server Component membaca sesi
-    // yang baru saja dibuat.
-    router.replace(tujuan);
-    router.refresh();
+    setErrorUmum(hasil.pesan);
+    setValue("password", "");
+    setFocus("password");
   }
 
   return (

@@ -1,6 +1,5 @@
 "use server";
 
-import { kirimNotifikasiPesan } from "@/lib/public/email";
 import { PublicActionError, withPublicAction } from "@/lib/public/action";
 import { contactMessageSchema, visitorRatingSchema } from "@/lib/schemas";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -33,15 +32,6 @@ export const kirimPesanAction = withPublicAction(
         "Pesan gagal dikirim. Coba lagi beberapa saat.",
       );
     }
-
-    // Email dikirim SETELAH pesan tersimpan, dan kegagalannya tidak pernah
-    // sampai ke pengunjung — pesannya sudah aman di inbox dashboard.
-    await kirimNotifikasiPesan({
-      nama: input.sender_name,
-      email: input.sender_email,
-      subjek: input.subject,
-      isi: input.body,
-    });
   },
   {
     jenis: "contact",

@@ -7,6 +7,7 @@
  */
 
 import { chromium } from "playwright";
+import { loginPath } from "./helpers.mjs";
 import { bacaEnvLokal } from "../scripts/env-lokal.mjs";
 
 const PORT = process.argv[2] ?? "3020";
@@ -36,15 +37,33 @@ try {
 
   await page.goto(`${BASE}/admin/proyek`, { waitUntil: "load" });
   cek(
-    "route admin tanpa sesi → halaman login",
-    page.url().includes("/admin/login"),
+    "route admin tanpa sesi → dialihkan ke beranda, bukan ke halaman masuk",
+    new URL(page.url()).pathname === "/",
     page.url().replace(BASE, ""),
   );
 
+  // Halaman masuk hanya dicapai lewat alamat rahasia: route aslinya ditolak.
+  await page.goto(`${BASE}/admin/login`, { waitUntil: "load" });
+  cek(
+    "/admin/login tidak dapat dibuka langsung",
+    new URL(page.url()).pathname === "/",
+    page.url().replace(BASE, ""),
+  );
+
+  await page.goto(`${BASE}${loginPath()}`, { waitUntil: "load" });
+  cek(
+    "halaman masuk tersedia di alamat rahasia",
+    (await page.getByLabel("Email").count()) > 0,
+  );
+
   // Field kosong: pesan validasi muncul, tanpa permintaan autentikasi.
+  // Autentikasi kini dikerjakan Server Action, jadi yang dipantau adalah POST
+  // aksinya — bukan lagi permintaan ke /auth/v1/token milik klien peramban.
   let adaRequestAuth = false;
   const pantau = (req) => {
-    if (req.url().includes("/auth/v1/token")) adaRequestAuth = true;
+    if (req.method() === "POST" && req.headers()["next-action"] !== undefined) {
+      adaRequestAuth = true;
+    }
   };
   page.on("request", pantau);
   await page.getByRole("button", { name: "Masuk" }).click();
@@ -80,12 +99,13 @@ try {
     (await page.getByLabel("Password").inputValue()) === "",
   );
 
-  // Login benar → diantar ke tujuan semula (/admin/proyek).
+  // Login benar → diantar ke tujuan semula, yang diingat lewat cookie yang
+  // disetel proxy saat /admin/proyek tadi dialihkan ke beranda.
   await page.getByLabel("Password").fill(e.ADMIN_TEMP_PASSWORD);
   await page.getByRole("button", { name: "Masuk" }).click();
-  await page.waitForURL(/\/admin\/proyek/, { timeout: 25000 });
+  await page.waitForURL(/\/admin/, { timeout: 25000 });
   cek(
-    "login berhasil → diantar ke tujuan semula",
+    "login berhasil → diantar ke tujuan semula lewat cookie",
     page.url().includes("/admin/proyek"),
     page.url().replace(BASE, ""),
   );
@@ -347,8 +367,14 @@ try {
 
   await page.goto(`${BASE}/admin`, { waitUntil: "load" });
   await page.getByRole("button", { name: "Keluar" }).first().click();
-  await page.waitForURL(/\/admin\/login/, { timeout: 25000 });
-  cek("logout → diarahkan ke login", page.url().includes("/admin/login"));
+  // Ke beranda, bukan ke halaman masuk: alamat masuk yang rahasia tidak boleh
+  // ikut terlihat di bilah alamat setelah keluar.
+  await page.waitForURL((u) => new URL(u).pathname === "/", { timeout: 25000 });
+  cek(
+    "logout → diarahkan ke beranda, bukan ke halaman masuk",
+    new URL(page.url()).pathname === "/",
+    page.url().replace(BASE, ""),
+  );
 
   await page.goBack({ waitUntil: "load" }).catch(() => {});
   await page.waitForTimeout(1200);

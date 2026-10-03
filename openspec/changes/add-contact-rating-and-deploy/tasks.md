@@ -3,8 +3,8 @@ Perilaku yang harus dipenuhi ada di `specs/`; keputusan teknis ada di `design.md
 ## 1. Prasyarat dan konfigurasi
 
 - [x] 1.1 Verifikasi prasyarat dari dua change sebelumnya tersedia: dashboard admin berjalan dengan login, inbox dan moderasi rating ada, `lib/schemas/` dan peta revalidasi ada; hentikan pekerjaan dan laporkan bila ada yang belum ada
-- [x] 1.2 Tambahkan variabel lingkungan baru ke `lib/env.ts` dan `.env.example`: garam untuk hash pengenal pengirim (wajib), kunci API layanan email dan alamat pengirim (opsional); verifikasi variabel wajib yang kurang menggagalkan aplikasi dengan pesan yang menyebut namanya, variabel opsional yang kurang tidak menggagalkan, dan tidak satu pun berawalan `NEXT_PUBLIC_` (`deployment` → variabel lingkungan terdaftar)
-- [x] 1.3 Pasang dependensi pengiriman email; verifikasi `npm ls --depth=0` bersih dan build masih lulus
+- [x] 1.2 Tambahkan variabel lingkungan baru ke `lib/env.ts` dan `.env.example`: garam untuk hash pengenal pengirim (wajib) dan alamat rahasia halaman masuk admin (wajib); verifikasi variabel wajib yang kurang menggagalkan aplikasi dengan pesan yang menyebut namanya, dan tidak satu pun berawalan `NEXT_PUBLIC_`. Catatan: kredensial layanan email semula ada di task ini, lalu dicabut bersama bagian 7; `ADMIN_LOGIN_PATH` menggantikannya (`deployment` → variabel lingkungan terdaftar)
+- [~] 1.3 DICABUT — dependensi pengiriman email dihapus bersama bagian 7; `resend` sudah dilepas dari `package.json` dan build tetap lulus
 
 ## 2. Database: akses publik dan pembatasan laju
 
@@ -51,13 +51,20 @@ Perilaku yang harus dipenuhi ada di `specs/`; keputusan teknis ada di `design.md
 - [x] 6.4 Verifikasi aksesibilitas modal: dapat ditutup lewat tombol tutup, Escape, dan klik di luar; fokus berpindah ke dalam modal dan terkurung di sana; fokus kembali ke tombol pratinjau setelah ditutup; dan modal diumumkan sebagai dialog beserta namanya (`public-site/cv-preview` → modal dapat diakses)
 - [x] 6.5 Verifikasi jalur cadangan: peramban yang tidak dapat merender PDF inline menampilkan pesan berbahasa Indonesia beserta tombol unduh dan tautan buka di tab baru bukan area kosong; pada viewport 320 piksel modal tetap terbaca dengan tautan buka di tab baru ditampilkan menonjol; dan URL CV yang ada tetapi berkasnya gagal diambil menampilkan pesan berbahasa Indonesia (`public-site/cv-preview` → jalur cadangan)
 
-## 7. Notifikasi email
+## 7. Notifikasi email — DICABUT
 
-- [x] 7.1 Tulis modul pengiriman email yang mengirim satu pemberitahuan ke `ADMIN_EMAIL` memuat nama pengirim, email pengirim, subjek bila ada, isi pesan, dan waktu masuk, dengan `Reply-To` berisi alamat email pengirim yang sudah divalidasi; verifikasi menekan balas di aplikasi email mengarah ke pengirim pesan bukan alamat teknis layanan (`admin-email-notifications` → email pemberitahuan, membalas mengarah ke pengirim)
-- [x] 7.2 Sisipkan nilai dari pengunjung ke email sebagai teks saja dan jangan pernah ke baris header selain `Reply-To` yang tervalidasi; verifikasi isi pesan berisi tag HTML atau skrip tampil sebagai teks, dan nama atau subjek berisi karakter baris baru atau pola yang menyerupai header tidak menghasilkan header tambahan pada email terkirim (`admin-email-notifications` → isi diperlakukan sebagai teks)
-- [x] 7.3 Panggil pengiriman email setelah pesan tersimpan, dibungkus penangkap error dengan batas waktu, kegagalan dicatat di server tanpa mengubah hasil bagi pengunjung; verifikasi kegagalan layanan email tetap menyisakan pesan di inbox dan konfirmasi pengunjung tidak berubah, layanan email yang lambat tidak menahan konfirmasi lebih lama daripada batas wajar, dan pengiriman yang ditolak validasi, honeypot, atau batas laju tidak mengirim email (`admin-email-notifications` → kegagalan tidak merusak alur pengunjung)
-- [x] 7.4 Lewati pengiriman bila kredensial email tidak dikonfigurasi, dicatat sekali sebagai keterangan bukan kegagalan; verifikasi tanpa kredensial form kontak tetap berfungsi penuh, pesan tersimpan, konfirmasi muncul, dan tidak ada error yang terlihat (`admin-email-notifications` → dapat dimatikan lewat konfigurasi)
-- [x] 7.5 Verifikasi satu pesan menghasilkan tepat satu email, tidak terduplikasi walau pengunjung menekan kirim berulang kali pada permintaan yang sama (`admin-email-notifications` → satu pesan satu email)
+> Seluruh bagian ini dicabut di tengah implementasi atas permintaan pemilik:
+> "tidak perlu deh notif ke email, tidak butuh sampai bisa kirim email".
+> Pekerjaannya sudah sempat selesai lalu dibongkar kembali: `lib/public/email.ts`,
+> dependensi `resend`, variabel `RESEND_API_KEY` dan `RESEND_FROM_EMAIL`, serta
+> capability `admin-email-notifications` dihapus seluruhnya. `[~]` menandai
+> task yang dicabut, bukan yang belum dikerjakan.
+
+- [~] 7.1 DICABUT — notifikasi email dihapus dari ruang lingkup atas permintaan pemilik. Semula: Tulis modul pengiriman email yang mengirim satu pemberitahuan ke `ADMIN_EMAIL` memuat nama pengirim, email pengirim, subjek bila ada, isi pesan, dan waktu masuk, dengan `Reply-To` berisi alamat email pengirim yang sudah divalidasi; verifikasi menekan balas di aplikasi email mengarah ke pengirim pesan bukan alamat teknis layanan (`admin-email-notifications` → email pemberitahuan, membalas mengarah ke pengirim)
+- [~] 7.2 DICABUT — notifikasi email dihapus dari ruang lingkup atas permintaan pemilik. Semula: Sisipkan nilai dari pengunjung ke email sebagai teks saja dan jangan pernah ke baris header selain `Reply-To` yang tervalidasi; verifikasi isi pesan berisi tag HTML atau skrip tampil sebagai teks, dan nama atau subjek berisi karakter baris baru atau pola yang menyerupai header tidak menghasilkan header tambahan pada email terkirim (`admin-email-notifications` → isi diperlakukan sebagai teks)
+- [~] 7.3 DICABUT — notifikasi email dihapus dari ruang lingkup atas permintaan pemilik. Semula: Panggil pengiriman email setelah pesan tersimpan, dibungkus penangkap error dengan batas waktu, kegagalan dicatat di server tanpa mengubah hasil bagi pengunjung; verifikasi kegagalan layanan email tetap menyisakan pesan di inbox dan konfirmasi pengunjung tidak berubah, layanan email yang lambat tidak menahan konfirmasi lebih lama daripada batas wajar, dan pengiriman yang ditolak validasi, honeypot, atau batas laju tidak mengirim email (`admin-email-notifications` → kegagalan tidak merusak alur pengunjung)
+- [~] 7.4 DICABUT — notifikasi email dihapus dari ruang lingkup atas permintaan pemilik. Semula: Lewati pengiriman bila kredensial email tidak dikonfigurasi, dicatat sekali sebagai keterangan bukan kegagalan; verifikasi tanpa kredensial form kontak tetap berfungsi penuh, pesan tersimpan, konfirmasi muncul, dan tidak ada error yang terlihat (`admin-email-notifications` → dapat dimatikan lewat konfigurasi)
+- [~] 7.5 DICABUT — notifikasi email dihapus dari ruang lingkup atas permintaan pemilik. Semula: Verifikasi satu pesan menghasilkan tepat satu email, tidak terduplikasi walau pengunjung menekan kirim berulang kali pada permintaan yang sama (`admin-email-notifications` → satu pesan satu email)
 
 ## 8. Kesiapan deploy dan dokumentasi
 
