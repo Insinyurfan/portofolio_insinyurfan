@@ -165,7 +165,9 @@ Buka <http://localhost:3000>.
 | `npm start` | Menjalankan hasil build |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
+| `npm run check:env` | Memastikan keenam variabel wajib terisi dan bentuknya sah |
 | `npm run check:contrast` | Memeriksa rasio kontras token terhadap WCAG AA |
+| `npm run admin:password` | Menyetel password admin dari `ADMIN_TEMP_PASSWORD` di `.env.local` |
 | `npm run check:revalidate` | Memastikan semua route publik memakai periode revalidasi yang sama |
 | `npm run db:reset` | Supabase lokal: migrasi + seed dari nol |
 | `npm run db:push` | Menerapkan migrasi ke proyek remote yang ter-link |
@@ -350,6 +352,38 @@ sebelum mempersempit policy `authenticated` di
 `supabase/migrations/20261002120600_rls.sql`. Allowlist `ADMIN_EMAIL` hanya
 berlaku di lapisan aplikasi — ia tidak menghalangi pemegang kredensial pengguna
 Supabase lain untuk menulis langsung lewat API Supabase.
+
+### Mengganti password admin
+
+Dashboard Supabase hanya menawarkan "Send password recovery" dan "Send magic
+link" — keduanya lewat email, dan keduanya mengarahkan ke Site URL proyek.
+Portofolio ini sengaja **tidak punya halaman reset password**: pemiliknya satu
+orang, dan alur "lupa password" publik hanya menambah permukaan serang. Jadi
+link di email itu tidak akan pernah mendarat di halaman yang bisa menanganinya
+— kalau Site URL masih bawaan, ia malah mengarah ke `localhost:3000`.
+
+Gantilah lewat perkakas proyek ini:
+
+```bash
+# 1. Isi ADMIN_TEMP_PASSWORD di .env.local dengan password baru
+# 2. Jalankan:
+npm run admin:password
+```
+
+Password dibaca dari `.env.local`, bukan dari argumen baris perintah — argumen
+tersimpan di riwayat shell dan terlihat di daftar proses. Nilainya dikirim
+sebagai parameter query, tidak pernah disisipkan ke teks SQL, dan tidak pernah
+dicetak ke layar.
+
+Seluruh perubahan berjalan dalam satu transaksi yang hanya di-commit setelah
+hash barunya terbukti cocok dengan passwordnya. Itu menjaga dari satu kegagalan
+yang paling mahal: hash tertulis tetapi tidak bisa dipakai masuk, yang berarti
+terkunci dari dashboard produksi tanpa jalan kembali.
+
+Seluruh sesi lama ikut diakhiri, sehingga token yang beredar sebelum
+penggantian benar-benar mati. Semua perangkat perlu masuk ulang.
+
+Karena sumbernya `.env.local`, suite e2e otomatis tetap sinkron.
 
 ### Masuk
 

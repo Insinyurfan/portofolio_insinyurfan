@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "admin:password": "node scripts/set-admin-password.mjs",
     "build": "next build",
     "check:contrast": "node scripts/check-contrast.mjs",
     "check:env": "node scripts/check-env.mjs",
