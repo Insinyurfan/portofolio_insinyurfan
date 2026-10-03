@@ -7,6 +7,7 @@ import type {
   Experience,
   Profile,
   Project,
+  Rating,
   SkillCategory,
   SkillGroup,
   SocialLink,
@@ -210,4 +211,55 @@ export function collectTechStack(projects: Project[]): string[] {
   }
 
   return [...unik].sort((a, b) => a.localeCompare(b, "id"));
+}
+
+export type RingkasanRating = {
+  /** Jumlah rating yang sudah disetujui. */
+  total: number;
+  /** Rata-rata bintang, 0 kalau belum ada rating yang disetujui. */
+  average: number;
+};
+
+/**
+ * Rata-rata dan jumlah rating yang sudah disetujui.
+ *
+ * Diambil dari view agregat, bukan dihitung di aplikasi: dengan begitu angka
+ * yang ditampilkan dan daftar yang dirender berasal dari satu sumber dan tidak
+ * bisa tidak sinkron. View-nya juga tidak pernah mengembalikan baris individu.
+ */
+export async function getRatingSummary(): Promise<RingkasanRating> {
+  const supabase = createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("rating_summary")
+    .select("total, average")
+    .maybeSingle();
+
+  laporkan("getRatingSummary", error);
+
+  return {
+    total: data?.total ?? 0,
+    average: Number(data?.average ?? 0),
+  };
+}
+
+/**
+ * Rating yang sudah disetujui, terbaru lebih dulu.
+ *
+ * RLS sudah membatasi ke baris yang disetujui; filter di sini adalah lapisan
+ * kedua, bukan satu-satunya penjaga.
+ */
+export async function getApprovedRatings(): Promise<Rating[]> {
+  const supabase = createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("ratings")
+    .select("*")
+    .eq("is_approved", true)
+    .eq("is_published", true)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false });
+
+  laporkan("getApprovedRatings", error);
+  return data ?? [];
 }

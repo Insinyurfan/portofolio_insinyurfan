@@ -300,7 +300,9 @@ export const simpanProyekAction = withAdminAction(
 // Aksi lintas entitas
 // ---------------------------------------------------------------------------
 
-const ENTITAS_DARI_TABEL: Record<NamaTabel, Entitas> = {
+// Partial: tidak setiap tabel adalah entitas konten yang perlu direvalidasi.
+// rate_limit_attempts, misalnya, tidak pernah tampil di halaman publik.
+const ENTITAS_DARI_TABEL: Partial<Record<NamaTabel, Entitas>> = {
   profile: "profile",
   social_links: "social_links",
   education: "education",

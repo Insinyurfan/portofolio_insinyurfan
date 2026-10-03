@@ -46,9 +46,13 @@ const PATH_PER_ENTITAS: Record<Entitas, string[]> = {
   achievements: ["/pencapaian"],
   projects: ["/proyek", "/sitemap.xml"],
 
-  // Tidak pernah tampil di halaman publik pada change ini.
+  // Pesan tidak pernah tampil di halaman publik.
   messages: [],
-  ratings: [],
+
+  // Rating yang disetujui tampil di beranda, beserta rata-ratanya. Menyetujui,
+  // mencabut persetujuan, dan menghapus rating semuanya mengubah apa yang
+  // terlihat di sana.
+  ratings: ["/"],
 };
 
 const SELURUH_LAYOUT: Entitas[] = ["profile", "social_links"];
@@ -83,9 +87,4 @@ export function revalidasiUntuk(
     if (konteks.featured) revalidatePath("/");
   }
 
-  if (entitas === "ratings") {
-    // Belum dipakai di change ini; rating yang disetujui tampil di beranda
-    // mulai change `add-contact-rating-and-deploy`.
-    return;
-  }
 }

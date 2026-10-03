@@ -15,9 +15,12 @@ publik dan fitur rating dibangun di change berikutnya (lihat `openspec/changes/`
 - [Menjalankan di lokal](#menjalankan-di-lokal)
 - [Perintah yang tersedia](#perintah-yang-tersedia)
 - [Struktur folder](#struktur-folder)
+- [Variabel lingkungan](#variabel-lingkungan)
 - [Catatan penting](#catatan-penting)
 - [Dashboard admin](#dashboard-admin)
+- [Form publik](#form-publik)
 - [Deploy ke Vercel](#deploy-ke-vercel)
+- [Custom domain](#custom-domain)
 
 ## Teknologi
 
@@ -166,7 +169,10 @@ Buka <http://localhost:3000>.
 | `npm run check:revalidate` | Memastikan semua route publik memakai periode revalidasi yang sama |
 | `npm run db:reset` | Supabase lokal: migrasi + seed dari nol |
 | `npm run db:push` | Menerapkan migrasi ke proyek remote yang ter-link |
-| `npm run db:check` | Menjalankan pemeriksaan RLS terhadap database |
+| `npm run db:check` | Pemeriksaan RLS dan constraint |
+| `npm run db:check:public` | Pemeriksaan jalur tulis publik (paling penting) |
+| `npm run predeploy` | Seluruh pemeriksaan sebelum deploy, berhenti di kegagalan pertama |
+| `npm run e2e:produksi` | Verifikasi situs yang sudah dideploy |
 | `npm run db:types` | Menghasilkan ulang `lib/database.types.ts` |
 
 ## Struktur folder
@@ -199,6 +205,7 @@ components/
   ui/                     Primitif publik: kartu, badge, tombol, timeline
   admin/                  Primitif admin, sidebar, toast, dialog konfirmasi
     managers/             Satu manager per jenis konten
+  public/                 Form kontak, form rating, pratinjau CV, honeypot
 
 lib/
   env.ts                  Validasi variabel lingkungan (satu tempat)
@@ -212,6 +219,9 @@ lib/
   admin/action.ts         withAdminAction: auth → validasi → handler → revalidasi
   admin/revalidate.ts     Peta entitas → halaman publik terdampak
   admin/storage.ts        Unggah, hapus, konversi URL ↔ path Storage
+  public/action.ts        withPublicAction: honeypot → batas laju → validasi
+  public/sender.ts        Hash pengenal pengirim (bukan alamat IP mentah)
+  public/email.ts         Notifikasi email, kegagalannya tidak pernah ke pengunjung
   format.ts               Tanggal id-ID, label enum bahasa Indonesia
   constants.ts            REVALIDATE, nama bucket, item navigasi
   database.types.ts       Tipe skema (hasil generate)
@@ -222,9 +232,41 @@ supabase/
   seed.sql                Data contoh (idempoten)
   tests/rls_checks.sql    Pemeriksaan RLS dan constraint
   tests/admin_checks.sql  Pemeriksaan fungsi pengurutan dan kolom pesan
+  tests/public_write_checks.sql  Pemeriksaan jalur tulis publik
 
 scripts/                  Pemeriksa kontras dan konsistensi revalidasi
 ```
+
+## Variabel lingkungan
+
+Daftar lengkap. Semua dibaca lewat `lib/env.ts` — tidak ada variabel lain yang
+dibaca kode di luar daftar ini.
+
+| Variabel | Wajib | Aman untuk peramban | Dari mana |
+| --- | --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | ya | ya | Supabase → Project Settings → Data API → Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ya | ya | Supabase → Project Settings → API Keys → `anon` `public` |
+| `NEXT_PUBLIC_SITE_URL` | ya | ya | URL situs Anda, tanpa garis miring di akhir |
+| `ADMIN_EMAIL` | ya | **tidak** | Email akun admin yang Anda buat di Supabase Authentication |
+| `RATE_LIMIT_SALT` | ya | **tidak** | Hasilkan sendiri: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
+| `RESEND_API_KEY` | tidak | **tidak** | [resend.com](https://resend.com) → API Keys |
+| `RESEND_FROM_EMAIL` | tidak | **tidak** | Alamat pengirim terverifikasi di Resend, misalnya `Portofolio <noreply@domain-anda.com>` |
+
+**Awalan `NEXT_PUBLIC_` menentukan segalanya.** Variabel dengan awalan itu
+ikut masuk ke bundel JavaScript yang dikirim ke setiap pengunjung. Empat
+variabel terbawah **tidak boleh** diberi awalan itu: `ADMIN_EMAIL` akan
+membocorkan allowlist admin, `RATE_LIMIT_SALT` akan membuat hash pengenal
+pengirim dapat dibalik, dan kunci Resend akan dapat dipakai siapa pun untuk
+mengirim email atas nama Anda.
+
+Yang wajib akan menggagalkan aplikasi dengan pesan yang menyebut nama
+variabelnya kalau belum diisi. Yang opsional tidak: tanpa kredensial Resend,
+form kontak tetap berfungsi penuh dan notifikasi emailnya saja yang dilewati.
+
+Tiga variabel lain mungkin ada di `.env.local` Anda — `SUPABASE_DB_URL`,
+`SUPABASE_ACCESS_TOKEN`, dan `ADMIN_TEMP_PASSWORD`. Ketiganya **hanya untuk
+perkakas di komputer Anda** (migrasi, pemeriksaan SQL, pengujian) dan tidak
+boleh diatur di Vercel. Aplikasinya tidak pernah membacanya.
 
 ## Catatan penting
 
@@ -313,6 +355,55 @@ Gambar dibatasi 5 MB (JPG, PNG, WebP, AVIF, GIF, SVG), CV dibatasi 10 MB dan
 hanya PDF. Batas ini ditegakkan di server, bukan hanya oleh atribut form.
 Berkas lama otomatis dihapus dari Storage setelah penggantinya tersimpan.
 
+## Form publik
+
+Halaman `/kontak` memuat form kontak, dan beranda memuat section rating.
+
+### Penyaringan spam
+
+Tiga lapis, dan tidak ada yang berdiri sendiri:
+
+1. **Honeypot** — field tersembunyi yang tidak terlihat pengunjung maupun
+   pembaca layar. Pengiriman yang mengisinya dibuang, dan tanggapannya dibuat
+   **sama seperti berhasil**: pesan penolakan yang jujur akan memberi tahu
+   pembuat skrip field mana yang harus dikosongkan.
+2. **Pembatasan laju** — lima pengiriman per jam per pengirim, dihitung di
+   database. Penghitungnya menyimpan hash beralamat garam, bukan alamat IP.
+3. **Moderasi** — rating tidak pernah tampil sebelum Anda setujui di
+   `/admin/rating`.
+
+Batasnya sengaja longgar: beberapa pengunjung bisa berbagi satu alamat IP di
+kantor, kampus, atau jaringan seluler, dan kuota yang ketat akan memblokir
+orang yang tidak bersalah. Ubah nilainya di `lib/public/action.ts` bila perlu.
+
+### Notifikasi email
+
+Opsional. Isi `RESEND_API_KEY` dan `RESEND_FROM_EMAIL` untuk menerima email
+setiap kali ada pesan baru. Menekan balas di email itu mengarah langsung ke
+pengirim pesan.
+
+Kegagalan layanan email **tidak pernah** merusak alur pengunjung: pesannya
+sudah tersimpan sebelum email dikirim, kegagalannya dicatat di log server, dan
+hitungan "pesan belum dibaca" di dashboard tetap menjadi sumber kebenaran.
+
+### Apa yang BISA dan TIDAK BISA dilakukan pengunjung
+
+| | Pengunjung |
+| --- | --- |
+| Mengirim pesan | bisa |
+| Membaca pesan — termasuk pesannya sendiri | **tidak** |
+| Mengirim rating | bisa |
+| Membaca rating yang sudah disetujui | bisa |
+| Membaca rating yang belum disetujui | **tidak** |
+| Menyetujui ratingnya sendiri | **tidak** |
+| Menandai pesannya sudah dibaca | **tidak** |
+| Mengubah atau menghapus kiriman | **tidak** |
+| Membaca penghitung pembatasan laju | **tidak** |
+
+Semuanya ditegakkan oleh Row Level Security di database, bukan oleh kode
+aplikasi — kunci anon memang terbit di peramban, jadi siapa pun bisa memanggil
+Supabase langsung. Jalankan `npm run db:check:public` untuk membuktikannya.
+
 ## Deploy ke Vercel
 
 1. Push repositori ini ke GitHub, GitLab, atau Bitbucket.
@@ -328,21 +419,76 @@ Berkas lama otomatis dihapus dari Storage setelah penggantinya tersimpan.
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Kunci `anon` proyek Supabase Anda |
    | `NEXT_PUBLIC_SITE_URL` | URL produksi tanpa garis miring di akhir |
    | `ADMIN_EMAIL` | Email akun admin — **tanpa** awalan `NEXT_PUBLIC_` |
+   | `RATE_LIMIT_SALT` | Nilai acak panjang — **tanpa** awalan `NEXT_PUBLIC_` |
 
-   Keempatnya wajib. Build akan gagal dengan pesan yang menyebut nama variabel
+   Kelimanya wajib. Build akan gagal dengan pesan yang menyebut nama variabel
    yang kurang kalau salah satu belum diatur — itu memang disengaja.
+
+   Opsional, untuk notifikasi email: `RESEND_API_KEY` dan `RESEND_FROM_EMAIL`.
+   Daftar lengkapnya ada di [Variabel lingkungan](#variabel-lingkungan).
+
+   Jangan menambahkan `SUPABASE_DB_URL`, `SUPABASE_ACCESS_TOKEN`, maupun
+   `ADMIN_TEMP_PASSWORD` ke Vercel. Ketiganya hanya untuk perkakas di komputer
+   Anda, dan aplikasinya tidak pernah membacanya.
 
 4. Pastikan migrasi sudah diterapkan ke proyek Supabase produksi
    (`npx supabase db push`), signup sudah dinonaktifkan, dan akun admin sudah
    dibuat.
-5. Deploy. Setelah selesai, periksa:
-   - halaman publik menampilkan konten dari database,
-   - `/sitemap.xml` memuat domain produksi Anda, bukan `localhost`,
-   - `/robots.txt` dapat diambil dan menunjuk sitemap yang benar,
-   - `/admin` mengalihkan ke halaman masuk saat belum ada sesi,
-   - login dengan akun admin berhasil, dan email selain `ADMIN_EMAIL` ditolak.
 
-> `NEXT_PUBLIC_SITE_URL` dipakai untuk URL kanonik, tag Open Graph, dan
-> sitemap. Kalau nanti Anda memasang custom domain, perbarui variabel ini ke
-> domain baru lalu deploy ulang — kalau tidak, ketiganya akan tetap menunjuk
-> alamat lama.
+   > Perintah migrasi produksi (`npx supabase db push`) berbeda dari perintah
+   > pengembangan lokal (`npm run db:reset`). Yang kedua **menghapus seluruh
+   > database lalu menjalankan seed** — jangan pernah menjalankannya terhadap
+   > proyek produksi.
+
+5. Jalankan pemeriksaan sebelum deploy di komputer Anda:
+
+   ```bash
+   npm run predeploy
+   ```
+
+   Skrip ini menjalankan pemeriksaan tipe, lint, kontras token, konsistensi
+   revalidasi, dan build produksi — berurutan, berhenti pada kegagalan
+   pertama. Kalau lulus di sini, build di Vercel juga lulus.
+
+6. Deploy. Setelah selesai, periksa daftar di bawah.
+
+### Verifikasi setelah deploy
+
+Jalankan otomatis:
+
+```bash
+npm run e2e:produksi -- https://domain-anda.com
+```
+
+Atau periksa manual:
+
+- [ ] Kesembilan halaman publik terbuka dan menampilkan konten dari database
+- [ ] `/sitemap.xml` memuat domain produksi Anda, bukan `localhost`
+- [ ] `/robots.txt` dapat diambil dan menunjuk sitemap yang benar
+- [ ] `/admin` mengalihkan ke halaman masuk saat belum ada sesi
+- [ ] Login dengan akun admin berhasil
+- [ ] Form kontak di `/kontak` dapat mengirim, dan pesannya muncul di
+      `/admin/pesan` sebagai belum dibaca
+- [ ] Form rating di beranda dapat mengirim, dan ratingnya muncul di
+      `/admin/rating` sebagai menunggu persetujuan — belum tampil di beranda
+
+## Custom domain
+
+1. Vercel → Settings → Domains → **Add**, lalu masukkan domain Anda.
+2. Vercel menampilkan catatan DNS yang harus dibuat di penyedia domain Anda:
+   - domain utama (`domain-anda.com`) → catatan **A** ke alamat yang Vercel
+     tunjukkan,
+   - subdomain (`www.domain-anda.com`) → catatan **CNAME** ke
+     `cname.vercel-dns.com`.
+3. Tunggu DNS menyebar. Vercel menerbitkan sertifikat HTTPS otomatis.
+4. **Perbarui `NEXT_PUBLIC_SITE_URL` ke domain baru, lalu deploy ulang.**
+
+Langkah 4 wajib dan paling mudah terlewat. URL kanonik, tag Open Graph, dan
+`sitemap.xml` semuanya dibangun dari variabel itu — kalau tidak diperbarui,
+situsnya tetap berjalan normal sehingga kesalahannya tidak terlihat, tetapi
+mesin pencari dan pratinjau tautan tetap menunjuk alamat `.vercel.app` lama.
+
+Setelah deploy ulang, pastikan:
+
+- [ ] `https://domain-anda.com/sitemap.xml` memuat domain baru di setiap `<loc>`
+- [ ] Tag `og:url` di beranda menunjuk domain baru, bukan `.vercel.app`

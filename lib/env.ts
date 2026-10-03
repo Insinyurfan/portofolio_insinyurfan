@@ -10,7 +10,10 @@ type EnvName =
   | "NEXT_PUBLIC_SUPABASE_URL"
   | "NEXT_PUBLIC_SUPABASE_ANON_KEY"
   | "NEXT_PUBLIC_SITE_URL"
-  | "ADMIN_EMAIL";
+  | "ADMIN_EMAIL"
+  | "RATE_LIMIT_SALT"
+  | "RESEND_API_KEY"
+  | "RESEND_FROM_EMAIL";
 
 const KETERANGAN: Record<EnvName, string> = {
   NEXT_PUBLIC_SUPABASE_URL:
@@ -21,6 +24,12 @@ const KETERANGAN: Record<EnvName, string> = {
     "URL dasar situs tanpa garis miring di akhir, misalnya http://localhost:3000",
   ADMIN_EMAIL:
     "email satu-satunya akun admin yang boleh masuk ke dashboard",
+  RATE_LIMIT_SALT:
+    "garam acak untuk hash pengenal pengirim pada pembatasan laju form publik",
+  RESEND_API_KEY:
+    "kunci API Resend untuk notifikasi email saat ada pesan baru (opsional)",
+  RESEND_FROM_EMAIL:
+    "alamat pengirim notifikasi email, misalnya Portofolio <noreply@domain-anda.com> (opsional)",
 };
 
 /**
@@ -40,7 +49,16 @@ const NILAI: Record<EnvName, string | undefined> = {
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+  RATE_LIMIT_SALT: process.env.RATE_LIMIT_SALT,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
 };
+
+/** Nilai opsional: kosong berarti fiturnya dilewati, bukan error. */
+function opsional(nama: EnvName): string | null {
+  const nilai = NILAI[nama];
+  return nilai === undefined || nilai.trim() === "" ? null : nilai.trim();
+}
 
 function wajib(nama: EnvName): string {
   const nilai = NILAI[nama];
@@ -94,6 +112,31 @@ export const env = {
  */
 export function adminEmail(): string {
   return wajib("ADMIN_EMAIL").toLowerCase();
+}
+
+/**
+ * Garam untuk hash pengenal pengirim pada pembatasan laju.
+ *
+ * WAJIB, dan hanya dibaca di server. Tanpa garam, hash alamat IP bisa dibalik
+ * dengan menebak seluruh ruang alamat IPv4 — garamnya yang membuat penghitung
+ * laju tidak menjadi catatan alamat pengunjung.
+ */
+export function rateLimitSalt(): string {
+  return wajib("RATE_LIMIT_SALT");
+}
+
+/**
+ * Konfigurasi layanan email, atau null bila belum disetel.
+ *
+ * Sengaja opsional: form kontak harus tetap berfungsi penuh tanpa ini, dan
+ * ketidakhadirannya dicatat sebagai keterangan, bukan kegagalan.
+ */
+export function konfigurasiEmail(): { apiKey: string; from: string } | null {
+  const apiKey = opsional("RESEND_API_KEY");
+  const from = opsional("RESEND_FROM_EMAIL");
+
+  if (!apiKey || !from) return null;
+  return { apiKey, from };
 }
 
 /** URL absolut dari path relatif, untuk kanonik/Open Graph/sitemap. */

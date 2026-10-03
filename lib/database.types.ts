@@ -301,6 +301,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_attempts: {
+        Row: {
+          created_at: string
+          form_kind: string
+          id: number
+          sender_hash: string
+        }
+        Insert: {
+          created_at?: string
+          form_kind: string
+          id?: never
+          sender_hash: string
+        }
+        Update: {
+          created_at?: string
+          form_kind?: string
+          id?: never
+          sender_hash?: string
+        }
+        Relationships: []
+      }
       ratings: {
         Row: {
           comment: string | null
@@ -437,9 +458,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      rating_summary: {
+        Row: {
+          average: number | null
+          total: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          p_form_kind: string
+          p_max_attempts?: number
+          p_sender_hash: string
+          p_window_seconds?: number
+        }
+        Returns: boolean
+      }
       swap_sort_order: {
         Args: { p_direction: number; p_id: string; p_table: string }
         Returns: boolean

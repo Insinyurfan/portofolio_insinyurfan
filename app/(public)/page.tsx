@@ -3,6 +3,8 @@ import { Download, MapPin } from "lucide-react";
 import { TypingRoles } from "@/components/home/typing-roles";
 import { SocialIconLinks } from "@/components/layout/social-icon-links";
 import { ProjectCard } from "@/components/projects/project-card";
+import { CvPreview } from "@/components/public/cv-preview";
+import { RatingsSection } from "@/components/public/ratings-section";
 import {
   Badge,
   ButtonExternal,
@@ -13,16 +15,25 @@ import {
 import { ProfilePhoto } from "@/components/ui/profile-photo";
 import { Reveal } from "@/components/ui/reveal";
 
-import { getFeaturedProjects, getProfile, getSocialLinks } from "@/lib/queries";
+import {
+  getApprovedRatings,
+  getFeaturedProjects,
+  getProfile,
+  getRatingSummary,
+  getSocialLinks,
+} from "@/lib/queries";
 
 export const revalidate = 300; // = REVALIDATE di lib/constants.ts; Next butuh nilai literal
 
 export default async function BerandaPage() {
-  const [profile, socialLinks, featured] = await Promise.all([
-    getProfile(),
-    getSocialLinks(),
-    getFeaturedProjects(),
-  ]);
+  const [profile, socialLinks, featured, ringkasanRating, ratings] =
+    await Promise.all([
+      getProfile(),
+      getSocialLinks(),
+      getFeaturedProjects(),
+      getRatingSummary(),
+      getApprovedRatings(),
+    ]);
 
   // Beranda harus tetap dirender dengan status sukses walau profil belum ada.
   if (!profile) {
@@ -77,11 +88,18 @@ export default async function BerandaPage() {
               <ButtonLink href="/kontak" variant="outline">
                 Kontak
               </ButtonLink>
+              {/* Kedua tombol CV hanya dirender bila berkasnya memang ada. */}
               {profile.cv_url ? (
-                <ButtonExternal href={profile.cv_url}>
-                  <Download className="size-4" aria-hidden="true" />
-                  Unduh CV
-                </ButtonExternal>
+                <>
+                  <CvPreview
+                    cvUrl={profile.cv_url}
+                    namaPemilik={profile.full_name}
+                  />
+                  <ButtonExternal href={profile.cv_url}>
+                    <Download className="size-4" aria-hidden="true" />
+                    Unduh CV
+                  </ButtonExternal>
+                </>
               ) : null}
             </div>
 
@@ -132,6 +150,8 @@ export default async function BerandaPage() {
           </ul>
         )}
       </section>
+
+      <RatingsSection ringkasan={ringkasanRating} ratings={ratings} />
     </div>
   );
 }

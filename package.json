@@ -19,7 +19,10 @@
     "e2e:publik": "node e2e/publik.mjs",
     "e2e:admin": "node e2e/admin-auth.mjs",
     "e2e:admin-konten": "node e2e/admin-konten.mjs",
-    "e2e:produksi": "node e2e/produksi.mjs"
+    "e2e:produksi": "node e2e/produksi.mjs",
+    "e2e:form": "node e2e/publik-form.mjs",
+    "predeploy": "node scripts/predeploy.mjs",
+    "db:check:public": "node scripts/run-sql.mjs supabase/tests/public_write_checks.sql"
   },
   "dependencies": {
     "@hookform/resolvers": "5.9.1",
@@ -35,6 +38,7 @@
     "react-dom": "19.3.0",
     "react-hook-form": "7.89.0",
     "react-icons": "5.7.0",
+    "resend": "6.32.0",
     "server-only": "0.0.1",
     "sonner": "2.0.8",
     "tailwind-merge": "3.7.0",

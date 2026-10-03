@@ -312,3 +312,38 @@ export const moderasiRatingSchema = z.object({
   id: z.string().uuid(),
   is_approved: z.coerce.boolean(),
 });
+
+// ---------------------------------------------------------------------------
+// Form publik
+//
+// Nilai dari pengunjung — satu-satunya data di sistem ini yang berasal dari
+// orang luar. Setiap field dibatasi panjangnya, dan spasi di ujung dipangkas
+// supaya nilai yang hanya berisi spasi diperlakukan sebagai kosong.
+// ---------------------------------------------------------------------------
+
+/** Field honeypot. Ikut di skema supaya nilainya terbaca, lalu dibuang. */
+const honeypot = z.string().optional();
+
+export const contactMessageSchema = z.object({
+  nomor_referensi: honeypot,
+  sender_name: teksWajib(100, "Nama"),
+  sender_email: z
+    .string()
+    .trim()
+    .min(1, WAJIB)
+    .max(200, "Email maksimal 200 karakter.")
+    .email("Format email tidak sah."),
+  subject: teksOpsional(150, "Subjek"),
+  body: teksWajib(5000, "Pesan"),
+});
+
+export const visitorRatingSchema = z.object({
+  nomor_referensi: honeypot,
+  reviewer_name: teksWajib(80, "Nama"),
+  stars: z.coerce
+    .number()
+    .int("Bintang harus bilangan bulat.")
+    .min(1, "Pilih bintang dulu, antara 1 sampai 5.")
+    .max(5, "Bintang maksimal 5."),
+  comment: teksOpsional(1000, "Komentar"),
+});

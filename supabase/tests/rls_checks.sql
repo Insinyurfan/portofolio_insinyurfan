@@ -62,16 +62,27 @@ begin
     raise exception 'GAGAL: anon dapat membaca public.messages';
   end if;
 
-  -- ratings tertutup penuh di change ini, termasuk yang sudah disetujui.
-  if exists (select 1 from public.ratings) then
-    raise exception 'GAGAL: anon dapat membaca public.ratings';
+  -- Rating yang BELUM disetujui tetap tertutup.
+  --
+  -- Catatan: sejak change `add-contact-rating-and-deploy`, anon BOLEH membaca
+  -- rating yang sudah disetujui dan BOLEH menyisipkan ke messages dan ratings.
+  -- Seluruh perilaku jalur tulis publik diuji terpisah di
+  -- supabase/tests/public_write_checks.sql; berkas ini hanya menjaga agar
+  -- tabel KONTEN tetap tertutup bagi anon.
+  if exists (select 1 from public.ratings where not is_approved) then
+    raise exception 'GAGAL: anon dapat melihat rating yang BELUM disetujui';
   end if;
 
-  raise notice 'LULUS: anon hanya melihat konten terbit; messages dan ratings tertutup';
+  raise notice 'LULUS: anon hanya melihat konten terbit; messages tertutup, rating belum disetujui tertutup';
 end;
 $$;
 
--- Penulisan oleh anon harus ditolak di setiap tabel konten.
+-- Penulisan oleh anon harus ditolak di setiap tabel KONTEN.
+--
+-- messages dan ratings sengaja TIDAK ada di daftar ini: keduanya memang
+-- menerima kiriman pengunjung sejak change berikutnya, dan batasannya
+-- (tidak boleh menyetujui sendiri, tidak boleh mengubah atau menghapus)
+-- diuji di public_write_checks.sql.
 do $$
 declare
   nama_tabel text;
@@ -79,8 +90,7 @@ declare
 begin
   foreach nama_tabel in array array[
     'profile', 'social_links', 'education', 'skill_categories',
-    'skills', 'experiences', 'projects', 'achievements',
-    'messages', 'ratings'
+    'skills', 'experiences', 'projects', 'achievements'
   ]
   loop
     -- INSERT

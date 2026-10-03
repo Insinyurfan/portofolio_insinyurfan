@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Briefcase, Mail, MapPin } from "lucide-react";
 
 import { SocialIconLinks } from "@/components/layout/social-icon-links";
+import { ContactForm } from "@/components/public/contact-form";
 import { Badge, Card, EmptyState, PageShell } from "@/components/ui/primitives";
 import { Reveal } from "@/components/ui/reveal";
 import { getProfile, getSocialLinks } from "@/lib/queries";
@@ -20,10 +21,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Halaman kontak — INFORMASI SAJA.
+ * Halaman kontak.
  *
- * Tidak ada form, input, maupun tombol kirim di change ini. Form kontak yang
- * menulis ke tabel messages dibangun di change `add-contact-rating-and-deploy`.
+ * Form kontak berdampingan dengan informasi kontak langsung: pengunjung yang
+ * lebih suka mengirim email sendiri tidak dipaksa memakai form.
  */
 export default async function KontakPage() {
   const [profile, socialLinks] = await Promise.all([getProfile(), getSocialLinks()]);
@@ -31,17 +32,37 @@ export default async function KontakPage() {
   return (
     <PageShell
       title="Kontak"
-      description="Silakan hubungi saya lewat email atau media sosial di bawah ini."
+      description="Kirim pesan lewat form, atau hubungi saya langsung lewat email dan media sosial."
     >
-      {!profile ? (
-        <EmptyState
-          title="Informasi kontak belum tersedia"
-          description="Isi tabel profile di Supabase atau jalankan skrip seed untuk memasukkan data contoh."
-        />
-      ) : (
+      <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr] lg:items-start">
+        {/*
+          Form dirender tanpa syarat: ia harus tetap berfungsi walau profil
+          belum diisi, dan tidak bergantung pada data profil apa pun.
+        */}
         <Reveal>
           <Card>
-            <dl className="space-y-5">
+            <h2 className="font-heading text-lg font-bold text-text">
+              Kirim pesan
+            </h2>
+            <p className="mt-1 mb-5 text-sm text-text-muted">
+              Isi form di bawah, saya akan membalas lewat email.
+            </p>
+            <ContactForm />
+          </Card>
+        </Reveal>
+
+        {!profile ? (
+          <EmptyState
+            title="Informasi kontak belum tersedia"
+            description="Isi tabel profile di Supabase atau jalankan skrip seed untuk memasukkan data contoh."
+          />
+        ) : (
+          <Reveal delay={100}>
+            <Card>
+              <h2 className="mb-4 font-heading text-lg font-bold text-text">
+                Atau hubungi langsung
+              </h2>
+              <dl className="space-y-5">
               {/* Tanpa email, tidak ada tautan mailto yang dirender — bukan tautan rusak. */}
               {profile.email ? (
                 <div>
@@ -88,14 +109,15 @@ export default async function KontakPage() {
               ) : null}
             </dl>
 
-            {profile.is_open_to_work ? (
-              <p className="mt-6 border-t border-border-subtle pt-5">
-                <Badge tone="accent">● Sedang terbuka untuk peluang baru</Badge>
-              </p>
-            ) : null}
-          </Card>
-        </Reveal>
-      )}
+              {profile.is_open_to_work ? (
+                <p className="mt-6 border-t border-border-subtle pt-5">
+                  <Badge tone="accent">● Sedang terbuka untuk peluang baru</Badge>
+                </p>
+              ) : null}
+            </Card>
+          </Reveal>
+        )}
+      </div>
     </PageShell>
   );
 }
