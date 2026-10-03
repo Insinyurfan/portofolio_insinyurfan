@@ -128,13 +128,36 @@ export function rateLimitSalt(): string {
  * tetap tidak bisa masuk tanpa kredensial yang sah.
  */
 export function adminLoginPath(): string {
-  const nilai = wajib("ADMIN_LOGIN_PATH").replaceAll("/", "").trim();
+  const nilai = normalkanLoginPath(wajib("ADMIN_LOGIN_PATH"));
 
-  if (!/^[a-z0-9][a-z0-9-]*$/i.test(nilai)) {
+  if (nilai === null) {
     throw new Error(
       "ADMIN_LOGIN_PATH harus berupa satu potongan alamat berisi huruf, angka, " +
         `dan tanda hubung saja — tanpa garis miring. Contoh: "masuk-7f3a9".`,
     );
+  }
+
+  return nilai;
+}
+
+/**
+ * Bentuk alamat masuk yang sudah dinormalkan, atau `null` kalau nilainya tidak
+ * ada maupun tidak sah.
+ *
+ * Versi yang TIDAK melempar, khusus untuk proxy.ts. Proxy berjalan pada setiap
+ * permintaan, termasuk ke halaman publik — melempar di sana akan menjatuhkan
+ * seluruh situs hanya karena satu variabel dashboard yang kurang.
+ *
+ * Dipisahkan begitu supaya proxy dan adminLoginPath() memakai aturan yang sama
+ * dan tidak bisa menyimpang satu dari yang lain.
+ */
+export function normalkanLoginPath(
+  mentah: string | undefined,
+): string | null {
+  const nilai = (mentah ?? "").replaceAll("/", "").trim();
+
+  if (nilai === "" || !/^[a-z0-9][a-z0-9-]*$/i.test(nilai)) {
+    return null;
   }
 
   return `/${nilai}`;

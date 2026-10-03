@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { normalkanLoginPath } from "@/lib/env";
+
 /**
  * Proxy untuk route /admin dan halaman masuk admin.
  *
@@ -26,12 +28,31 @@ import { NextResponse, type NextRequest } from "next/server";
 /** Tujuan semula disimpan sebentar di cookie, bukan di alamat. */
 const COOKIE_TUJUAN = "adm_tujuan";
 
+/** Peringatan konfigurasi dicatat sekali saja, bukan tiap permintaan. */
+let sudahMemperingatkan = false;
+
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  const loginPath = `/${(process.env.ADMIN_LOGIN_PATH ?? "").replaceAll("/", "").trim()}`;
-  const diHalamanMasuk = loginPath !== "/" && pathname === loginPath;
+  const loginPath = normalkanLoginPath(process.env.ADMIN_LOGIN_PATH);
+  const diHalamanMasuk = loginPath !== null && pathname === loginPath;
   const diRouteAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
+
+  // Tanpa ADMIN_LOGIN_PATH yang sah, TIDAK ADA alamat yang melayani halaman
+  // masuk: /admin dialihkan ke beranda dan /admin/login juga, sehingga pemilik
+  // terkunci dari dashboardnya sendiri. Situsnya tetap tampak normal, jadi
+  // tanpa catatan ini kesalahan konfigurasinya tidak meninggalkan jejak apa pun
+  // untuk ditelusuri.
+  if (loginPath === null && diRouteAdmin && !sudahMemperingatkan) {
+    sudahMemperingatkan = true;
+    console.error(
+      "[proxy] ADMIN_LOGIN_PATH belum diatur atau tidak sah, sehingga halaman " +
+        "masuk admin tidak dapat dicapai lewat alamat mana pun. Atur variabel " +
+        "ini di Vercel (Project Settings > Environment Variables) lalu deploy " +
+        "ulang. Nilainya satu potongan alamat berisi huruf, angka, dan tanda " +
+        'hubung saja — contoh: "masuk-7f3a9c21".',
+    );
+  }
 
   // KELUAR LEBIH AWAL untuk seluruh halaman publik.
   //

@@ -236,7 +236,7 @@ supabase/
   tests/admin_checks.sql  Pemeriksaan fungsi pengurutan dan kolom pesan
   tests/public_write_checks.sql  Pemeriksaan jalur tulis publik
 
-scripts/                  Pemeriksa kontras dan konsistensi revalidasi
+scripts/                  Pemeriksa env, kontras, dan konsistensi revalidasi
 ```
 
 ## Variabel lingkungan
@@ -260,8 +260,20 @@ membocorkan allowlist admin, `RATE_LIMIT_SALT` akan membuat hash pengenal
 pengirim dapat dibalik, dan `ADMIN_LOGIN_PATH` akan mengumumkan alamat yang
 justru dimaksudkan untuk tidak diketahui.
 
-Keenamnya wajib. Aplikasi akan gagal dengan pesan yang menyebut nama
-variabelnya kalau salah satu belum diisi — termasuk saat build di Vercel.
+Keenamnya wajib, tetapi **tidak semuanya menggagalkan build**. Lima yang
+pertama dibaca saat halaman dirender, sehingga build di Vercel gagal dengan
+pesan yang menyebut nama variabelnya kalau salah satu belum diatur.
+
+`ADMIN_LOGIN_PATH` berbeda, dan ini perlu dipahami sebelum deploy: variabel itu
+hanya dibaca proxy pada permintaan ke `/admin`. Kalau belum diatur di Vercel,
+build **berhasil** dan situsnya berjalan normal — tetapi tidak ada alamat mana
+pun yang melayani halaman masuk, karena `/admin` dialihkan ke beranda dan
+`/admin/login` juga. Anda terkunci dari dashboard sendiri tanpa pesan error di
+halaman mana pun.
+
+Dua jaring pengaman untuk itu: `npm run predeploy` memeriksa keenam variabel
+lebih dulu dan berhenti kalau ada yang kurang, dan proxy mencatat satu pesan
+error yang jelas di log server Vercel bila nilainya hilang atau tidak sah.
 
 Tiga variabel lain mungkin ada di `.env.local` Anda — `SUPABASE_DB_URL`,
 `SUPABASE_ACCESS_TOKEN`, dan `ADMIN_TEMP_PASSWORD`. Ketiganya **hanya untuk

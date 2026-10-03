@@ -24,6 +24,7 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
  * peringatan itu sekaligus membuat maksudnya jelas.
  */
 const LANGKAH = [
+  { nama: "Variabel lingkungan", perintah: "node scripts/check-env.mjs" },
   { nama: "Pemeriksaan tipe", perintah: "npx tsc --noEmit" },
   { nama: "Lint", perintah: "npx eslint ." },
   { nama: "Kontras token", perintah: "node scripts/check-contrast.mjs" },
