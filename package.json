@@ -20,7 +20,6 @@
     "e2e:produksi": "node e2e/produksi.mjs",
     "e2e:publik": "node e2e/publik.mjs",
     "lint": "eslint .",
-    "postinstall": "prisma skills sync || exit 0",
     "predeploy": "node scripts/predeploy.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit"
@@ -55,7 +54,6 @@
     "eslint-config-next": "16.3.8",
     "pg": "8.23.1",
     "postcss": "8.5.28",
-    "prisma": "^8.0.0-rc.19",
     "supabase": "2.119.0",
     "tailwindcss": "4.3.3",
     "typescript": "6.0.3"
