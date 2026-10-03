@@ -1,24 +1,5 @@
 ## MODIFIED Requirements
 
-### Requirement: Tabel pesan dan rating disiapkan untuk fitur berikutnya
-
-Sistem SHALL membuat tabel `messages` (pesan dari form kontak) dan `ratings` (nama, bintang 1–5, komentar, status disetujui) beserta kebijakan aksesnya. Nilai bintang SHALL dibatasi pada bilangan bulat 1 sampai 5. Kedua tabel kini SHALL dipakai oleh halaman publik: pengunjung mengisi keduanya lewat form, dan rating yang sudah disetujui dibaca untuk ditampilkan.
-
-#### Scenario: Bintang di luar rentang ditolak
-
-- **WHEN** sebuah baris `ratings` disisipkan dengan nilai bintang 0 atau 6
-- **THEN** database menolak operasi tersebut
-
-#### Scenario: Pesan masuk dari halaman publik
-
-- **WHEN** pengunjung mengirim form kontak dengan data yang sah
-- **THEN** satu baris `messages` tersimpan dengan penanda belum dibaca
-
-#### Scenario: Rating masuk dari halaman publik
-
-- **WHEN** pengunjung mengirim rating dengan data yang sah
-- **THEN** satu baris `ratings` tersimpan dalam keadaan belum disetujui
-
 ### Requirement: Row Level Security membatasi akses publik
 
 Row Level Security SHALL aktif pada semua tabel. Pengunjung tanpa autentikasi SHALL hanya dapat melakukan `SELECT` pada baris tabel konten dengan `is_published = true`, dan SHALL tidak dapat melakukan `INSERT`, `UPDATE`, atau `DELETE` pada tabel konten. Pengguna terautentikasi SHALL dapat membaca dan mengubah semua baris.
@@ -30,20 +11,15 @@ Untuk `messages` dan `ratings`, pengunjung tanpa autentikasi SHALL dapat melakuk
 - **WHEN** klien tanpa autentikasi membaca sebuah tabel konten yang berisi baris dengan `is_published = false`
 - **THEN** baris tersebut tidak muncul di hasil
 
-#### Scenario: Penulisan ke tabel konten oleh publik ditolak
+#### Scenario: Penulisan oleh publik ditolak
 
 - **WHEN** klien tanpa autentikasi mencoba `INSERT`, `UPDATE`, atau `DELETE` pada tabel konten
 - **THEN** operasi ditolak oleh kebijakan RLS
 
-#### Scenario: Pesan tetap tertutup dari publik
+#### Scenario: Pesan dan rating tertutup dari publik
 
-- **WHEN** klien tanpa autentikasi mencoba membaca `messages`
-- **THEN** tidak ada baris yang dikembalikan, termasuk baris yang baru saja dikirim oleh klien itu sendiri
-
-#### Scenario: Rating belum disetujui tertutup dari publik
-
-- **WHEN** klien tanpa autentikasi membaca `ratings` yang memuat baris belum disetujui
-- **THEN** hanya baris yang sudah disetujui yang dikembalikan
+- **WHEN** klien tanpa autentikasi mencoba membaca `messages`, atau membaca `ratings` yang memuat baris belum disetujui
+- **THEN** `messages` tidak mengembalikan baris apa pun — termasuk baris yang baru saja dikirim klien itu sendiri — dan `ratings` hanya mengembalikan baris yang sudah disetujui
 
 #### Scenario: Publik tidak dapat menyetujui ratingnya sendiri
 
@@ -100,3 +76,35 @@ Sistem SHALL menyediakan penyimpanan dan satu fungsi database untuk membatasi la
 
 - **WHEN** catatan percobaan sudah jauh melampaui jendela waktu yang dipakai
 - **THEN** catatan itu dapat dihapus tanpa memengaruhi keputusan pembatasan laju yang berjalan
+
+## REMOVED Requirements
+
+### Requirement: Tabel pesan dan rating disiapkan untuk fitur berikutnya
+
+Dihapus, bukan diubah. Namanya ("disiapkan untuk fitur berikutnya") dan
+skenario "Tabel ada tetapi belum dipakai UI" adalah pernyataan ruang lingkup
+milik change sebelumnya. Change inilah fitur berikutnya itu, sehingga keduanya
+kini menyatakan kebalikan dari yang benar.
+
+Penggantinya ada di bawah, dengan nama yang menggambarkan keadaan sesudahnya.
+
+## ADDED Requirements
+
+### Requirement: Tabel pesan dan rating dipakai halaman publik
+
+Sistem SHALL menyediakan tabel `messages` (pesan dari form kontak) dan `ratings` (nama, bintang 1–5, komentar, status disetujui) beserta kebijakan aksesnya. Nilai bintang SHALL dibatasi pada bilangan bulat 1 sampai 5. Kedua tabel SHALL dipakai oleh halaman publik: pengunjung mengisi keduanya lewat form, dan rating yang sudah disetujui dibaca untuk ditampilkan.
+
+#### Scenario: Bintang di luar rentang ditolak
+
+- **WHEN** sebuah baris `ratings` disisipkan dengan nilai bintang 0 atau 6
+- **THEN** database menolak operasi tersebut
+
+#### Scenario: Pesan masuk dari halaman publik
+
+- **WHEN** pengunjung mengirim form kontak dengan data yang sah
+- **THEN** satu baris `messages` tersimpan dengan penanda belum dibaca
+
+#### Scenario: Rating masuk dari halaman publik
+
+- **WHEN** pengunjung mengirim rating dengan data yang sah
+- **THEN** satu baris `ratings` tersimpan dalam keadaan belum disetujui

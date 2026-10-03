@@ -48,9 +48,29 @@ Penyembunyian alamat ini SHALL dinyatakan di dokumentasi sebagai pengurang kebis
 
 ### Requirement: Login admin dengan email dan password
 
-Halaman masuk SHALL menerima email dan password, dan autentikasinya SHALL dikerjakan di server dalam satu permintaan yang sekaligus menulis cookie sesi dan mengeluarkan pengalihan. Pesan kegagalan SHALL selalu seragam dan SHALL TIDAK mengungkapkan apakah sebuah email terdaftar. Field password SHALL dikosongkan setiap kali gagal, dan isian email SHALL dipertahankan.
+Halaman masuk SHALL menyediakan form berisi email dan password yang mengautentikasi lewat Supabase Auth. Autentikasinya SHALL dikerjakan di server dalam satu permintaan yang sekaligus menulis cookie sesi dan mengeluarkan pengalihan. Kredensial yang benar SHALL membuat sesi dan mengarahkan ke dashboard. Kredensial yang salah SHALL menampilkan pesan error berbahasa Indonesia tanpa menyebutkan apakah yang salah adalah emailnya atau passwordnya, dan password SHALL tidak pernah ikut terkirim kembali ke form. Field password SHALL dikosongkan setiap kali gagal, dan isian email SHALL dipertahankan.
 
 Klien autentikasi Supabase SHALL TIDAK dikirim ke bundel peramban.
+
+#### Scenario: Login berhasil
+
+- **WHEN** admin mengirim email dan password yang benar
+- **THEN** sesi dibuat dan admin diarahkan ke halaman ringkasan dashboard
+
+#### Scenario: Kredensial salah
+
+- **WHEN** email atau password yang dikirim salah
+- **THEN** halaman masuk menampilkan pesan error berbahasa Indonesia yang tidak membocorkan email mana yang terdaftar, dan field password dikosongkan
+
+#### Scenario: Field kosong
+
+- **WHEN** form masuk dikirim dengan email atau password kosong
+- **THEN** pesan validasi berbahasa Indonesia muncul pada field yang bersangkutan dan tidak ada permintaan autentikasi yang dikirim
+
+#### Scenario: Pembatasan percobaan login
+
+- **WHEN** beberapa percobaan login gagal berurutan dari klien yang sama
+- **THEN** pesan error tetap generik dan tidak ada informasi tambahan tentang keberadaan akun yang terungkap
 
 #### Scenario: Sesi langsung terbaca setelah masuk
 

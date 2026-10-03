@@ -1,6 +1,17 @@
-## MODIFIED Requirements
+## REMOVED Requirements
 
 ### Requirement: Halaman Kontak menampilkan informasi tanpa form
+
+Dihapus, bukan diubah. Namanya sendiri ("tanpa form") dan skenario "Tidak ada
+form di change ini" adalah pernyataan ruang lingkup milik change sebelumnya.
+Change inilah yang menambahkan form itu, sehingga keduanya kini menyatakan
+kebalikan dari yang benar.
+
+Penggantinya ada di bawah, dengan nama yang menggambarkan keadaan sesudahnya.
+
+## ADDED Requirements
+
+### Requirement: Halaman Kontak memuat form dan informasi kontak langsung
 
 Halaman `/kontak` SHALL menampilkan email pemilik sebagai tautan `mailto`, lokasi, status terbuka untuk pekerjaan, dan tautan sosial media terbit. Halaman tersebut SHALL juga memuat form kontak, yang perilakunya ditetapkan di kapabilitas `public-site/contact-form`. Informasi kontak langsung SHALL tetap tersedia berdampingan dengan form, sehingga pengunjung yang lebih suka mengirim email sendiri tidak dipaksa memakai form.
 

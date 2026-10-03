@@ -542,8 +542,9 @@ Atau periksa manual:
 - [ ] Kesembilan halaman publik terbuka dan menampilkan konten dari database
 - [ ] `/sitemap.xml` memuat domain produksi Anda, bukan `localhost`
 - [ ] `/robots.txt` dapat diambil dan menunjuk sitemap yang benar
-- [ ] `/admin` mengalihkan ke halaman masuk saat belum ada sesi
-- [ ] Login dengan akun admin berhasil
+- [ ] `/admin` mengalihkan ke **beranda** saat belum ada sesi, dan
+      `/admin/login` tidak dapat dibuka langsung
+- [ ] Halaman masuk terbuka di alamat `ADMIN_LOGIN_PATH`, dan login berhasil
 - [ ] Form kontak di `/kontak` dapat mengirim, dan pesannya muncul di
       `/admin/pesan` sebagai belum dibaca
 - [ ] Form rating di beranda dapat mengirim, dan ratingnya muncul di
