@@ -107,8 +107,28 @@ cek("judul setiap halaman berbeda", judul.size === HALAMAN.length, `${judul.size
   cek("/admin tanpa sesi → dialihkan", a.status === 307 || a.status === 302, `HTTP ${a.status}`);
   cek("tidak ada konten admin terkirim", !body.includes("Navigasi dashboard"));
 
-  const lg = await (await fetch(`${BASE}/admin/login`)).text();
-  cek("halaman login dirender", lg.includes("Masuk ke Dashboard"));
+  // /admin/login sengaja TIDAK dapat dibuka langsung; halaman masuk hanya
+  // dilayani di alamat rahasia dari ADMIN_LOGIN_PATH. Yang diperiksa di sini
+  // dua hal sekaligus: alamat aslinya tertutup, dan alamat rahasianya hidup.
+  //
+  // Pemeriksaan kedua itu penting justru karena kegagalannya tidak terlihat
+  // dari halaman mana pun: tanpa ADMIN_LOGIN_PATH yang sah di Vercel, situsnya
+  // tampak normal sementara pemilik terkunci dari dashboardnya sendiri.
+  const asli = await fetch(`${BASE}/admin/login`, { redirect: "manual" });
+  cek(
+    "/admin/login tidak dapat dibuka langsung",
+    asli.status === 307 || asli.status === 302,
+    `HTTP ${asli.status}`,
+  );
+
+  const rahasia = `/${(e.ADMIN_LOGIN_PATH ?? "").replaceAll("/", "").trim()}`;
+  const lg =
+    rahasia === "/" ? "" : await (await fetch(`${BASE}${rahasia}`)).text();
+  cek(
+    "halaman masuk dirender di alamat rahasia",
+    lg.includes("Masuk ke Dashboard"),
+    rahasia === "/" ? "ADMIN_LOGIN_PATH belum diisi di .env.local" : "",
+  );
   cek(
     "ADMIN_EMAIL tidak muncul di HTML",
     !e.ADMIN_EMAIL || !lg.includes(e.ADMIN_EMAIL),
