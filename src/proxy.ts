@@ -88,35 +88,32 @@ export async function proxy(request: NextRequest) {
   );
 
   /**
-   * getClaims(), BUKAN getUser().
+   * getUser(), dan ini sudah diukur — bukan pilihan bawaan yang dibiarkan.
    *
-   * Proyek ini memakai kunci penanda tangan asimetris (ES256), sehingga
-   * getClaims() memverifikasi tanda tangan JWT secara lokal lewat WebCrypto
-   * dengan kunci publik yang di-cache — tanpa perjalanan jaringan ke server
-   * Auth. Terukur di produksi: itu memotong sekitar separuh dari ~300 ms yang
-   * dihabiskan setiap permintaan halaman admin dalam keadaan hangat.
+   * Pernah diganti getClaims() dengan harapan memangkas perjalanan jaringan ke
+   * server Auth: proyek ini memakai kunci asimetris (ES256), sehingga tanda
+   * tangan JWT bisa diverifikasi lokal lewat WebCrypto. Di produksi ternyata
+   * TIDAK ada perbedaan terukur — median tetap ~290 ms berbanding ~300 ms.
+   * Sebabnya ada di dokumentasi getClaims sendiri: di lingkungan berumur
+   * pendek seperti fungsi serverless, kunci publiknya tetap diambil lewat
+   * jaringan pada setiap invokasi.
    *
-   * Yang TIDAK berubah: tanda tangan dan masa berlaku tetap diperiksa secara
-   * kriptografis, jadi cookie palsu tetap ditolak di sini.
-   *
-   * Yang berubah dan perlu dinyatakan jujur: verifikasi lokal tidak mengetahui
-   * sesi yang dicabut di server sebelum tokennya kedaluwarsa. Itu dapat
-   * diterima untuk proxy, yang tugasnya mengarahkan halaman — dan karena itu
-   * requireAdmin() di setiap aksi tulis SENGAJA tetap memakai getUser(), yang
-   * bertanya langsung ke server Auth. Pemeriksaan longgar untuk navigasi,
-   * pemeriksaan ketat untuk perubahan data.
+   * Karena tidak ada keuntungannya, pilihan yang lebih aman dipertahankan:
+   * getUser() bertanya langsung ke server Auth, sehingga sesi yang DICABUT
+   * ikut tertolak — bukan hanya token yang kedaluwarsa atau palsu.
    *
    * Panggilan ini sekaligus memperbarui token yang hampir kedaluwarsa, dan
    * cookie barunya ditulis ke response lewat setAll di atas.
    */
-  const { data: klaim } = await supabase.auth.getClaims();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const emailSesi = klaim?.claims?.email;
   const emailAdmin = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const adalahAdmin =
-    typeof emailSesi === "string" &&
+    user?.email !== undefined &&
     emailAdmin !== undefined &&
-    emailSesi.trim().toLowerCase() === emailAdmin;
+    user.email.trim().toLowerCase() === emailAdmin;
 
   // ----------------------------------------------------- Halaman masuk
   if (diHalamanMasuk) {
