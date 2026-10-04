@@ -5,10 +5,10 @@ import type { Entitas } from "@/server/actions/revalidate";
 import type { Database } from "@/shared/database.types";
 import { requireAdmin, AuthError } from "@/server/auth";
 import {
+  adalahPrefiksMedia,
   ambilFile,
   hapusBerkas,
   unggahBerkas,
-  type PrefiksMedia,
 } from "@/server/actions/storage";
 import {
   achievementSchema,
@@ -143,12 +143,17 @@ export async function unggahAction(
     return { ok: false, code: "validasi", message: "Tidak ada berkas yang dipilih." };
   }
 
-  const prefiks = String(formData.get("prefiks") ?? "") as PrefiksMedia;
+  // Nilainya datang dari form dan bisa berisi apa saja, jadi diperiksa lewat
+  // penjaga tipe yang diturunkan dari daftar yang sama dengan tipenya — bukan
+  // daftar kedua yang ditulis ulang di sini dan bisa tertinggal saat tujuan
+  // unggahan baru ditambahkan.
+  const prefiksMentah = String(formData.get("prefiks") ?? "");
   const jenis = formData.get("jenis") === "pdf" ? "pdf" : "gambar";
 
-  if (!["profile", "projects", "achievements", "cv"].includes(prefiks)) {
+  if (!adalahPrefiksMedia(prefiksMentah)) {
     return { ok: false, code: "validasi", message: "Tujuan unggahan tidak dikenali." };
   }
+  const prefiks = prefiksMentah;
 
   try {
     const url = await unggahBerkas(file, prefiks, jenis);

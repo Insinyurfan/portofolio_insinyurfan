@@ -375,16 +375,35 @@ try {
     // profil berubah begitu field berkas baru ditambahkan — saat field "Logo
     // header" disisipkan sebelum foto, indeks 1 berpindah dari CV ke foto dan
     // PDF uji masuk ke field yang salah tanpa ada yang gagal secara terlihat.
+    // Form sungguhan harus sudah terpasang, bukan kerangka muatnya. Sejak
+    // route group dashboard punya loading.tsx, `waitUntil: "load"` bisa
+    // selesai saat yang tampil masih kerangka — mengisi lalu langsung menekan
+    // Simpan kemudian berlomba dengan hidrasi react-hook-form, dan
+    // penyimpanannya diam-diam tidak terjadi tanpa pesan error apa pun.
+    await adm.waitForFunction(
+      () => !document.querySelector('[aria-busy="true"]'),
+      null,
+      { timeout: 15000 },
+    );
+
     const inputCv = adm.getByLabel("Berkas CV");
     await inputCv.setInputFiles({
       name: "cv-uji.pdf",
       mimeType: "application/pdf",
       buffer: readFileSync(new URL("./.tmp/cv-uji.pdf", import.meta.url)),
     });
-    await adm.waitForTimeout(5000);
+
+    // Tombol Simpan nonaktif selama unggahan berjalan, jadi yang ditunggu
+    // adalah tombol hapusnya muncul — bukti berkasnya sudah terpasang di form.
+    await adm
+      .getByRole("button", { name: "Hapus Berkas CV", exact: true })
+      .waitFor({ timeout: 25000 });
 
     await adm.getByRole("button", { name: "Simpan profil" }).click();
-    await adm.waitForTimeout(4000);
+
+    // Bukti tersimpan datang dari toastnya, bukan dari lamanya menunggu.
+    await adm.getByText("Profil tersimpan.").waitFor({ timeout: 25000 });
+    await adm.waitForTimeout(1500);
 
     cvDipasangOlehUji = true;
     await pub2.goto(`${BASE}/`, { waitUntil: "load" });
@@ -450,6 +469,15 @@ try {
   // CV uji dilepas kembali supaya profil kembali seperti semula.
   if (cvDipasangOlehUji) {
     await adm.goto(`${BASE}/admin/profil`, { waitUntil: "load" });
+
+    // Tunggu kerangka muat selesai, sama seperti saat memasangnya. Tanpa ini
+    // tombol dicari ketika form sungguhannya belum terpasang.
+    await adm.waitForFunction(
+      () => !document.querySelector('[aria-busy="true"]'),
+      null,
+      { timeout: 15000 },
+    );
+
     // Disasar dengan nama lengkapnya, BUKAN `name: "Hapus"` + `.last()`.
     // Playwright mencocokkan nama sebagai substring, sehingga pola lama ikut
     // menangkap tombol "Hapus <role>" di daftar role — dan karena kliknya

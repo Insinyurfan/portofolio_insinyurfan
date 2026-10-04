@@ -5,6 +5,7 @@ import { Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { toastGagal } from "@/client/components/admin/toaster";
+import { keWebp } from "@/client/lib/ke-webp";
 import { Button } from "@/client/components/admin/ui";
 import { unggahAction } from "@/server/actions/konten";
 import type { PrefiksMedia } from "@/server/actions/storage";
@@ -53,13 +54,19 @@ export function FileField({
     onSedangMengunggah?.(sedang);
   }
 
-  async function pilihBerkas(file: File) {
+  async function pilihBerkas(dipilih: File) {
     // Pratinjau lokal tampil seketika, sebelum unggahan selesai.
     if (jenis === "gambar") {
-      setPratinjauLokal(URL.createObjectURL(file));
+      setPratinjauLokal(URL.createObjectURL(dipilih));
     }
 
     setStatus(true);
+
+    // JPEG dan PNG dikonversi ke WebP di peramban lebih dulu, sehingga yang
+    // melintasi jaringan dan tersimpan di Storage sudah berukuran kecil.
+    // keWebp mengembalikan berkas aslinya bila konversi tidak menguntungkan
+    // atau tidak didukung, jadi langkah ini tidak pernah menggagalkan unggahan.
+    const file = jenis === "gambar" ? await keWebp(dipilih) : dipilih;
 
     const formData = new FormData();
     formData.set("file", file);
@@ -165,6 +172,15 @@ export function FileField({
           </div>
 
           {hint ? <p className="text-xs text-adm-fg-subtle">{hint}</p> : null}
+
+          {/* Dijelaskan sekali di sini, bukan diulang di setiap hint field. */}
+          {jenis === "gambar" ? (
+            <p className="text-xs text-adm-fg-subtle">
+              JPG dan PNG otomatis diubah ke WebP dan diperkecil bila lebih dari
+              1600 piksel, supaya ukurannya jauh lebih ringan tanpa perbedaan
+              yang terlihat. SVG, GIF, dan AVIF dibiarkan apa adanya.
+            </p>
+          ) : null}
 
           {mengunggah ? (
             <p role="status" className="text-xs text-adm-fg-muted">

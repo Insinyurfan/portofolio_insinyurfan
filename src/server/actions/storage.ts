@@ -19,17 +19,34 @@ import { AksiError } from "@/server/actions/admin";
 
 const PREFIKS_PUBLIK = `${env.supabaseUrl}/storage/v1/object/public/${STORAGE_BUCKET}/`;
 
-export type PrefiksMedia =
-  | "profile"
-  | "projects"
-  | "achievements"
-  | "cv"
+/**
+ * Daftar tujuan unggahan — SATU sumber kebenaran.
+ *
+ * Tipe DAN pemeriksaan saat berjalan sama-sama diturunkan dari array ini.
+ * Sebelumnya tipenya ditulis terpisah dari daftar yang diperiksa aksi unggah,
+ * sehingga menambah tujuan baru lolos pemeriksaan TypeScript tetapi ditolak
+ * saat dipakai dengan pesan "Tujuan unggahan tidak dikenali" — persis yang
+ * terjadi ketika "logo" dan "education" ditambahkan.
+ */
+export const PREFIKS_MEDIA = [
+  "profile",
+  "projects",
+  "achievements",
+  "cv",
   // Logo header dipisahkan dari "profile" supaya berkasnya mudah dikenali di
   // Storage, dan supaya mengganti foto profil tidak pernah tertukar dengan
   // mengganti logo saat berkas lama dibersihkan.
-  | "logo"
+  "logo",
   // Logo institusi di kartu pendidikan.
-  | "education";
+  "education",
+] as const;
+
+export type PrefiksMedia = (typeof PREFIKS_MEDIA)[number];
+
+/** Penjaga tipe untuk nilai yang datang dari form, yang bisa berisi apa saja. */
+export function adalahPrefiksMedia(nilai: string): nilai is PrefiksMedia {
+  return (PREFIKS_MEDIA as readonly string[]).includes(nilai);
+}
 
 const JENIS_GAMBAR: Record<string, string> = {
   "image/jpeg": "jpg",
