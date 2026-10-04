@@ -5,7 +5,10 @@ import { Badge, Card, EmptyState, PageShell } from "@/client/components/ui/primi
 import { ProfilePhoto } from "@/client/components/ui/profile-photo";
 import { Reveal } from "@/client/components/ui/reveal";
 import { keParagraf } from "@/shared/format";
-import { getProfile } from "@/server/db/queries";
+import {
+  getPageIntro,
+  getProfile,
+} from "@/server/db/queries";
 
 export const revalidate = 300; // = REVALIDATE di src/shared/constants.ts; Next butuh nilai literal
 
@@ -23,11 +26,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function TentangPage() {
+  const intro = await getPageIntro("tentang");
   const profile = await getProfile();
   const paragraf = keParagraf(profile?.bio ?? null);
 
   return (
     <PageShell
+      hero={intro}
       title="Tentang Saya"
       description="Sedikit cerita tentang latar belakang dan apa yang sedang saya kerjakan."
     >

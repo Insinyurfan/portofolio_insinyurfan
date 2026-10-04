@@ -22,6 +22,7 @@ import {
   socialLinkSchema,
   tandaiPesanSchema,
   moderasiRatingSchema,
+  pageIntroSchema,
   toggleTerbitSchema,
   urutkanSchema,
 } from "@/shared/schemas";
@@ -357,6 +358,7 @@ const ENTITAS_DARI_TABEL: Partial<Record<NamaTabel, Entitas>> = {
   achievements: "achievements",
   messages: "messages",
   ratings: "ratings",
+  page_intros: "page_intros",
 };
 
 export const toggleTerbitAction = withAdminAction(
@@ -471,5 +473,21 @@ export const moderasiRatingAction = withAdminAction(
     sukses: (i) =>
       i.is_approved ? "Rating disetujui." : "Persetujuan rating dicabut.",
     revalidasi: "ratings",
+  },
+);
+
+/**
+ * Menyimpan pembuka satu halaman.
+ *
+ * Barisnya sudah disiapkan migrasi untuk setiap halaman profil, jadi aksi ini
+ * selalu memperbarui — tidak pernah menyisipkan baris baru dengan kunci
+ * halaman karangan sendiri.
+ */
+export const simpanPembukaHalamanAction = withAdminAction(
+  pageIntroSchema,
+  (input) => simpanBaris("page_intros", input),
+  {
+    sukses: "Pembuka halaman tersimpan.",
+    revalidasi: "page_intros",
   },
 );

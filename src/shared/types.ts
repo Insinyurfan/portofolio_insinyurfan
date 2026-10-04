@@ -11,6 +11,7 @@ export type Education = Tables<"education">;
 export type SkillCategory = Tables<"skill_categories">;
 export type Skill = Tables<"skills">;
 export type Experience = Tables<"experiences">;
+export type PageIntro = Tables<"page_intros">;
 export type Project = Tables<"projects">;
 export type Achievement = Tables<"achievements">;
 export type Message = Tables<"messages">;

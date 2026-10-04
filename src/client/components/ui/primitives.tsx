@@ -122,12 +122,17 @@ export function ButtonExternal({
  * tautan beranda, tetapi di halaman dalam yang panjang navbar ikut tergulung
  * ke atas, sementara tautan ini berada tepat di awal konten utama — dan ia
  * ikut terbaca pembaca layar sebagai bagian dari halaman, bukan navigasi situs.
+ *
+ * `hero` bersifat opsional dan datang dari database. Halaman yang pembukanya
+ * belum diisi pemilik merender bentuk tanpa pembuka, persis seperti sebelum
+ * fitur ini ada.
  */
 export function PageShell({
   title,
   description,
   eyebrow,
   jumlah,
+  hero,
   children,
 }: {
   title: string;
@@ -136,6 +141,12 @@ export function PageShell({
   eyebrow?: string;
   /** Keterangan jumlah isi, misalnya "2 jenjang". Disembunyikan bila kosong. */
   jumlah?: string;
+  /** Blok pembuka besar; null berarti tidak dirender. */
+  hero?: {
+    eyebrow: string | null;
+    headline: string | null;
+    description: string | null;
+  } | null;
   children: ReactNode;
 }) {
   return (
@@ -153,19 +164,39 @@ export function PageShell({
         Kembali ke beranda
       </Link>
 
-      <header className="mt-6 mb-8 sm:mt-8 sm:mb-12">
-        {eyebrow || jumlah ? (
+      {hero?.headline ? (
+        <PageHero hero={hero} jumlah={jumlah} />
+      ) : null}
+
+      <header
+        className={
+          hero?.headline
+            ? "mt-8 mb-8 sm:mt-10 sm:mb-12"
+            : "mt-6 mb-8 sm:mt-8 sm:mb-12"
+        }
+      >
+        {eyebrow || (jumlah && !hero?.headline) ? (
           <div className="mb-3 flex flex-wrap items-center gap-3">
             {eyebrow ? (
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-subtle">
                 {eyebrow}
               </p>
             ) : null}
-            {jumlah ? <Badge tone="accent">{jumlah}</Badge> : null}
+            {/* Hitungan hanya muncul sekali: kalau ada pembuka, ia tampil di
+                sana, bukan diulang di kepala bagian. */}
+            {jumlah && !hero?.headline ? <Badge tone="accent">{jumlah}</Badge> : null}
           </div>
         ) : null}
 
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl">{title}</h1>
+        <h1
+          className={
+            hero?.headline
+              ? "text-2xl sm:text-3xl"
+              : "text-3xl sm:text-4xl lg:text-5xl"
+          }
+        >
+          {title}
+        </h1>
 
         {description ? (
           <p className="prosa mt-3 text-base text-text-muted">{description}</p>
@@ -174,6 +205,66 @@ export function PageShell({
 
       {children}
     </div>
+  );
+}
+
+/**
+ * Blok pembuka besar di atas kepala halaman.
+ *
+ * Judulnya dirender sebagai `<p>`, BUKAN heading. Halaman hanya boleh punya
+ * satu `<h1>`, dan itu milik judul halamannya; menjadikan kalimat editorial
+ * ini heading kedua membuat struktur dokumen menyesatkan bagi pembaca layar
+ * dan bagi mesin pencari.
+ */
+function PageHero({
+  hero,
+  jumlah,
+}: {
+  hero: {
+    eyebrow: string | null;
+    headline: string | null;
+    description: string | null;
+  };
+  jumlah?: string;
+}) {
+  return (
+    <section
+      aria-label="Pembuka halaman"
+      className="relative mt-6 overflow-hidden rounded-card-lg border border-border-subtle bg-accent-soft px-6 py-10 sm:mt-8 sm:px-10 sm:py-14"
+    >
+      {/* Bentuk hias; tidak membawa makna, jadi disembunyikan dari pembaca layar. */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-pill bg-surface-raised/40 sm:size-72"
+      />
+
+      <div className="relative">
+        {hero.eyebrow || jumlah ? (
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            {hero.eyebrow ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-soft-text">
+                {hero.eyebrow}
+              </p>
+            ) : null}
+            {jumlah ? (
+              <span className="rounded-pill bg-surface-raised px-2.5 py-0.5 text-xs font-medium text-text-muted">
+                {jumlah}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+
+        <p className="font-heading text-3xl font-bold leading-tight tracking-tight text-text sm:text-4xl lg:text-5xl">
+          {hero.headline}
+        </p>
+
+        {hero.description ? (
+          <p className="prosa mt-4 text-base text-accent-soft-text sm:text-lg">
+            {hero.description}
+          </p>
+        ) : null}
+      </div>
+    </section>
   );
 }
 

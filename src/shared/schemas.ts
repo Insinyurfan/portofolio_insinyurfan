@@ -380,3 +380,26 @@ export const visitorRatingSchema = z.object({
     .max(5, "Bintang maksimal 5."),
   comment: teksOpsional(1000, "Komentar"),
 });
+
+// ---------------------------------------------------------------------------
+// Pembuka halaman
+// ---------------------------------------------------------------------------
+
+export const pageIntroSchema = z.object({
+  id: idOpsional,
+  // Kunci halaman tidak disunting pemilik — barisnya sudah disiapkan migrasi.
+  // Divalidasi di sini supaya aksi tulis tidak bisa membuat kunci sembarangan.
+  page: z.enum([
+    "tentang",
+    "pendidikan",
+    "keahlian",
+    "pengalaman",
+    "proyek",
+    "pencapaian",
+    "kontak",
+  ]),
+  eyebrow: teksOpsional(40, "Label"),
+  headline: teksOpsional(120, "Judul pembuka"),
+  description: teksOpsional(400, "Deskripsi pembuka"),
+  is_published: terbit,
+});

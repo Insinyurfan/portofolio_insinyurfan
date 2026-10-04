@@ -6,6 +6,7 @@ import type {
   Education,
   Experience,
   Message,
+  PageIntro,
   Profile,
   Project,
   Rating,
@@ -204,4 +205,15 @@ export async function adminGetRingkasan(): Promise<RingkasanAdmin> {
     pesanBelumDibaca: belumDibaca.count ?? 0,
     ratingMenunggu: menunggu.count ?? 0,
   };
+}
+
+export async function adminGetPageIntros(): Promise<PageIntro[]> {
+  const supabase = await createSessionSupabaseClient();
+  const { data, error } = await supabase
+    .from("page_intros")
+    .select("*")
+    .order("page", { ascending: true });
+
+  lapor("adminGetPageIntros", error);
+  return data ?? [];
 }

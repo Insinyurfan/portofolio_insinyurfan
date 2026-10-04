@@ -21,7 +21,8 @@ export type Entitas =
   | "projects"
   | "achievements"
   | "messages"
-  | "ratings";
+  | "ratings"
+  | "page_intros";
 
 /** Konteks tambahan untuk entitas yang punya halaman per-item. */
 export type KonteksRevalidasi = {
@@ -46,6 +47,10 @@ const PATH_PER_ENTITAS: Record<Entitas, string[]> = {
   achievements: ["/pencapaian"],
   projects: ["/proyek", "/sitemap.xml"],
 
+  // Pembuka halaman muncul di SEMUA halaman profil sekaligus, jadi
+  // revalidasinya menyeluruh — sama seperti profil dan tautan sosial.
+  page_intros: [],
+
   // Pesan tidak pernah tampil di halaman publik.
   messages: [],
 
@@ -55,7 +60,7 @@ const PATH_PER_ENTITAS: Record<Entitas, string[]> = {
   ratings: ["/"],
 };
 
-const SELURUH_LAYOUT: Entitas[] = ["profile", "social_links"];
+const SELURUH_LAYOUT: Entitas[] = ["profile", "social_links", "page_intros"];
 
 /**
  * Membatalkan cache setiap halaman publik yang menampilkan entitas ini.

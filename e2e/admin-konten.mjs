@@ -325,6 +325,17 @@ try {
     await page.getByText("Profil tersimpan.").waitFor({ timeout: 20000 });
   }
 
+  /**
+   * Nilai ASLI dicatat dulu, lalu dikembalikan di akhir.
+   *
+   * Versi sebelumnya mengosongkan field ini sebagai "pembersihan", dan itu
+   * MENGHAPUS nama situs yang sudah diatur pemilik — persis kelas kesalahan
+   * yang sama seperti uji yang dulu menghapus satu baris role. Uji tidak boleh
+   * meninggalkan data uji, tetapi juga tidak boleh membuang data sungguhan.
+   */
+  await page.getByLabel("Nama situs").waitFor({ state: "visible" });
+  const namaSitusAsli = await page.getByLabel("Nama situs").inputValue();
+
   await simpanNamaSitus("Situs Uji E2E");
 
   // Navbar ada di SETIAP halaman, jadi yang diperiksa bukan hanya beranda:
@@ -341,8 +352,8 @@ try {
     merekProyek,
   );
 
-  // Dikosongkan kembali: nilai cadangan harus tetap masuk akal, dan data uji
-  // tidak boleh tertinggal di database.
+  // Nilai cadangan diuji dengan mengosongkan sementara, LALU nilai asli
+  // pemilik dikembalikan.
   await page.goto(`${BASE}/admin/profil`, { waitUntil: "load" });
   await simpanNamaSitus("");
   await page.goto(`${BASE}/`, { waitUntil: "load" });
@@ -351,6 +362,16 @@ try {
     'nama situs kosong → header memakai "Portofolio"',
     merekKosong === "Portofolio",
     merekKosong,
+  );
+
+  await page.goto(`${BASE}/admin/profil`, { waitUntil: "load" });
+  await simpanNamaSitus(namaSitusAsli);
+  await page.goto(`${BASE}/`, { waitUntil: "load" });
+  const merekPulih = (await page.locator("header nav a").first().textContent())?.trim();
+  cek(
+    "nama situs milik pemilik dikembalikan seperti semula",
+    merekPulih === (namaSitusAsli.trim() === "" ? "Portofolio" : namaSitusAsli),
+    merekPulih,
   );
 
   // ===================================== REGRESI PUBLIK

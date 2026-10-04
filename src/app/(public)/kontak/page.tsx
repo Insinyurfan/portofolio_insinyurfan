@@ -5,7 +5,11 @@ import { SocialIconLinks } from "@/client/components/layout/social-icon-links";
 import { ContactForm } from "@/client/components/public/contact-form";
 import { Badge, Card, EmptyState, PageShell } from "@/client/components/ui/primitives";
 import { Reveal } from "@/client/components/ui/reveal";
-import { getProfile, getSocialLinks } from "@/server/db/queries";
+import {
+  getPageIntro,
+  getProfile,
+  getSocialLinks,
+} from "@/server/db/queries";
 
 export const revalidate = 300; // = REVALIDATE di src/shared/constants.ts; Next butuh nilai literal
 
@@ -27,10 +31,12 @@ export async function generateMetadata(): Promise<Metadata> {
  * lebih suka mengirim email sendiri tidak dipaksa memakai form.
  */
 export default async function KontakPage() {
+  const intro = await getPageIntro("kontak");
   const [profile, socialLinks] = await Promise.all([getProfile(), getSocialLinks()]);
 
   return (
     <PageShell
+      hero={intro}
       title="Kontak"
       description="Kirim pesan lewat form, atau hubungi saya langsung lewat email dan media sosial."
     >

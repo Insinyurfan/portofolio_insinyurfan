@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 
 import { Badge, Card, EmptyState, PageShell } from "@/client/components/ui/primitives";
 import { Reveal } from "@/client/components/ui/reveal";
-import { getProfile, getSkillsByCategory } from "@/server/db/queries";
+import {
+  getPageIntro,
+  getProfile,
+  getSkillsByCategory,
+} from "@/server/db/queries";
 
 export const revalidate = 300; // = REVALIDATE di src/shared/constants.ts; Next butuh nilai literal
 
@@ -18,11 +22,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function KeahlianPage() {
+  const intro = await getPageIntro("keahlian");
   // Query sudah membuang kategori yang tidak punya keahlian terbit.
   const groups = await getSkillsByCategory();
 
   return (
     <PageShell
+      hero={intro}
       title="Keahlian"
       description="Alat dan teknologi yang saya pakai sehari-hari, dikelompokkan per kategori."
     >

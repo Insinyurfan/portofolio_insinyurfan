@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 
 import { ProjectGrid } from "@/client/components/projects/project-grid";
 import { PageShell } from "@/client/components/ui/primitives";
-import { collectTechStack, getProfile, getProjects } from "@/server/db/queries";
+import {
+  collectTechStack,
+  getPageIntro,
+  getProfile,
+  getProjects,
+} from "@/server/db/queries";
 
 export const revalidate = 300; // = REVALIDATE di src/shared/constants.ts; Next butuh nilai literal
 
@@ -27,10 +32,12 @@ export async function generateMetadata(): Promise<Metadata> {
  * sendiri.
  */
 export default async function ProyekPage() {
+  const intro = await getPageIntro("proyek");
   const projects = await getProjects();
 
   return (
     <PageShell
+      hero={intro}
       title="Proyek"
       description="Proyek yang pernah saya kerjakan. Gunakan filter untuk menyaring menurut tech stack."
     >

@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 
 import { AchievementGrid } from "@/client/components/achievements/achievement-grid";
 import { EmptyState, PageShell } from "@/client/components/ui/primitives";
-import { getAchievements, getProfile } from "@/server/db/queries";
+import {
+  getAchievements,
+  getPageIntro,
+  getProfile,
+} from "@/server/db/queries";
 
 export const revalidate = 300; // = REVALIDATE di src/shared/constants.ts; Next butuh nilai literal
 
@@ -18,10 +22,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PencapaianPage() {
+  const intro = await getPageIntro("pencapaian");
   const achievements = await getAchievements();
 
   return (
     <PageShell
+      hero={intro}
       title="Pencapaian"
       description="Sertifikat dan penghargaan. Klik salah satu kartu untuk melihat pratinjaunya."
     >

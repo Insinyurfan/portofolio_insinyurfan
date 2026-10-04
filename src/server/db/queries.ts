@@ -8,6 +8,7 @@ import type {
   Experience,
   Profile,
   Project,
+  PageIntro,
   Rating,
   RingkasanRating,
   SkillCategory,
@@ -278,4 +279,29 @@ export async function getTechStackSlugs(): Promise<
   }
 
   return [...peta.entries()].map(([slug, tech]) => ({ tech, slug }));
+}
+
+/**
+ * Blok pembuka satu halaman publik.
+ *
+ * Mengembalikan null kalau pemiliknya belum mengisi judulnya. Halaman yang
+ * mendapat null merender bentuk tanpa pembuka — jadi menambahkan tabel ini
+ * tidak mengubah tampilan situs sampai ada yang memutuskan mengisinya.
+ */
+export async function getPageIntro(page: string): Promise<PageIntro | null> {
+  const supabase = createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("page_intros")
+    .select("*")
+    .eq("page", page)
+    .eq("is_published", true)
+    .maybeSingle();
+
+  laporkan("getPageIntro", error);
+
+  // Judul kosong diperlakukan sama dengan "belum diisi": blok pembuka tanpa
+  // judul hanya menampilkan label kecil yang menggantung tanpa konteks.
+  if (!data || data.headline === null || data.headline.trim() === "") return null;
+  return data;
 }

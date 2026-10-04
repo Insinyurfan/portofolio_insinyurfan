@@ -215,6 +215,39 @@ export type Database = {
         }
         Relationships: []
       }
+      page_intros: {
+        Row: {
+          created_at: string
+          description: string | null
+          eyebrow: string | null
+          headline: string | null
+          id: string
+          is_published: boolean
+          page: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          eyebrow?: string | null
+          headline?: string | null
+          id?: string
+          is_published?: boolean
+          page: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          eyebrow?: string | null
+          headline?: string | null
+          id?: string
+          is_published?: boolean
+          page?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profile: {
         Row: {
           bio: string | null

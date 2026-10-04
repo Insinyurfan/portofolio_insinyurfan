@@ -6,6 +6,7 @@ import {
   FolderKanban,
   GraduationCap,
   LayoutDashboard,
+  LayoutTemplate,
   Link2,
   LogOut,
   Mail,
@@ -25,6 +26,7 @@ import { cn } from "@/shared/cn";
 const ITEM = [
   { href: "/admin", label: "Ringkasan", icon: LayoutDashboard },
   { href: "/admin/profil", label: "Profil", icon: User },
+  { href: "/admin/halaman", label: "Pembuka Halaman", icon: LayoutTemplate },
   { href: "/admin/tautan-sosial", label: "Tautan Sosial", icon: Link2 },
   { href: "/admin/pendidikan", label: "Pendidikan", icon: GraduationCap },
   { href: "/admin/keahlian", label: "Keahlian", icon: Wrench },

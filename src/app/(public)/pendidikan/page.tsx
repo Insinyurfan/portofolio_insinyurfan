@@ -3,7 +3,11 @@ import type { Metadata } from "next";
 import { EducationCard } from "@/client/components/education/education-card";
 import { EmptyState, PageShell } from "@/client/components/ui/primitives";
 import { Reveal } from "@/client/components/ui/reveal";
-import { getEducation, getProfile } from "@/server/db/queries";
+import {
+  getEducation,
+  getPageIntro,
+  getProfile,
+} from "@/server/db/queries";
 
 export const revalidate = 300; // = REVALIDATE di src/shared/constants.ts; Next butuh nilai literal
 
@@ -19,10 +23,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PendidikanPage() {
+  const intro = await getPageIntro("pendidikan");
   const education = await getEducation();
 
   return (
     <PageShell
+      hero={intro}
       eyebrow="Riwayat akademik"
       title="Pendidikan"
       description="Jenjang yang pernah dan sedang ditempuh, beserta fokus bidang, lokasi, dan capaian di masing-masing."

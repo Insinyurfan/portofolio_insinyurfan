@@ -334,14 +334,19 @@ policy `authenticated` di `supabase/migrations/20261002120600_rls.sql`.
 `app/globals.css`. Itu yang menegakkan aturan satu warna aksen dan membuat
 `npm run check:contrast` berlaku untuk seluruh situs sekaligus.
 
-**Filter tech stack adalah tautan ke halaman tersendiri, bukan parameter
-alamat.** `/proyek/tech/react`, bukan `/proyek?tech=React`. Ini soal kecepatan,
+**Filter adalah tautan ke halaman tersendiri, bukan parameter alamat.** `/proyek/tech/react`, bukan `/proyek?tech=React`. Ini soal kecepatan,
 bukan selera: membaca `searchParams` memaksa Next merender halaman secara
 dinamis pada setiap kunjungan, sehingga `/proyek` tidak pernah masuk cache CDN.
 Terukur di produksi — `/proyek` menjawab dalam 1232 ms dengan
 `X-Vercel-Cache: MISS`, sementara setiap halaman lain sekitar 200 ms dengan
 `HIT`. Sekarang `/proyek` dan setiap `/proyek/tech/*` adalah halaman statis yang
 dibangun saat build, dan filternya tidak mengirim JavaScript sama sekali.
+
+Aturan yang sama berlaku untuk filter jenis di halaman pengalaman:
+`/pengalaman/jenis/magang`, bukan `/pengalaman?jenis=internship`. Slug-nya
+berbahasa Indonesia dan ditulis eksplisit di
+`src/client/components/experience/experience-filter.tsx`, sehingga mengganti
+label tidak ikut mengubah alamat yang mungkin sudah dibagikan orang.
 
 Konsekuensi yang perlu diingat: menambah tech stack baru pada proyek berarti
 ada alamat `/proyek/tech/*` baru. Halamannya dibuat saat permintaan pertama
@@ -474,6 +479,7 @@ berikutnya. Kartu, grid, header, dan footer tidak dibatasi dan tetap penuh.
 | --- | --- |
 | `/admin` | Ringkasan: jumlah proyek, pesan belum dibaca, rating menunggu |
 | `/admin/profil` | Nama situs dan logo header, nama, bio, daftar role, foto, berkas CV, status open-to-work |
+| `/admin/halaman` | Blok pembuka besar di atas setiap halaman publik |
 | `/admin/tautan-sosial` | Ikon sosial di beranda dan footer |
 | `/admin/pendidikan` | Timeline pendidikan |
 | `/admin/keahlian` | Kategori beserta keahlian di dalamnya |
