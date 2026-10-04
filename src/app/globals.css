@@ -1,0 +1,329 @@
+@import "tailwindcss";
+
+/*
+ * Dark mode berbasis class, dikendalikan next-themes.
+ * Lihat design.md → "next-themes untuk tema, bukan toggle buatan sendiri".
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * SATU SUMBER KEBENARAN UNTUK WARNA.
+ *
+ * Komponen tidak boleh memakai nilai warna lepas (hex, rgb, atau utilitas
+ * warna bawaan Tailwind seperti text-emerald-600). Semuanya lewat token di
+ * bawah, karena itulah yang menegakkan aturan "tepat satu warna aksen" di
+ * spesifikasi site-shell dan membuat pemeriksaan kontras berlaku untuk
+ * seluruh situs sekaligus.
+ *
+ * Rasio kontras setiap pasangan diperiksa di scripts/check-contrast.mjs.
+ */
+:root {
+  /* Permukaan */
+  --surface: #f6f9f7;
+  --surface-raised: #ffffff;
+  --surface-sunken: #eaf0ed;
+
+  /* Garis */
+  --border-subtle: #dde6e1;
+  --border-strong: #7a8b83;
+
+  /* Teks */
+  --text: #0d1714;
+  --text-muted: #44544e;
+  --text-subtle: #5a6b64;
+
+  /* Aksen tunggal: hijau zamrud */
+  --accent: #04704f;
+  --accent-hover: #045c41;
+  --accent-contrast: #ffffff;
+  --accent-soft: #e3f2eb;
+  --accent-soft-text: #034b36;
+
+  /* Fokus */
+  --focus: #04704f;
+
+  /* Latar gelap di belakang modal */
+  --overlay: rgb(13 23 20 / 0.66);
+}
+
+:root:not([data-theme="light"]) {
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+  }
+}
+
+.dark {
+  color-scheme: dark;
+
+  --surface: #0a1210;
+  --surface-raised: #121d19;
+  --surface-sunken: #060c0a;
+
+  --border-subtle: #22302a;
+  --border-strong: #5a7468;
+
+  --text: #e9f1ed;
+  --text-muted: #a7bab2;
+  --text-subtle: #8ba199;
+
+  --accent: #4ade9f;
+  --accent-hover: #6ee7b3;
+  --accent-contrast: #04231a;
+  --accent-soft: #10291f;
+  --accent-soft-text: #7fe9b6;
+
+  --focus: #4ade9f;
+  --overlay: rgb(3 7 6 / 0.78);
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-text: var(--accent-soft-text);
+
+  --color-focus: var(--focus);
+  --color-overlay: var(--overlay);
+
+  /* Tipografi: judul tegas, teks isi tenang */
+  --font-heading: var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Kartu bersudut membulat */
+  --radius-card: 1.25rem;
+  --radius-card-lg: 1.75rem;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgb(13 23 20 / 0.04), 0 8px 24px -12px rgb(13 23 20 / 0.10);
+  --shadow-card-hover: 0 2px 4px rgb(13 23 20 / 0.06), 0 16px 40px -16px rgb(13 23 20 / 0.16);
+}
+
+@layer base {
+  * {
+    border-color: var(--border-subtle);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--surface);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  /* Indikator fokus yang terlihat jelas di kedua tema. */
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Hormati permintaan mengurangi gerak secara global. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * WADAH HALAMAN
+ *
+ * Satu-satunya tempat lebar halaman ditentukan. Sebelumnya `max-w-5xl`
+ * ditulis berulang di sembilan berkas, sehingga mengubah lebar situs berarti
+ * menyunting sembilan tempat dan berisiko ada yang tertinggal.
+ *
+ * Isinya memakai SELURUH lebar layar; yang tersisa hanya margin tepi supaya
+ * teks tidak menempel ke pinggir jendela. Margin itu melebar di layar besar,
+ * karena jarak yang pas di ponsel terasa sempit di monitor lebar.
+ * ------------------------------------------------------------------------- */
+@utility wadah {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+
+  @media (width >= 80rem) {
+    padding-inline: 2.5rem;
+  }
+
+  @media (width >= 120rem) {
+    padding-inline: 4rem;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * UKURAN BARIS YANG TERBACA
+ *
+ * Dipakai HANYA untuk blok teks panjang — bio, deskripsi proyek, paragraf
+ * pengantar. Kartu, grid, header, dan footer tidak memakainya dan tetap penuh.
+ *
+ * Alasannya bukan selera: di layar lebar, satu baris teks yang membentang
+ * penuh membuat mata kehilangan jejak saat berpindah ke baris berikutnya.
+ * Batas ~75 karakter menjaga perpindahan baris tetap mudah diikuti, tanpa
+ * mengecilkan bagian lain halaman.
+ * ------------------------------------------------------------------------- */
+@utility prosa {
+  max-width: 75ch;
+}
+
+@utility bento-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+
+  @media (width >= 48rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+
+  @media (width >= 64rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * KOLOM KEEMPAT UNTUK DAFTAR PANJANG
+ *
+ * Dipakai BERSAMA bento-grid, dan hanya oleh daftar yang isinya banyak dan
+ * seragam — yaitu halaman /proyek. Sejak situs memakai seluruh lebar layar,
+ * tiga kolom di monitor sangat lebar menghasilkan kartu raksasa dengan
+ * thumbnail yang meregang.
+ *
+ * Strip "Proyek Pilihan" di beranda SENGAJA tidak memakainya: kartu
+ * pertamanya membentang dua kolom, sehingga dengan dua proyek pilihan akan
+ * tersisa satu kolom kosong di ujung kanan.
+ * ------------------------------------------------------------------------- */
+@utility bento-lebar {
+  @media (width >= 120rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ===========================================================================
+ * TOKEN DASHBOARD ADMIN
+ *
+ * Dilingkupi di bawah .admin-root, BUKAN di :root.
+ *
+ * Alasannya nyata, bukan teoretis: menjalankan `npx shadcn init` pada proyek
+ * ini menimpa --accent publik dari #04704f (hijau zamrud) menjadi
+ * oklch(0.97 0 0), dan kegagalannya muncul sebagai warna salah di halaman
+ * publik — jauh dari tempat perubahannya dilakukan. Melingkupi token membuat
+ * kedua gaya hidup berdampingan tanpa saling tahu.
+ *
+ * Admin sengaja tampil netral dan fungsional, tidak mengikuti arah bento grid
+ * halaman publik.
+ * ===========================================================================*/
+
+.admin-root {
+  --adm-bg: #f7f8f8;
+  --adm-panel: #ffffff;
+  --adm-panel-muted: #f1f3f3;
+  --adm-border: #dfe3e3;
+  --adm-border-strong: #7e8a89;
+  --adm-fg: #14191a;
+  --adm-fg-muted: #4c5555;
+  --adm-fg-subtle: #5e6a69;
+  --adm-primary: #0f6b52;
+  --adm-primary-hover: #0b5641;
+  --adm-primary-fg: #ffffff;
+  --adm-danger: #9b1c1c;
+  --adm-danger-hover: #7f1616;
+  --adm-danger-fg: #ffffff;
+  --adm-danger-soft: #fdeaea;
+  --adm-warning-soft: #fdf3e3;
+  --adm-warning-fg: #7a4a06;
+  --adm-success-soft: #e6f4ee;
+  --adm-success-fg: #0b5641;
+  --adm-ring: #0f6b52;
+  --adm-overlay: rgb(20 25 26 / 0.6);
+
+  background-color: var(--adm-bg);
+  color: var(--adm-fg);
+}
+
+.dark .admin-root {
+  --adm-bg: #0d1112;
+  --adm-panel: #161c1d;
+  --adm-panel-muted: #1e2627;
+  --adm-border: #2a3334;
+  --adm-border-strong: #63726f;
+  --adm-fg: #e9eded;
+  --adm-fg-muted: #a8b4b3;
+  --adm-fg-subtle: #8c9a98;
+  --adm-primary: #4cd6a4;
+  --adm-primary-hover: #74e3bb;
+  --adm-primary-fg: #06241a;
+  --adm-danger: #f3a3a3;
+  --adm-danger-hover: #f8c2c2;
+  --adm-danger-fg: #2b0a0a;
+  --adm-danger-soft: #2a1414;
+  --adm-warning-soft: #2b2112;
+  --adm-warning-fg: #f0c88a;
+  --adm-success-soft: #122a21;
+  --adm-success-fg: #7fe9b6;
+  --adm-ring: #4cd6a4;
+  --adm-overlay: rgb(3 6 6 / 0.72);
+}
+
+@theme inline {
+  --color-adm-bg: var(--adm-bg);
+  --color-adm-panel: var(--adm-panel);
+  --color-adm-panel-muted: var(--adm-panel-muted);
+  --color-adm-border: var(--adm-border);
+  --color-adm-border-strong: var(--adm-border-strong);
+  --color-adm-fg: var(--adm-fg);
+  --color-adm-fg-muted: var(--adm-fg-muted);
+  --color-adm-fg-subtle: var(--adm-fg-subtle);
+  --color-adm-primary: var(--adm-primary);
+  --color-adm-primary-hover: var(--adm-primary-hover);
+  --color-adm-primary-fg: var(--adm-primary-fg);
+  --color-adm-danger: var(--adm-danger);
+  --color-adm-danger-hover: var(--adm-danger-hover);
+  --color-adm-danger-fg: var(--adm-danger-fg);
+  --color-adm-danger-soft: var(--adm-danger-soft);
+  --color-adm-warning-soft: var(--adm-warning-soft);
+  --color-adm-warning-fg: var(--adm-warning-fg);
+  --color-adm-success-soft: var(--adm-success-soft);
+  --color-adm-success-fg: var(--adm-success-fg);
+  --color-adm-ring: var(--adm-ring);
+  --color-adm-overlay: var(--adm-overlay);
+
+  --radius-adm: 0.625rem;
+}

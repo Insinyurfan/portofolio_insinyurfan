@@ -126,10 +126,10 @@ Seed bersifat idempoten: menjalankannya dua kali tidak menggandakan data.
 npm run db:types
 
 # Atau dari proyek remote
-npx supabase gen types typescript --project-id <project-ref> > lib/database.types.ts
+npx supabase gen types typescript --project-id <project-ref> > src/shared/database.types.ts
 ```
 
-> **Penting:** `lib/database.types.ts` saat ini masih berisi tipe yang ditulis
+> **Penting:** `src/shared/database.types.ts` saat ini masih berisi tipe yang ditulis
 > tangan sebagai penopang sementara, karena pembuatan tipe otomatis butuh
 > database yang berjalan. Timpa berkas itu dengan hasil perintah di atas segera
 > setelah proyek Supabase Anda siap, lalu jalankan ulang setiap kali ada migrasi
@@ -175,61 +175,77 @@ Buka <http://localhost:3000>.
 | `npm run db:check:public` | Pemeriksaan jalur tulis publik (paling penting) |
 | `npm run predeploy` | Seluruh pemeriksaan sebelum deploy, berhenti di kegagalan pertama |
 | `npm run e2e:produksi` | Verifikasi situs yang sudah dideploy |
-| `npm run db:types` | Menghasilkan ulang `lib/database.types.ts` |
+| `npm run db:types` | Menghasilkan ulang `src/shared/database.types.ts` |
 
 ## Struktur folder
 
+Frontend dan backend dipisahkan tegas di bawah `src/`. Pemisahannya bukan
+sekadar nama folder: ESLint menolak impor yang melanggarnya, dan modul backend
+menandai dirinya `server-only` sehingga pelanggaran juga menggagalkan build.
+
 ```
-app/                      Route App Router
-  layout.tsx              Root: bahasa, font, provider tema — TANPA navbar
-  (public)/               Route group situs publik (tidak masuk ke URL)
-    layout.tsx            Navbar, footer, tautan lompat ke konten
-    page.tsx              Beranda — hero, animasi ketik role, proyek pilihan
-    tentang/ pendidikan/  Halaman profil
-    keahlian/ pengalaman/
-    pencapaian/ kontak/
-    proyek/               Daftar proyek + filter tech stack
-    proyek/tech/[tech]/   Daftar yang tersaring — satu halaman statis per tech
-    proyek/[slug]/        Detail proyek
-  admin/                  Dashboard admin
-    (dashboard)/          Halaman dashboard + layout sidebar
-    login/                Halaman masuk, layout sendiri tanpa sidebar
-    actions-auth.ts       Masuk dan keluar (Server Action)
-    actions-content.ts    Seluruh aksi tulis, lewat withAdminAction
-  sitemap.ts robots.ts    SEO
-  not-found.tsx           Halaman 404
-  globals.css             Token publik + token admin (dilingkup .admin-root)
+src/
+  server/                 ← BACKEND. Seluruh isinya "server-only".
+    db/
+      client.ts           Klien anon khusus server (halaman publik)
+      session.ts          Klien sadar sesi (dashboard admin)
+      queries.ts          Pembacaan publik — SELALU memfilter is_published
+      queries-admin.ts    Pembacaan admin — termasuk baris draf
+    auth.ts               requireAdmin() — otorisasi setiap aksi tulis
+    actions/
+      admin.ts            withAdminAction: auth → validasi → handler → revalidasi
+      public.ts           withPublicAction: honeypot → batas laju → validasi
+      konten.ts           Seluruh aksi tulis dashboard
+      auth.ts             Masuk dan keluar (Server Action)
+      publik-form.ts      Kirim pesan dan rating dari pengunjung
+      revalidate.ts       Peta entitas → halaman publik terdampak
+      storage.ts          Unggah, hapus, konversi URL ↔ path Storage
+      sender.ts           Hash pengenal pengirim (bukan alamat IP mentah)
 
-proxy.ts                  Proteksi route /admin + alamat masuk rahasia
+  client/                 ← FRONTEND. Dilarang menyentuh database.
+    components/
+      layout/             Navbar, footer, toggle tema, ikon sosial
+      home/               Animasi ketik role
+      projects/           Kartu proyek, grid, filter tech stack (tautan, tanpa JS)
+      achievements/       Grid pencapaian + pratinjau gambar
+      ui/                 Primitif publik: kartu, badge, tombol, timeline
+      admin/              Primitif admin, sidebar, toast, dialog konfirmasi
+        managers/         Satu manager per jenis konten
+      public/             Form kontak, form rating, pratinjau CV, honeypot
+    hooks/                use-mounted, use-reduced-motion, use-rating-submitted
+
+  shared/                 ← DIPAKAI KEDUANYA. Tidak boleh bergantung pada
+                            server/ maupun client/.
+    env.ts                Validasi variabel lingkungan (satu tempat)
+    schemas.ts            Skema zod, dipakai klien DAN server
+    types.ts              Alias ringkas
+    constants.ts          REVALIDATE, nama bucket, item navigasi
+    format.ts             Tanggal id-ID, label enum, slug tech stack
+    cn.ts                 Penggabung className
+    honeypot.ts           Nama field honeypot
+    social-icons.ts       Peta platform → ikon
+    database.types.ts     Tipe skema (hasil generate)
+
+  app/                    ← ROUTING saja; logikanya ada di server/ dan client/
+    layout.tsx            Root: bahasa, font, provider tema — TANPA navbar
+    (public)/             Route group situs publik (tidak masuk ke URL)
+      layout.tsx          Navbar, footer, tautan lompat ke konten
+      page.tsx            Beranda — hero, animasi ketik role, proyek pilihan
+      tentang/ pendidikan/
+      keahlian/ pengalaman/
+      pencapaian/ kontak/
+      proyek/             Daftar proyek + filter tech stack
+      proyek/tech/[tech]/ Daftar tersaring — satu halaman statis per tech
+      proyek/[slug]/      Detail proyek
+    admin/
+      (dashboard)/        Halaman dashboard + layout sidebar
+      login/              Halaman masuk, layout sendiri tanpa sidebar
+    sitemap.ts robots.ts  SEO
+    not-found.tsx         Halaman 404
+    globals.css           Token publik + token admin (dilingkup .admin-root)
+
+  proxy.ts                Proteksi route /admin + alamat masuk rahasia
                           (dulu bernama middleware.ts)
-
-components/
-  layout/                 Navbar, footer, toggle tema, ikon sosial
-  home/                   Animasi ketik role
-  projects/               Kartu proyek, grid, filter tech stack (tautan, tanpa JS)
-  achievements/           Grid pencapaian + pratinjau gambar
-  ui/                     Primitif publik: kartu, badge, tombol, timeline
-  admin/                  Primitif admin, sidebar, toast, dialog konfirmasi
-    managers/             Satu manager per jenis konten
-  public/                 Form kontak, form rating, pratinjau CV, honeypot
-
-lib/
-  env.ts                  Validasi variabel lingkungan (satu tempat)
-  auth.ts                 requireAdmin() — otorisasi setiap aksi tulis
-  schemas.ts              Skema zod, dipakai klien DAN server
-  supabase/server.ts      Klien anon khusus server (halaman publik)
-  supabase/session.ts     Klien sadar sesi (dashboard admin)
-  queries.ts              Pembacaan publik — SELALU memfilter is_published
-  queries-admin.ts        Pembacaan admin — termasuk baris draf
-  admin/action.ts         withAdminAction: auth → validasi → handler → revalidasi
-  admin/revalidate.ts     Peta entitas → halaman publik terdampak
-  admin/storage.ts        Unggah, hapus, konversi URL ↔ path Storage
-  public/action.ts        withPublicAction: honeypot → batas laju → validasi
-  public/sender.ts        Hash pengenal pengirim (bukan alamat IP mentah)
-  format.ts               Tanggal id-ID, label enum bahasa Indonesia
-  constants.ts            REVALIDATE, nama bucket, item navigasi
-  database.types.ts       Tipe skema (hasil generate)
-  types.ts                Alias ringkas
 
 supabase/
   migrations/             Skema berversi
@@ -241,9 +257,24 @@ supabase/
 scripts/                  Pemeriksa env, kontras, dan konsistensi revalidasi
 ```
 
+### Batas frontend–backend
+
+Ditegakkan di `eslint.config.mjs`, dan sengaja TIDAK hanya mengandalkan
+konvensi penamaan:
+
+| Dari | Dilarang mengimpor | Alasan |
+| --- | --- | --- |
+| `src/client/` | `@/server/db/*`, `@/server/auth` | Komponen peramban tidak boleh menyentuh database atau sesi. Ambil datanya di Server Component lalu teruskan sebagai prop, atau panggil Server Action. |
+| `src/client/` | `@supabase/*`, `pg`, `node:*` | Menyeret klien Supabase dan modul Node ke bundel peramban. |
+| `src/shared/` | `@/server/*`, `@/client/*` | Dipakai kedua sisi, jadi tidak boleh bergantung pada salah satunya. |
+
+Yang tetap boleh: `src/client/` memanggil Server Action di
+`@/server/actions/`. Itu memang jembatan resminya — pemanggilannya lewat
+jaringan, dan kodenya tidak ikut ke peramban.
+
 ## Variabel lingkungan
 
-Daftar lengkap. Semua dibaca lewat `lib/env.ts` — tidak ada variabel lain yang
+Daftar lengkap. Semua dibaca lewat `src/shared/env.ts` — tidak ada variabel lain yang
 dibaca kode di luar daftar ini.
 
 | Variabel | Wajib | Aman untuk peramban | Dari mana |
@@ -410,12 +441,39 @@ dengan pengalihannya, kalau tidak proxy belum melihat sesi itu dan
 memantulkan admin kembali ke beranda. Efek sampingnya menyenangkan —
 `@supabase/supabase-js` tidak lagi ikut ke bundel peramban sama sekali.
 
+### Identitas situs: nama dan logo di header
+
+Tulisan di pojok kiri header dan logo di sampingnya diatur di `/admin/profil`,
+bukan di kode. Tidak ada satu pun teks di situs publik yang ditulis keras.
+
+- **Nama situs** — dikosongkan berarti memakai "Portofolio". Maksimal 40
+  karakter, karena ruang di header terbatas dan nama yang terlalu panjang
+  mendorong menu navigasi keluar layar di peranti kecil.
+- **Logo header** — rasio apa pun boleh; gambarnya disesuaikan tanpa terpotong
+  maupun meregang, jadi tidak perlu disiapkan persegi. Dikosongkan berarti
+  header hanya menampilkan nama. Logo lama otomatis dihapus dari Storage
+  setelah penggantian tersimpan.
+
+Keduanya tampil di SETIAP halaman, jadi menyimpannya merevalidasi seluruh
+layout sekaligus — bukan satu path.
+
+### Lebar halaman
+
+Halaman memakai seluruh lebar layar. Lebarnya ditentukan di satu tempat saja,
+utility `wadah` di `src/app/globals.css`, bukan ditulis berulang di tiap
+halaman. Margin tepinya melebar bertahap di layar besar.
+
+Blok teks panjang — bio dan deskripsi proyek — dibatasi utility `prosa`
+(~75 karakter per baris). Itu bukan selera: di layar lebar, baris yang
+membentang penuh membuat mata kehilangan jejak saat berpindah ke baris
+berikutnya. Kartu, grid, header, dan footer tidak dibatasi dan tetap penuh.
+
 ### Yang bisa dikelola
 
 | Halaman | Isi |
 | --- | --- |
 | `/admin` | Ringkasan: jumlah proyek, pesan belum dibaca, rating menunggu |
-| `/admin/profil` | Nama, bio, daftar role, foto, berkas CV, status open-to-work |
+| `/admin/profil` | Nama situs dan logo header, nama, bio, daftar role, foto, berkas CV, status open-to-work |
 | `/admin/tautan-sosial` | Ikon sosial di beranda dan footer |
 | `/admin/pendidikan` | Timeline pendidikan |
 | `/admin/keahlian` | Kategori beserta keahlian di dalamnya |
@@ -454,7 +512,7 @@ Tiga lapis, dan tidak ada yang berdiri sendiri:
 
 Batasnya sengaja longgar: beberapa pengunjung bisa berbagi satu alamat IP di
 kantor, kampus, atau jaringan seluler, dan kuota yang ketat akan memblokir
-orang yang tidak bersalah. Ubah nilainya di `lib/public/action.ts` bila perlu.
+orang yang tidak bersalah. Ubah nilainya di `src/server/actions/public.ts` bila perlu.
 
 ### Pesan masuk
 

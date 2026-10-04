@@ -1,7 +1,7 @@
 /**
  * Memastikan setiap variabel lingkungan WAJIB ada di .env.local.
  *
- * Ini bukan duplikasi dari lib/env.ts. Variabel di sana dibaca saat kode yang
+ * Ini bukan duplikasi dari src/shared/env.ts. Variabel di sana dibaca saat kode yang
  * membutuhkannya berjalan, dan tidak semuanya ikut dievaluasi saat build —
  * ADMIN_LOGIN_PATH khususnya hanya dibaca proxy pada permintaan ke /admin.
  *

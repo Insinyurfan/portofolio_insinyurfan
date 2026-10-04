@@ -371,7 +371,11 @@ try {
   if ((await pub2.getByRole("button", { name: "Pratinjau CV" }).count()) === 0) {
     await adm.goto(`${BASE}/admin/profil`, { waitUntil: "load" });
 
-    const inputCv = adm.locator('input[type="file"]').nth(1);
+    // Disasar lewat LABEL, bukan `nth(1)`. Urutan input berkas di halaman
+    // profil berubah begitu field berkas baru ditambahkan — saat field "Logo
+    // header" disisipkan sebelum foto, indeks 1 berpindah dari CV ke foto dan
+    // PDF uji masuk ke field yang salah tanpa ada yang gagal secara terlihat.
+    const inputCv = adm.getByLabel("Berkas CV");
     await inputCv.setInputFiles({
       name: "cv-uji.pdf",
       mimeType: "application/pdf",
@@ -446,11 +450,30 @@ try {
   // CV uji dilepas kembali supaya profil kembali seperti semula.
   if (cvDipasangOlehUji) {
     await adm.goto(`${BASE}/admin/profil`, { waitUntil: "load" });
-    await adm
-      .getByRole("button", { name: "Hapus" })
-      .last()
-      .click()
-      .catch(() => {});
+    // Disasar dengan nama lengkapnya, BUKAN `name: "Hapus"` + `.last()`.
+    // Playwright mencocokkan nama sebagai substring, sehingga pola lama ikut
+    // menangkap tombol "Hapus <role>" di daftar role — dan karena kliknya
+    // dibungkus catch kosong, kegagalannya tidak terlihat sementara satu role
+    // milik pemilik terhapus dari database setiap kali uji ini dijalankan.
+    const tombolHapusCv = adm.getByRole("button", {
+      name: "Hapus Berkas CV",
+      exact: true,
+    });
+
+    // Kegagalan di sini TIDAK boleh ditelan diam-diam. Versi sebelumnya
+    // memakai `name: "Hapus"` + `.last()` dibungkus catch kosong: karena
+    // Playwright mencocokkan nama sebagai substring, kliknya mendarat di
+    // tombol "Hapus <role>" dan satu role milik pemilik ikut terhapus dari
+    // database setiap kali uji ini dijalankan.
+    if ((await tombolHapusCv.count()) === 0) {
+      cek(
+        "tombol hapus CV ditemukan untuk membersihkan CV uji",
+        false,
+        "tidak ada — CV uji kemungkinan gagal terpasang di langkah sebelumnya",
+      );
+    } else {
+      await tombolHapusCv.click();
+    }
     await adm.waitForTimeout(600);
     await adm.getByRole("button", { name: "Simpan profil" }).click();
     await adm.waitForTimeout(4000);

@@ -1,7 +1,7 @@
 -- Fondasi: fungsi trigger updated_at dan tipe enum tertutup.
 --
 -- Nilai enum ditulis dalam bahasa Inggris dan netral bahasa; label bahasa
--- Indonesia dipetakan di lapisan tampilan (lib/format.ts). Itu yang membuat
+-- Indonesia dipetakan di lapisan tampilan (src/shared/format.ts). Itu yang membuat
 -- syarat "tidak ada nilai enum mentah yang tampil" bisa diperiksa, dan
 -- membuat pemetaan labelnya exhaustive terhadap enum di TypeScript.
 

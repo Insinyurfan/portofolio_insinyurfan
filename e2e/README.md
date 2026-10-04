@@ -7,7 +7,7 @@ otomatis sebagai non-goal). Ia ditambahkan saat implementasi karena verifikasi
 lewat HTTP saja tidak cukup — dan ternyata menemukan tujuh bug yang tidak
 terlihat dari `next build`, `tsc`, maupun `curl`:
 
-1. `lib/env.ts` membaca `process.env[nama]` dengan kunci dinamis, sehingga
+1. `src/shared/env.ts` membaca `process.env[nama]` dengan kunci dinamis, sehingga
    variabel `NEXT_PUBLIC_*` tidak ter-inline ke bundel peramban dan halaman
    login mati saat dihidrasi.
 2. Policy Storage memberi `authenticated` hak hapus tanpa hak baca, sehingga

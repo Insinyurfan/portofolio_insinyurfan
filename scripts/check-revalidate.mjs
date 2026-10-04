@@ -6,7 +6,7 @@
  *      tetapi Next.js menolak `export const revalidate` yang bukan nilai
  *      literal — segment config harus bisa dianalisis statis. Jadi nilainya
  *      ditulis literal per route, dan skrip inilah yang mencegahnya melenceng.
- *      lib/constants.ts tetap satu sumber kebenarannya.
+ *      src/shared/constants.ts tetap satu sumber kebenarannya.
  *
  *   2. Setiap route ADMIN dirender dinamis.
  *      Halaman admin menampilkan data langsung termasuk draf, dan konten admin
@@ -21,14 +21,14 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const APP_DIR = join(ROOT, "app");
+const APP_DIR = join(ROOT, "src", "app");
 
-/** Nilai acuan diambil dari lib/constants.ts, bukan ditulis ulang di sini. */
-const constantsSource = await readFile(join(ROOT, "lib", "constants.ts"), "utf8");
+/** Nilai acuan diambil dari src/shared/constants.ts, bukan ditulis ulang di sini. */
+const constantsSource = await readFile(join(ROOT, "src", "shared", "constants.ts"), "utf8");
 const acuanMatch = constantsSource.match(/export const REVALIDATE\s*=\s*(\d+)/);
 
 if (!acuanMatch) {
-  console.error("GAGAL: REVALIDATE tidak ditemukan di lib/constants.ts");
+  console.error("GAGAL: REVALIDATE tidak ditemukan di src/shared/constants.ts");
   process.exit(1);
 }
 
@@ -60,7 +60,7 @@ for (const path of berkas) {
   const nama = relative(ROOT, path).replace(/\\/g, "/");
 
   // Route admin: wajib dinamis, TIDAK boleh punya revalidate.
-  if (nama.startsWith("app/admin/")) {
+  if (nama.startsWith("src/app/admin/")) {
     const dinamis = /export const dynamic\s*=\s*["']force-dynamic["']/.test(isi);
     if (!dinamis) {
       masalah.push(`${nama}: route admin tanpa dynamic = "force-dynamic"`);
@@ -72,11 +72,11 @@ for (const path of berkas) {
   }
 
   // robots.ts tidak mengambil data, jadi tidak butuh revalidate.
-  if (nama === "app/robots.ts") continue;
+  if (nama === "src/app/robots.ts") continue;
 
   // Root layout sengaja minimal: shell publik (beserta datanya) ada di
-  // app/(public)/layout.tsx, jadi revalidate juga ada di sana.
-  if (nama === "app/layout.tsx") continue;
+  // src/app/(public)/layout.tsx, jadi revalidate juga ada di sana.
+  if (nama === "src/app/layout.tsx") continue;
 
   // Halaman 404 tidak mengambil data.
   if (nama.endsWith("not-found.tsx")) continue;
@@ -98,7 +98,7 @@ for (const path of berkas) {
   }
 }
 
-console.log(`Periode revalidasi acuan (lib/constants.ts): ${acuan} detik\n`);
+console.log(`Periode revalidasi acuan (src/shared/constants.ts): ${acuan} detik\n`);
 console.log("Route publik — wajib revalidate yang sama:");
 console.log(barisPublik.sort().join("\n"));
 console.log("\nRoute admin — wajib force-dynamic:");

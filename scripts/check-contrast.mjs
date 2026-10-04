@@ -2,7 +2,7 @@
  * Memeriksa rasio kontras setiap pasangan token teks/latar pada tema terang
  * dan gelap terhadap WCAG AA (4.5:1 teks normal, 3:1 teks besar / komponen).
  *
- * Nilai diambil dari app/globals.css supaya pemeriksaan ini tidak bisa
+ * Nilai diambil dari src/app/globals.css supaya pemeriksaan ini tidak bisa
  * diam-diam melenceng dari token yang benar-benar dipakai.
  *
  * Jalankan: node scripts/check-contrast.mjs
@@ -10,7 +10,7 @@
 
 import { readFile } from "node:fs/promises";
 
-const CSS_PATH = new URL("../app/globals.css", import.meta.url);
+const CSS_PATH = new URL("../src/app/globals.css", import.meta.url);
 
 /** Ambil blok `:root { ... }` atau `.dark { ... }` beserta deklarasi --token. */
 function parseTokens(css, selector) {

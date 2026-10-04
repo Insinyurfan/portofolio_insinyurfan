@@ -288,6 +288,51 @@ try {
     (await page.getByText("Belum ada rating").count()) > 0,
   );
 
+  // ============================== IDENTITAS SITUS DI HEADER
+  console.log("\n— Nama situs & logo di header —");
+
+  await page.goto(`${BASE}/admin/profil`, { waitUntil: "load" });
+  cek(
+    "nama situs dapat diatur dari dashboard",
+    (await page.getByLabel("Nama situs").count()) > 0,
+  );
+  cek(
+    "logo header dapat diunggah dari dashboard",
+    (await page.getByText("Logo header").count()) > 0,
+  );
+
+  await page.getByLabel("Nama situs").fill("Situs Uji E2E");
+  await page.getByRole("button", { name: "Simpan profil" }).click();
+  await page.waitForTimeout(3500);
+
+  // Navbar ada di SETIAP halaman, jadi yang diperiksa bukan hanya beranda:
+  // revalidasi profil harus mencakup seluruh layout, bukan satu path.
+  await page.goto(`${BASE}/`, { waitUntil: "load" });
+  const merekBeranda = (await page.locator("header nav a").first().textContent())?.trim();
+  cek("nama baru tampil di header beranda", merekBeranda === "Situs Uji E2E", merekBeranda);
+
+  await page.goto(`${BASE}/proyek`, { waitUntil: "load" });
+  const merekProyek = (await page.locator("header nav a").first().textContent())?.trim();
+  cek(
+    "berlaku di seluruh halaman, bukan hanya beranda",
+    merekProyek === "Situs Uji E2E",
+    merekProyek,
+  );
+
+  // Dikosongkan kembali: nilai cadangan harus tetap masuk akal, dan data uji
+  // tidak boleh tertinggal di database.
+  await page.goto(`${BASE}/admin/profil`, { waitUntil: "load" });
+  await page.getByLabel("Nama situs").fill("");
+  await page.getByRole("button", { name: "Simpan profil" }).click();
+  await page.waitForTimeout(3500);
+  await page.goto(`${BASE}/`, { waitUntil: "load" });
+  const merekKosong = (await page.locator("header nav a").first().textContent())?.trim();
+  cek(
+    'nama situs kosong → header memakai "Portofolio"',
+    merekKosong === "Portofolio",
+    merekKosong,
+  );
+
   // ===================================== REGRESI PUBLIK
   console.log("\n— Regresi halaman publik —");
 
