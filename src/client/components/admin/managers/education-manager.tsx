@@ -7,6 +7,8 @@ import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 
 import { FileField } from "@/client/components/admin/file-field";
+import { GalleryField } from "@/client/components/admin/gallery-field";
+import { StringListField } from "@/client/components/admin/managers/string-list-field";
 import { ItemList } from "@/client/components/admin/item-list";
 import {
   Button,
@@ -33,6 +35,10 @@ const KOSONG: Nilai = {
   degree: "",
   location: "",
   logo_url: "",
+  focus_items: [],
+  activity_items: [],
+  gallery: [],
+  website_url: "",
   start_year: new Date().getFullYear(),
   end_year: "",
   gpa: "",
@@ -63,6 +69,10 @@ export function EducationManager({ items }: { items: Education[] }) {
             degree: item.degree ?? "",
             location: item.location ?? "",
             logo_url: item.logo_url ?? "",
+            focus_items: item.focus_items,
+            activity_items: item.activity_items,
+            gallery: item.gallery,
+            website_url: item.website_url ?? "",
             start_year: item.start_year,
             end_year: item.end_year ?? "",
             gpa: item.gpa ?? "",
@@ -198,6 +208,60 @@ export function EducationManager({ items }: { items: Education[] }) {
             >
               {(a) => <Textarea {...a} {...register("description")} />}
             </Field>
+
+            <Field
+              id="website_url"
+              label="Situs resmi institusi"
+              hint="Tombol “Kunjungi situs institusi” di dialog detail mengarah ke sini. Dikosongkan berarti tombolnya tidak dirender."
+              error={formState.errors.website_url?.message}
+            >
+              {(a) => (
+                <Input {...a} {...register("website_url")} placeholder="https://…" />
+              )}
+            </Field>
+
+            <Controller
+              control={control}
+              name="focus_items"
+              render={({ field }) => (
+                <StringListField
+                  label="Fokus pembelajaran"
+                  nilai={field.value ?? []}
+                  onChange={field.onChange}
+                  placeholder="Misalnya: Rekayasa Perangkat Lunak"
+                  hint="Satu baris per poin, tampil di dialog detail. Kosong berarti bagiannya tidak dirender."
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="activity_items"
+              render={({ field }) => (
+                <StringListField
+                  label="Aktivitas & pencapaian"
+                  nilai={field.value ?? []}
+                  onChange={field.onChange}
+                  placeholder="Misalnya: Anggota himpunan mahasiswa"
+                  hint="Satu baris per poin, tampil di dialog detail."
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="gallery"
+              render={({ field }) => (
+                <GalleryField
+                  label="Dokumentasi pendidikan"
+                  nilai={field.value ?? []}
+                  prefiks="education"
+                  onChange={field.onChange}
+                  onSedangMengunggah={setMengunggah}
+                  hint="Tiga foto pertama tampil sebagai cuplikan di kartu; semuanya tampil di dialog detail."
+                />
+              )}
+            />
 
             <label className="flex items-center gap-2 text-sm text-adm-fg">
               <Checkbox {...register("is_published")} />

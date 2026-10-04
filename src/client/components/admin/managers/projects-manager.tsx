@@ -7,6 +7,7 @@ import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 
 import { FileField } from "@/client/components/admin/file-field";
+import { GalleryField } from "@/client/components/admin/gallery-field";
 import { ItemList } from "@/client/components/admin/item-list";
 import { StringListField } from "@/client/components/admin/managers/string-list-field";
 import {
@@ -19,8 +20,7 @@ import {
   Textarea,
 } from "@/client/components/admin/ui";
 import { useAksi } from "@/client/components/admin/use-aksi";
-import { simpanProyekAction, unggahAction } from "@/server/actions/konten";
-import { toastGagal } from "@/client/components/admin/toaster";
+import { simpanProyekAction } from "@/server/actions/konten";
 import { keSlug, projectSchema } from "@/shared/schemas";
 import type { Project } from "@/shared/types";
 
@@ -102,27 +102,6 @@ export function ProjectsManager({ items }: { items: Project[] }) {
       setTerbuka(false);
       reset(KOSONG);
     }
-  }
-
-  /** Unggah beberapa gambar galeri sekaligus. */
-  async function tambahGaleri(files: FileList) {
-    setMengunggah(true);
-    const urlBaru: string[] = [];
-
-    for (const file of Array.from(files)) {
-      const fd = new FormData();
-      fd.set("file", file);
-      fd.set("prefiks", "projects");
-      fd.set("jenis", "gambar");
-      const hasil = await unggahAction(fd);
-      if (hasil.ok && hasil.data) urlBaru.push(hasil.data.url);
-      else if (!hasil.ok) toastGagal(hasil.message);
-    }
-
-    if (urlBaru.length > 0) {
-      setValue("gallery", [...(getValues("gallery") ?? []), ...urlBaru]);
-    }
-    setMengunggah(false);
   }
 
   return (
@@ -230,32 +209,14 @@ export function ProjectsManager({ items }: { items: Project[] }) {
               control={control}
               name="gallery"
               render={({ field }) => (
-                <div className="space-y-2">
-                  <StringListField
-                    label="Galeri gambar"
-                    nilai={field.value ?? []}
-                    onChange={field.onChange}
-                    placeholder="https://…"
-                    hint="Urutan di sini adalah urutan yang tampil di halaman detail."
-                  />
-                  <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-adm-primary">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      className="sr-only"
-                      onChange={(e) => {
-                        if (e.target.files?.length) {
-                          void tambahGaleri(e.target.files);
-                          e.target.value = "";
-                        }
-                      }}
-                    />
-                    <span className="underline-offset-2 hover:underline">
-                      {mengunggah ? "Mengunggah…" : "Atau unggah gambar galeri →"}
-                    </span>
-                  </label>
-                </div>
+                <GalleryField
+                  label="Galeri gambar"
+                  nilai={field.value ?? []}
+                  prefiks="projects"
+                  onChange={field.onChange}
+                  onSedangMengunggah={setMengunggah}
+                  hint="Urutan di sini adalah urutan yang tampil di halaman detail."
+                />
               )}
             />
 

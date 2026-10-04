@@ -58,10 +58,13 @@ export type Database = {
       }
       education: {
         Row: {
+          activity_items: string[]
           created_at: string
           degree: string | null
           description: string | null
           end_year: number | null
+          focus_items: string[]
+          gallery: string[]
           gpa: number | null
           id: string
           institution: string
@@ -72,12 +75,16 @@ export type Database = {
           sort_order: number
           start_year: number
           updated_at: string
+          website_url: string | null
         }
         Insert: {
+          activity_items?: string[]
           created_at?: string
           degree?: string | null
           description?: string | null
           end_year?: number | null
+          focus_items?: string[]
+          gallery?: string[]
           gpa?: number | null
           id?: string
           institution: string
@@ -88,12 +95,16 @@ export type Database = {
           sort_order?: number
           start_year: number
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
+          activity_items?: string[]
           created_at?: string
           degree?: string | null
           description?: string | null
           end_year?: number | null
+          focus_items?: string[]
+          gallery?: string[]
           gpa?: number | null
           id?: string
           institution?: string
@@ -104,6 +115,7 @@ export type Database = {
           sort_order?: number
           start_year?: number
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -112,43 +124,58 @@ export type Database = {
           created_at: string
           description: string | null
           end_date: string | null
+          gallery: string[]
+          highlights: string[]
           id: string
           is_ongoing: boolean
           is_published: boolean
+          location: string | null
+          logo_url: string | null
           organization: string
           position: string
           sort_order: number
           start_date: string
           type: Database["public"]["Enums"]["experience_type"]
           updated_at: string
+          website_url: string | null
         }
         Insert: {
           created_at?: string
           description?: string | null
           end_date?: string | null
+          gallery?: string[]
+          highlights?: string[]
           id?: string
           is_ongoing?: boolean
           is_published?: boolean
+          location?: string | null
+          logo_url?: string | null
           organization: string
           position: string
           sort_order?: number
           start_date: string
           type: Database["public"]["Enums"]["experience_type"]
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
           created_at?: string
           description?: string | null
           end_date?: string | null
+          gallery?: string[]
+          highlights?: string[]
           id?: string
           is_ongoing?: boolean
           is_published?: boolean
+          location?: string | null
+          logo_url?: string | null
           organization?: string
           position?: string
           sort_order?: number
           start_date?: string
           type?: Database["public"]["Enums"]["experience_type"]
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }

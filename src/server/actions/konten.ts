@@ -217,16 +217,9 @@ export const simpanTautanSosialAction = withAdminAction(
 export const simpanPendidikanAction = withAdminAction(
   educationSchema,
   async (input) => {
-    // Logo lama hanya boleh dihapus SETELAH baris barunya tersimpan: kalau
-    // penyimpanan gagal, berkas yang masih dipakai tidak ikut hilang.
-    const lama = input.id ? await ambilLogoPendidikan(input.id) : null;
-
+    const lama = input.id ? await ambilBaris("education", input.id) : null;
     const hasil = await simpanBaris("education", input);
-
-    if (lama && lama !== input.logo_url) {
-      await hapusBerkas(lama);
-    }
-
+    await bersihkanBerkasLama(lama, input);
     return hasil;
   },
   {
@@ -235,16 +228,30 @@ export const simpanPendidikanAction = withAdminAction(
   },
 );
 
-/** Logo yang tersimpan sekarang, untuk dibersihkan bila diganti. */
-async function ambilLogoPendidikan(id: string): Promise<string | null> {
-  const supabase = await createSessionSupabaseClient();
-  const { data } = await supabase
-    .from("education")
-    .select("logo_url")
-    .eq("id", id)
-    .maybeSingle();
+/**
+ * Membersihkan berkas yang TIDAK lagi dirujuk baris setelah disimpan.
+ *
+ * Dipanggil SESUDAH penyimpanan berhasil, bukan sebelumnya: kalau
+ * penyimpanannya gagal, berkas yang masih dipakai tidak boleh ikut hilang.
+ */
+async function bersihkanBerkasLama(
+  lama: Record<string, unknown> | null,
+  baru: { logo_url?: string | null; gallery?: string[] },
+): Promise<void> {
+  if (!lama) return;
 
-  return data?.logo_url ?? null;
+  const buang: string[] = [];
+
+  const logoLama = lama.logo_url;
+  if (typeof logoLama === "string" && logoLama !== baru.logo_url) {
+    buang.push(logoLama);
+  }
+
+  const galeriLama = Array.isArray(lama.gallery) ? (lama.gallery as string[]) : [];
+  const galeriBaru = baru.gallery ?? [];
+  buang.push(...galeriLama.filter((g) => !galeriBaru.includes(g)));
+
+  if (buang.length > 0) await hapusBerkas(...buang);
 }
 
 export const simpanKategoriKeahlianAction = withAdminAction(
@@ -267,7 +274,12 @@ export const simpanKeahlianAction = withAdminAction(
 
 export const simpanPengalamanAction = withAdminAction(
   experienceSchema,
-  (input) => simpanBaris("experiences", input),
+  async (input) => {
+    const lama = input.id ? await ambilBaris("experiences", input.id) : null;
+    const hasil = await simpanBaris("experiences", input);
+    await bersihkanBerkasLama(lama, input);
+    return hasil;
+  },
   {
     sukses: (i) => (i.id ? "Pengalaman diperbarui." : "Pengalaman ditambahkan."),
     revalidasi: "experiences",
@@ -409,6 +421,7 @@ export const hapusItemAction = withAdminAction(
       const url: Array<string | null> = [];
       if (typeof baris.thumbnail_url === "string") url.push(baris.thumbnail_url);
       if (typeof baris.image_url === "string") url.push(baris.image_url);
+      if (typeof baris.logo_url === "string") url.push(baris.logo_url);
       if (Array.isArray(baris.gallery)) url.push(...(baris.gallery as string[]));
       if (url.length > 0) await hapusBerkas(...url);
     }

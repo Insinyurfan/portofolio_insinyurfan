@@ -118,6 +118,19 @@ const tahun = z.coerce
   .min(1900, "Tahun tidak masuk akal.")
   .max(2100, "Tahun tidak masuk akal.");
 
+/**
+ * Daftar teks: baris kosong atau hanya spasi dibuang sebelum disimpan.
+ *
+ * Dipakai untuk daftar poin (fokus pembelajaran, aktivitas, kontribusi) dan
+ * untuk galeri. Pembuangan dilakukan di sini, bukan di tampilan, supaya baris
+ * kosong tidak pernah tersimpan dan tidak perlu disaring ulang di tiap tempat
+ * yang membacanya.
+ */
+const daftarTeks = z
+  .array(z.string())
+  .default([])
+  .transform((arr) => arr.map((v) => v.trim()).filter((v) => v !== ""));
+
 export const educationSchema = z
   .object({
     id: idOpsional,
@@ -128,6 +141,10 @@ export const educationSchema = z
     // Batas 120 karakter sama dengan constraint di database.
     location: teksOpsional(120, "Lokasi"),
     logo_url: urlOpsional,
+    focus_items: daftarTeks,
+    activity_items: daftarTeks,
+    gallery: daftarTeks,
+    website_url: urlOpsional,
     start_year: tahun,
     end_year: z
       .union([tahun, z.literal(""), z.null(), z.undefined()])
@@ -184,6 +201,11 @@ export const experienceSchema = z
     end_date: tanggalOpsional,
     is_ongoing: z.coerce.boolean().default(false),
     description: teksOpsional(2000, "Deskripsi"),
+    location: teksOpsional(120, "Lokasi"),
+    logo_url: urlOpsional,
+    highlights: daftarTeks,
+    gallery: daftarTeks,
+    website_url: urlOpsional,
     sort_order: urutan,
     is_published: terbit,
   })

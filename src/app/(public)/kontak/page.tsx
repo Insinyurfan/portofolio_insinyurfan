@@ -34,7 +34,11 @@ export default async function KontakPage() {
       title="Kontak"
       description="Kirim pesan lewat form, atau hubungi saya langsung lewat email dan media sosial."
     >
-      <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr] lg:items-start">
+      {/* `*:min-w-0` adalah pengaman, bukan hiasan: item grid bawaannya
+       * `min-width: auto`, sehingga satu isi yang tidak dapat dipotong — email
+       * panjang, URL, nama berkas — melebarkan kolomnya melampaui lebar
+       * halaman dan memunculkan scroll ke samping. */}
+      <div className="grid gap-5 lg:grid-cols-[1.2fr_1fr] lg:items-start *:min-w-0">
         {/*
           Form dirender tanpa syarat: ia harus tetap berfungsi walau profil
           belum diisi, dan tidak bergantung pada data profil apa pun.
@@ -68,12 +72,18 @@ export default async function KontakPage() {
                 <div>
                   <dt className="text-sm text-text-subtle">Email</dt>
                   <dd className="mt-1">
+                    {/* `break-all` pada teks emailnya, bukan pada tautannya:
+                     * alamat email adalah satu kata tanpa spasi, jadi ia tidak
+                     * punya tempat untuk berganti baris dan memaksa kartunya
+                     * melebar sampai halaman bisa di-scroll ke samping di
+                     * layar sempit. Baru terlihat setelah email contoh yang
+                     * pendek diganti alamat sungguhan. */}
                     <a
                       href={`mailto:${profile.email}`}
-                      className="inline-flex items-center gap-2 font-heading text-lg font-semibold text-accent hover:underline"
+                      className="inline-flex items-start gap-2 font-heading text-lg font-semibold text-accent hover:underline"
                     >
-                      <Mail className="size-5" aria-hidden="true" />
-                      {profile.email}
+                      <Mail className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+                      <span className="break-all">{profile.email}</span>
                     </a>
                   </dd>
                 </div>
