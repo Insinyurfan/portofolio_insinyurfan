@@ -13,7 +13,7 @@
     "db:push": "supabase db push",
     "db:reset": "supabase db reset",
     "db:seed": "node scripts/run-sql.mjs supabase/seed.sql",
-    "db:types": "supabase gen types typescript --project-id guxpvjuwovmgjdwawcfr --schema public > lib/database.types.ts",
+    "db:types": "supabase gen types typescript --project-id guxpvjuwovmgjdwawcfr --schema public > src/shared/database.types.ts",
     "dev": "next dev",
     "e2e:admin": "node e2e/admin-auth.mjs",
     "e2e:admin-konten": "node e2e/admin-konten.mjs",

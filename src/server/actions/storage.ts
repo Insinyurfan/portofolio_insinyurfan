@@ -27,7 +27,9 @@ export type PrefiksMedia =
   // Logo header dipisahkan dari "profile" supaya berkasnya mudah dikenali di
   // Storage, dan supaya mengganti foto profil tidak pernah tertukar dengan
   // mengganti logo saat berkas lama dibersihkan.
-  | "logo";
+  | "logo"
+  // Logo institusi di kartu pendidikan.
+  | "education";
 
 const JENIS_GAMBAR: Record<string, string> = {
   "image/jpeg": "jpg",

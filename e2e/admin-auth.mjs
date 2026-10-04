@@ -306,7 +306,7 @@ try {
   await page.waitForTimeout(500);
   cek(
     "form terbuka lewat keyboard",
-    (await page.getByLabel("Institusi").count()) > 0,
+    (await page.getByRole("textbox", { name: "Institusi", exact: true }).count()) > 0,
   );
   await page.getByRole("button", { name: "Batal" }).click();
 

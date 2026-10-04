@@ -3,9 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 
+import { FileField } from "@/client/components/admin/file-field";
 import { ItemList } from "@/client/components/admin/item-list";
 import {
   Button,
@@ -30,6 +31,8 @@ const KOSONG: Nilai = {
   institution: "",
   major: "",
   degree: "",
+  location: "",
+  logo_url: "",
   start_year: new Date().getFullYear(),
   end_year: "",
   gpa: "",
@@ -41,12 +44,14 @@ const KOSONG: Nilai = {
 export function EducationManager({ items }: { items: Education[] }) {
   const { jalankan, sedangBerjalan } = useAksi();
   const [terbuka, setTerbuka] = useState(false);
+  const [mengunggah, setMengunggah] = useState(false);
 
   const form = useForm<Nilai, unknown, Keluaran>({
     resolver: zodResolver(educationSchema),
     defaultValues: KOSONG,
   });
-  const { register, handleSubmit, reset, setError, formState, getValues } = form;
+  const { register, handleSubmit, reset, setError, control, formState, getValues } =
+    form;
 
   function buka(item?: Education) {
     reset(
@@ -56,6 +61,8 @@ export function EducationManager({ items }: { items: Education[] }) {
             institution: item.institution,
             major: item.major ?? "",
             degree: item.degree ?? "",
+            location: item.location ?? "",
+            logo_url: item.logo_url ?? "",
             start_year: item.start_year,
             end_year: item.end_year ?? "",
             gpa: item.gpa ?? "",
@@ -131,6 +138,30 @@ export function EducationManager({ items }: { items: Education[] }) {
               </Field>
             </div>
 
+            <Field
+              id="location"
+              label="Lokasi"
+              hint="Ditampilkan di kartu beserta ikon lokasi. Misalnya: Bekasi, Jawa Barat."
+              error={formState.errors.location?.message}
+            >
+              {(a) => <Input {...a} {...register("location")} />}
+            </Field>
+
+            <Controller
+              control={control}
+              name="logo_url"
+              render={({ field }) => (
+                <FileField
+                  label="Logo institusi"
+                  nilai={field.value ?? null}
+                  prefiks="education"
+                  hint="Tampil di kartu pendidikan. Rasio apa pun boleh — gambar disesuaikan tanpa terpotong. Dikosongkan berarti kartu memakai inisial nama institusi."
+                  onChange={(url) => field.onChange(url ?? "")}
+                  onSedangMengunggah={setMengunggah}
+                />
+              )}
+            />
+
             <div className="grid gap-4 sm:grid-cols-3">
               <Field
                 id="start_year"
@@ -174,7 +205,9 @@ export function EducationManager({ items }: { items: Education[] }) {
             </label>
 
             <div className="flex gap-2">
-              <Button type="submit" disabled={sedangBerjalan}>
+              {/* Ikut nonaktif selama logo masih diunggah: menyimpan di
+                  tengah unggahan akan menyimpan baris tanpa logonya. */}
+              <Button type="submit" disabled={sedangBerjalan || mengunggah}>
                 {sedangBerjalan ? "Menyimpan…" : "Simpan"}
               </Button>
               <Button

@@ -262,7 +262,7 @@ try {
   // Pendidikan: tahun selesai lebih awal ditolak.
   await page.goto(`${BASE}/admin/pendidikan`, { waitUntil: "load" });
   await page.getByRole("button", { name: "Tambah pendidikan" }).first().click();
-  await page.getByLabel("Institusi").fill("Uji");
+  await page.getByRole("textbox", { name: "Institusi", exact: true }).fill("Uji");
   await page.getByLabel("Tahun mulai").fill("2025");
   await page.getByLabel("Tahun selesai").fill("2020");
   await page.getByRole("button", { name: "Simpan" }).click();
@@ -356,15 +356,24 @@ try {
   // ===================================== REGRESI PUBLIK
   console.log("\n— Regresi halaman publik —");
 
+  /**
+   * Penanda diambil dari teks yang ditulis di KODE halaman, bukan dari isi
+   * yang dikelola pemilik.
+   *
+   * Versi sebelumnya mencari "Universitas Contoh", "TypeScript", dan nama
+   * lengkap dari data seed. Begitu pemilik mengganti data contoh dengan isi
+   * aslinya — yang justru tujuan seluruh dashboard ini — pemeriksaan regresi
+   * mulai gagal karena alasan yang salah, dan menyamarkan regresi sungguhan.
+   */
   const publik = [
-    ["/", "Nama Lengkap Anda"],
+    ["/", "Proyek Pilihan"],
     ["/tentang", "Tentang Saya"],
-    ["/pendidikan", "Universitas Contoh"],
-    ["/keahlian", "TypeScript"],
-    ["/pengalaman", "Frontend Developer"],
-    ["/proyek", "Sistem Informasi Perpustakaan"],
-    ["/pencapaian", "Sertifikat"],
-    ["/kontak", "mailto:"],
+    ["/pendidikan", "Riwayat akademik"],
+    ["/keahlian", "Keahlian"],
+    ["/pengalaman", "Pengalaman"],
+    ["/proyek", "Proyek"],
+    ["/pencapaian", "Pencapaian"],
+    ["/kontak", "Kontak"],
   ];
 
   for (const [path, penanda] of publik) {

@@ -219,9 +219,47 @@ try {
     await page.goto(`${BASE}/`, { waitUntil: "load" });
 
     const html = await page.content();
-    cek("nama pemilik ada di HTML", html.includes("Nama Lengkap Anda"));
-    cek("seluruh role ada di HTML", html.includes("Penggemar Open Source"));
-    cek("proyek featured ada di HTML", html.includes("Sistem Informasi Perpustakaan"));
+
+    /**
+     * Yang diuji di sini adalah "isi database ikut terkirim di HTML awal",
+     * BUKAN nilai tertentu.
+     *
+     * Versi sebelumnya mencari "Nama Lengkap Anda", "Penggemar Open Source",
+     * dan "Sistem Informasi Perpustakaan" — semuanya data seed. Begitu pemilik
+     * mengganti data contoh dengan isi aslinya, yang justru tujuan seluruh
+     * dashboard ini, pemeriksaan ini mulai gagal karena alasan yang salah dan
+     * menyamarkan regresi sungguhan.
+     *
+     * Nilai pembandingnya kini diambil dari halaman yang SAMA saat JavaScript
+     * aktif. Kalau isinya hanya muncul setelah hidrasi, perbandingan ini tetap
+     * gagal — dan itulah yang memang ingin ditangkap.
+     */
+    const dariKlien = await (async () => {
+      const c = await browser.newContext();
+      const pg = await c.newPage();
+      await pg.goto(`${BASE}/`, { waitUntil: "load" });
+      await pg.waitForTimeout(600);
+      const nilai = await pg.evaluate(() => ({
+        nama: document.querySelector("h1")?.textContent?.trim() ?? "",
+        proyek:
+          document
+            .querySelector("section:last-of-type ul li h2, ul li h3")
+            ?.textContent?.trim() ?? "",
+      }));
+      await c.close();
+      return nilai;
+    })();
+
+    cek(
+      "nama pemilik ada di HTML tanpa JavaScript",
+      dariKlien.nama !== "" && html.includes(dariKlien.nama),
+      dariKlien.nama,
+    );
+    cek(
+      "judul proyek ada di HTML tanpa JavaScript",
+      dariKlien.proyek !== "" && html.includes(dariKlien.proyek),
+      dariKlien.proyek,
+    );
 
     const tersembunyi = await page.evaluate(
       () =>

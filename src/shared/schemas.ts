@@ -124,6 +124,10 @@ export const educationSchema = z
     institution: teksWajib(150, "Institusi"),
     major: teksOpsional(120, "Jurusan"),
     degree: teksOpsional(60, "Jenjang"),
+    // Keduanya opsional: kartu pendidikan tetap utuh tanpa logo maupun lokasi.
+    // Batas 120 karakter sama dengan constraint di database.
+    location: teksOpsional(120, "Lokasi"),
+    logo_url: urlOpsional,
     start_year: tahun,
     end_year: z
       .union([tahun, z.literal(""), z.null(), z.undefined()])

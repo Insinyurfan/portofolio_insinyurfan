@@ -66,6 +66,8 @@ export type Database = {
           id: string
           institution: string
           is_published: boolean
+          location: string | null
+          logo_url: string | null
           major: string | null
           sort_order: number
           start_year: number
@@ -80,6 +82,8 @@ export type Database = {
           id?: string
           institution: string
           is_published?: boolean
+          location?: string | null
+          logo_url?: string | null
           major?: string | null
           sort_order?: number
           start_year: number
@@ -94,6 +98,8 @@ export type Database = {
           id?: string
           institution?: string
           is_published?: boolean
+          location?: string | null
+          logo_url?: string | null
           major?: string | null
           sort_order?: number
           start_year?: number

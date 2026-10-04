@@ -1,14 +1,8 @@
 import type { Metadata } from "next";
 
-import {
-  Badge,
-  EmptyState,
-  PageShell,
-  Timeline,
-  TimelineItem,
-} from "@/client/components/ui/primitives";
+import { EducationCard } from "@/client/components/education/education-card";
+import { EmptyState, PageShell } from "@/client/components/ui/primitives";
 import { Reveal } from "@/client/components/ui/reveal";
-import { formatIpk, formatRentangTahun } from "@/shared/format";
 import { getEducation, getProfile } from "@/server/db/queries";
 
 export const revalidate = 300; // = REVALIDATE di src/shared/constants.ts; Next butuh nilai literal
@@ -29,47 +23,28 @@ export default async function PendidikanPage() {
 
   return (
     <PageShell
+      eyebrow="Riwayat akademik"
       title="Pendidikan"
-      description="Riwayat pendidikan formal beserta fokus bidang di setiap jenjang."
+      description="Jenjang yang pernah dan sedang ditempuh, beserta fokus bidang, lokasi, dan capaian di masing-masing."
+      // Hitungan disembunyikan saat kosong, supaya tidak muncul "0 jenjang"
+      // tepat di atas empty state yang sudah menjelaskan hal yang sama.
+      jumlah={
+        education.length > 0 ? `${education.length} jenjang` : undefined
+      }
     >
       {education.length === 0 ? (
         <EmptyState
           title="Belum ada riwayat pendidikan"
-          description="Tambahkan entri pendidikan di Supabase atau jalankan skrip seed untuk memasukkan data contoh."
+          description="Tambahkan entri pendidikan lewat dashboard admin untuk menampilkannya di sini."
         />
       ) : (
-        <Timeline>
-          {education.map((item, index) => {
-            const ipk = formatIpk(item.gpa);
-
-            return (
-              <Reveal as="li" key={item.id} delay={index * 80} className="list-none">
-                <TimelineItem meta={formatRentangTahun(item.start_year, item.end_year)}>
-                  <h2 className="font-heading text-lg font-bold text-text">
-                    {item.institution}
-                  </h2>
-
-                  <p className="mt-1 text-sm text-text-muted">
-                    {[item.degree, item.major].filter(Boolean).join(" · ")}
-                  </p>
-
-                  {/* IPK hanya dirender kalau ada — tidak pernah menampilkan nilai kosong. */}
-                  {ipk ? (
-                    <p className="mt-3">
-                      <Badge tone="accent">IPK {ipk}</Badge>
-                    </p>
-                  ) : null}
-
-                  {item.description ? (
-                    <p className="mt-3 text-sm leading-relaxed text-text-muted">
-                      {item.description}
-                    </p>
-                  ) : null}
-                </TimelineItem>
-              </Reveal>
-            );
-          })}
-        </Timeline>
+        <ul className="list-none space-y-4 sm:space-y-5">
+          {education.map((item, index) => (
+            <Reveal as="li" key={item.id} delay={index * 80}>
+              <EducationCard item={item} />
+            </Reveal>
+          ))}
+        </ul>
       )}
     </PageShell>
   );

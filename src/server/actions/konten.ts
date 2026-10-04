@@ -211,12 +211,36 @@ export const simpanTautanSosialAction = withAdminAction(
 
 export const simpanPendidikanAction = withAdminAction(
   educationSchema,
-  (input) => simpanBaris("education", input),
+  async (input) => {
+    // Logo lama hanya boleh dihapus SETELAH baris barunya tersimpan: kalau
+    // penyimpanan gagal, berkas yang masih dipakai tidak ikut hilang.
+    const lama = input.id ? await ambilLogoPendidikan(input.id) : null;
+
+    const hasil = await simpanBaris("education", input);
+
+    if (lama && lama !== input.logo_url) {
+      await hapusBerkas(lama);
+    }
+
+    return hasil;
+  },
   {
     sukses: (i) => (i.id ? "Pendidikan diperbarui." : "Pendidikan ditambahkan."),
     revalidasi: "education",
   },
 );
+
+/** Logo yang tersimpan sekarang, untuk dibersihkan bila diganti. */
+async function ambilLogoPendidikan(id: string): Promise<string | null> {
+  const supabase = await createSessionSupabaseClient();
+  const { data } = await supabase
+    .from("education")
+    .select("logo_url")
+    .eq("id", id)
+    .maybeSingle();
+
+  return data?.logo_url ?? null;
+}
 
 export const simpanKategoriKeahlianAction = withAdminAction(
   skillCategorySchema,

@@ -115,24 +115,63 @@ export function ButtonExternal({
   );
 }
 
-/** Pembungkus halaman: judul, deskripsi, dan lebar baca yang konsisten. */
+/**
+ * Pembungkus halaman: tautan pulang, pembuka, lalu isinya.
+ *
+ * Tautan "Kembali ke beranda" selalu dirender. Navbar memang sudah memuat
+ * tautan beranda, tetapi di halaman dalam yang panjang navbar ikut tergulung
+ * ke atas, sementara tautan ini berada tepat di awal konten utama — dan ia
+ * ikut terbaca pembaca layar sebagai bagian dari halaman, bukan navigasi situs.
+ */
 export function PageShell({
   title,
   description,
+  eyebrow,
+  jumlah,
   children,
 }: {
   title: string;
   description?: string;
+  /** Label kecil di atas judul, misalnya "Riwayat akademik". */
+  eyebrow?: string;
+  /** Keterangan jumlah isi, misalnya "2 jenjang". Disembunyikan bila kosong. */
+  jumlah?: string;
   children: ReactNode;
 }) {
   return (
-    <div className="wadah py-12 sm:py-16">
-      <header className="mb-8 sm:mb-12">
-        <h1 className="text-3xl sm:text-4xl">{title}</h1>
+    <div className="wadah py-10 sm:py-14">
+      <Link
+        href="/"
+        className="group inline-flex items-center gap-2 rounded-pill text-sm font-medium text-text-muted transition-colors hover:text-accent"
+      >
+        <span
+          aria-hidden="true"
+          className="transition-transform group-hover:-translate-x-0.5"
+        >
+          ←
+        </span>
+        Kembali ke beranda
+      </Link>
+
+      <header className="mt-6 mb-8 sm:mt-8 sm:mb-12">
+        {eyebrow || jumlah ? (
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            {eyebrow ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-subtle">
+                {eyebrow}
+              </p>
+            ) : null}
+            {jumlah ? <Badge tone="accent">{jumlah}</Badge> : null}
+          </div>
+        ) : null}
+
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl">{title}</h1>
+
         {description ? (
           <p className="prosa mt-3 text-base text-text-muted">{description}</p>
         ) : null}
       </header>
+
       {children}
     </div>
   );
