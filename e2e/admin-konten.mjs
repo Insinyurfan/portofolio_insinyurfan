@@ -301,9 +301,31 @@ try {
     (await page.getByText("Logo header").count()) > 0,
   );
 
-  await page.getByLabel("Nama situs").fill("Situs Uji E2E");
-  await page.getByRole("button", { name: "Simpan profil" }).click();
-  await page.waitForTimeout(3500);
+  /**
+   * Menunggu KEADAAN, bukan tidur selama waktu tetap.
+   *
+   * Sejak route group dashboard punya loading.tsx, `waitUntil: "load"` bisa
+   * selesai saat yang tampil masih kerangka muat. Mengisi field lalu langsung
+   * menekan Simpan kemudian berlomba dengan hidrasi react-hook-form, dan
+   * penyimpanannya diam-diam tidak terjadi — tanpa pesan error apa pun.
+   */
+  async function simpanNamaSitus(nilai) {
+    // Pastikan form sungguhan sudah terpasang, bukan kerangkanya.
+    await page.getByLabel("Nama situs").waitFor({ state: "visible" });
+    await page.waitForFunction(
+      () => !document.querySelector('[aria-busy="true"]'),
+      null,
+      { timeout: 15000 },
+    );
+
+    await page.getByLabel("Nama situs").fill(nilai);
+    await page.getByRole("button", { name: "Simpan profil" }).click();
+
+    // Bukti tersimpan datang dari toastnya, bukan dari lamanya menunggu.
+    await page.getByText("Profil tersimpan.").waitFor({ timeout: 20000 });
+  }
+
+  await simpanNamaSitus("Situs Uji E2E");
 
   // Navbar ada di SETIAP halaman, jadi yang diperiksa bukan hanya beranda:
   // revalidasi profil harus mencakup seluruh layout, bukan satu path.
@@ -322,9 +344,7 @@ try {
   // Dikosongkan kembali: nilai cadangan harus tetap masuk akal, dan data uji
   // tidak boleh tertinggal di database.
   await page.goto(`${BASE}/admin/profil`, { waitUntil: "load" });
-  await page.getByLabel("Nama situs").fill("");
-  await page.getByRole("button", { name: "Simpan profil" }).click();
-  await page.waitForTimeout(3500);
+  await simpanNamaSitus("");
   await page.goto(`${BASE}/`, { waitUntil: "load" });
   const merekKosong = (await page.locator("header nav a").first().textContent())?.trim();
   cek(

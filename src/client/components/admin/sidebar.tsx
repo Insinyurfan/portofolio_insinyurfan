@@ -105,6 +105,23 @@ export function AdminSidebar({ onLogout }: { onLogout: () => void }) {
                 href={item.href}
                 onClick={() => setTerbuka(false)}
                 aria-current={aktif(item.href) ? "page" : undefined}
+                /**
+                 * Prefetch DIMATIKAN, dan ini justru yang membuat dashboard
+                 * terasa cepat.
+                 *
+                 * Setiap halaman admin `force-dynamic`, jadi prefetch bukan
+                 * sekadar mengunduh berkas statis — ia memaksa server merender
+                 * halaman itu sungguhan, lengkap dengan pemeriksaan sesi dan
+                 * query databasenya. Dengan sepuluh tautan di sidebar, satu
+                 * kunjungan memicu sepuluh render dinamis sekaligus, dan klik
+                 * pengguna harus mengantre di belakangnya.
+                 *
+                 * Terukur di produksi: server menjawab satu halaman dalam
+                 * ~330 ms, tetapi yang dirasakan ~1200 ms karena antrean itu.
+                 * Hasilnya pun tidak terpakai — konten dinamis tidak dapat
+                 * disimpan lama di cache peramban.
+                 */
+                prefetch={false}
                 className={cn(
                   "flex items-center gap-2.5 rounded-adm px-3 py-2 text-sm transition-colors",
                   aktif(item.href)

@@ -129,9 +129,15 @@ export function ItemList({
                 </Button>
               </div>
 
-              {/* Judul dan keterangan */}
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
+              {/* Judul dan keterangan.
+               *
+               * Di layar sempit keduanya bertumpuk. Mulai dari layar lebar
+               * keterangan pindah ke SAMPING judul, bukan di bawahnya: sejak
+               * dashboard memakai seluruh lebar layar, versi bertumpuk
+               * meninggalkan pita kosong panjang antara judul dan tombol aksi,
+               * dan mata harus menyeberanginya untuk setiap baris. */}
+              <div className="min-w-0 flex-1 xl:flex xl:items-center xl:gap-8">
+                <div className="flex flex-wrap items-center gap-2 xl:w-[28rem] xl:shrink-0">
                   <p className="font-medium text-adm-fg">{item.judul}</p>
                   {item.penanda}
                   {/* Status terbit terbaca tanpa perlu membuka formnya, dan
@@ -143,7 +149,7 @@ export function ItemList({
                   )}
                 </div>
                 {item.keterangan ? (
-                  <p className="mt-0.5 truncate text-sm text-adm-fg-muted">
+                  <p className="mt-0.5 truncate text-sm text-adm-fg-muted xl:mt-0 xl:min-w-0 xl:flex-1">
                     {item.keterangan}
                   </p>
                 ) : null}
