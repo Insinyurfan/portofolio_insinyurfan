@@ -87,17 +87,36 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // Memanggil getUser() di sini sekaligus memperbarui token bila perlu, dan
-  // cookie barunya ditulis ke response lewat setAll di atas.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  /**
+   * getClaims(), BUKAN getUser().
+   *
+   * Proyek ini memakai kunci penanda tangan asimetris (ES256), sehingga
+   * getClaims() memverifikasi tanda tangan JWT secara lokal lewat WebCrypto
+   * dengan kunci publik yang di-cache — tanpa perjalanan jaringan ke server
+   * Auth. Terukur di produksi: itu memotong sekitar separuh dari ~300 ms yang
+   * dihabiskan setiap permintaan halaman admin dalam keadaan hangat.
+   *
+   * Yang TIDAK berubah: tanda tangan dan masa berlaku tetap diperiksa secara
+   * kriptografis, jadi cookie palsu tetap ditolak di sini.
+   *
+   * Yang berubah dan perlu dinyatakan jujur: verifikasi lokal tidak mengetahui
+   * sesi yang dicabut di server sebelum tokennya kedaluwarsa. Itu dapat
+   * diterima untuk proxy, yang tugasnya mengarahkan halaman — dan karena itu
+   * requireAdmin() di setiap aksi tulis SENGAJA tetap memakai getUser(), yang
+   * bertanya langsung ke server Auth. Pemeriksaan longgar untuk navigasi,
+   * pemeriksaan ketat untuk perubahan data.
+   *
+   * Panggilan ini sekaligus memperbarui token yang hampir kedaluwarsa, dan
+   * cookie barunya ditulis ke response lewat setAll di atas.
+   */
+  const { data: klaim } = await supabase.auth.getClaims();
 
+  const emailSesi = klaim?.claims?.email;
   const emailAdmin = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const adalahAdmin =
-    user?.email !== undefined &&
+    typeof emailSesi === "string" &&
     emailAdmin !== undefined &&
-    user.email.trim().toLowerCase() === emailAdmin;
+    emailSesi.trim().toLowerCase() === emailAdmin;
 
   // ----------------------------------------------------- Halaman masuk
   if (diHalamanMasuk) {
