@@ -1,6 +1,7 @@
 "use client";
 
-import { CalendarDays, MapPin, Sparkles } from "lucide-react";
+import { cn } from "@/shared/cn";
+import { ArrowUpRight, CalendarDays, MapPin, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
 
@@ -115,7 +116,7 @@ function KartuPengalaman({ item }: { item: Experience }) {
                   className="ml-auto inline-flex items-center gap-1.5 rounded-pill text-sm font-semibold text-accent transition-colors hover:text-accent-hover"
                 >
                   Buka detail
-                  <span aria-hidden="true">↗</span>
+                  <ArrowUpRight className="size-4" aria-hidden="true" />
                   {/* Nama posisinya ikut disebut supaya pengguna pembaca layar
                       dapat membedakan tombol ini antar kartu. */}
                   <span className="sr-only"> {item.position}</span>
@@ -216,11 +217,13 @@ function LogoOrganisasi({
   nama: string;
 }) {
   const kelas =
-    "flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-card border border-border-subtle bg-surface-sunken sm:size-16";
+    "flex size-16 sm:size-18 shrink-0 items-center justify-center overflow-hidden rounded-card border border-border-subtle";
 
   if (logoUrl) {
     return (
-      <div className={kelas}>
+      // Ubin putih: latar putih pada logo menyatu dengannya, sehingga tidak
+      // muncul kotak di dalam kotak.
+      <div className={cn(kelas, "bg-surface-raised")}>
         <Image
           src={logoUrl}
           // Nama organisasinya sudah tertulis sebagai teks di kartu yang sama,
@@ -228,7 +231,7 @@ function LogoOrganisasi({
           alt=""
           width={64}
           height={64}
-          className="size-full object-contain p-1.5"
+          className="size-full object-contain p-1"
         />
       </div>
     );
@@ -242,7 +245,7 @@ function LogoOrganisasi({
     .join("");
 
   return (
-    <div className={kelas} aria-hidden="true">
+    <div className={cn(kelas, "bg-surface-sunken")} aria-hidden="true">
       <span className="font-heading text-lg font-bold text-text-subtle">
         {inisial || "?"}
       </span>

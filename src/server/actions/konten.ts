@@ -340,8 +340,6 @@ export const simpanProyekAction = withAdminAction(
     konteks: (input, data) => ({
       slug: input.slug,
       slugLama: data.slugLama ?? undefined,
-      // Beranda ikut direvalidasi kalau proyek ini featured, atau tadinya featured.
-      featured: true,
     }),
   },
 );
@@ -386,7 +384,7 @@ export const toggleTerbitAction = withAdminAction(
   {
     sukses: (i) => (i.is_published ? "Item diterbitkan." : "Item disembunyikan."),
     revalidasi: (i) => ENTITAS_DARI_TABEL[i.tabel],
-    konteks: (_i, d) => ({ slug: d.slug, featured: true }),
+    konteks: (_i, d) => ({ slug: d.slug }),
   },
 );
 
@@ -438,7 +436,7 @@ export const hapusItemAction = withAdminAction(
   {
     sukses: "Item dihapus.",
     revalidasi: (i) => ENTITAS_DARI_TABEL[i.tabel],
-    konteks: (_i, d) => ({ slug: d.slug, featured: true }),
+    konteks: (_i, d) => ({ slug: d.slug }),
   },
 );
 

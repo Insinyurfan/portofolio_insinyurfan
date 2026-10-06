@@ -30,8 +30,6 @@ export type KonteksRevalidasi = {
   slug?: string;
   /** Slug sebelum diubah — wajib disertakan saat slug berganti. */
   slugLama?: string;
-  /** Apakah proyek ini tampil di beranda. */
-  featured?: boolean;
 };
 
 const PATH_PER_ENTITAS: Record<Entitas, string[]> = {
@@ -40,12 +38,19 @@ const PATH_PER_ENTITAS: Record<Entitas, string[]> = {
   profile: [],
   social_links: [],
 
-  education: ["/pendidikan"],
-  skill_categories: ["/keahlian"],
-  skills: ["/keahlian"],
-  experiences: ["/pengalaman"],
-  achievements: ["/pencapaian"],
-  projects: ["/proyek", "/sitemap.xml"],
+  // Setiap entitas di bawah ini ikut menyertakan "/".
+  //
+  // Beranda kini satu halaman yang memuat SELURUH bagian situs. Tanpa "/" di
+  // sini, menyunting satu entri hanya memperbarui halaman khususnya, sementara
+  // beranda tetap menyajikan versi lama sampai periode revalidasi habis —
+  // persis yang terjadi ketika logo institusi yang baru diunggah tampil di
+  // /pendidikan tetapi tidak di beranda.
+  education: ["/pendidikan", "/"],
+  skill_categories: ["/keahlian", "/"],
+  skills: ["/keahlian", "/"],
+  experiences: ["/pengalaman", "/"],
+  achievements: ["/pencapaian", "/"],
+  projects: ["/proyek", "/sitemap.xml", "/"],
 
   // Pembuka halaman muncul di SEMUA halaman profil sekaligus, jadi
   // revalidasinya menyeluruh — sama seperti profil dan tautan sosial.
@@ -82,14 +87,26 @@ export function revalidasiUntuk(
     revalidatePath(path);
   }
 
+  /**
+   * Halaman terfilter ikut dibatalkan lewat POLA route-nya.
+   *
+   * `revalidatePath("/proyek")` tidak mencakup `/proyek/tech/react` — itu
+   * berkas halaman yang berbeda. Tanpa baris di bawah, tampilan terfilter
+   * tetap menyajikan data lama sampai periode revalidasinya habis, padahal
+   * halaman induknya sudah diperbarui.
+   */
   if (entitas === "projects") {
+    revalidatePath("/proyek/tech/[tech]", "page");
+
     // Halaman detail: path konkret, termasuk slug lama saat slug berganti.
     if (konteks.slug) revalidatePath(`/proyek/${konteks.slug}`);
     if (konteks.slugLama && konteks.slugLama !== konteks.slug) {
       revalidatePath(`/proyek/${konteks.slugLama}`);
     }
-    // Beranda hanya menampilkan proyek featured.
-    if (konteks.featured) revalidatePath("/");
+  }
+
+  if (entitas === "experiences") {
+    revalidatePath("/pengalaman/jenis/[jenis]", "page");
   }
 
 }

@@ -117,17 +117,16 @@ export function ButtonExternal({
 }
 
 /**
- * Pembungkus halaman: blok pembuka, kepala bagian, lalu isinya.
+ * Pembungkus halaman: blok pembuka, lalu isinya.
  *
- * Blok pembuka SELALU dirender. Kalau pemilik belum menulis judul sendiri di
- * dashboard, judul halamannya yang dipakai — jadi halaman tidak pernah tampil
- * tanpa pembuka, dan mengisinya di dashboard hanya mengganti teksnya, bukan
- * memunculkan sesuatu yang sebelumnya tidak ada.
+ * Judul halaman hanya muncul SEKALI, yaitu di dalam blok pembuka. Sebelumnya
+ * ada kepala bagian kedua di bawahnya yang mengulang label dan judul yang
+ * sama persis — terbaca sebagai pengulangan, dan bagi pembaca layar
+ * menghasilkan dua heading dengan isi identik.
  *
- * Tautan "Kembali ke beranda" berada DI DALAM blok pembuka. Navbar memang
- * sudah memuat tautan beranda, tetapi di halaman panjang navbar ikut tergulung
- * ke atas, sementara tautan ini berada tepat di awal konten utama — dan ia
- * terbaca pembaca layar sebagai bagian halaman, bukan navigasi situs.
+ * Isinya juga tidak lagi dibungkus panel berwarna. Kartu di dalam halaman
+ * sudah menjadi kotaknya sendiri; wadah tambahan di sekelilingnya hanya
+ * menyempitkan kartu tanpa menambah kejelasan.
  */
 export function PageShell({
   title,
@@ -135,7 +134,6 @@ export function PageShell({
   eyebrow,
   jumlah,
   hero,
-  panel = true,
   children,
 }: {
   title: string;
@@ -150,12 +148,6 @@ export function PageShell({
     headline: string | null;
     description: string | null;
   } | null;
-  /**
-   * Isi halaman dibungkus panel bersudut membulat, bukan menempel langsung ke
-   * latar. Dimatikan hanya untuk halaman yang isinya memang sudah berupa
-   * kartu-kartu lebar dan akan terasa bertumpuk kalau dibungkus lagi.
-   */
-  panel?: boolean;
   children: ReactNode;
 }) {
   // Nilai dari dashboard menang; yang kosong jatuh ke nilai halaman. Dengan
@@ -173,40 +165,18 @@ export function PageShell({
         jumlah={jumlah}
       />
 
-      <header className="mt-10 mb-8 sm:mt-14 sm:mb-10">
-        {/* Label yang sama dengan pembuka, bukan prop halaman saja: kalau
-         * pemilik mengganti labelnya di dashboard, keduanya ikut berubah. */}
-        {labelPembuka ? (
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-text-subtle">
-            {labelPembuka}
-          </p>
-        ) : null}
-        <h1 className="text-2xl sm:text-3xl">{title}</h1>
-      </header>
-
-      {panel ? (
-        /* `surface-sunken`, bukan `surface-raised`: kartu di dalam halaman
-         * sudah memakai `surface-raised`, jadi panel berwarna sama akan
-         * membuat keduanya menyatu dan "kotak"-nya justru hilang. Dengan
-         * sunken, panelnya terbaca sebagai wadah dan kartunya tetap menonjol —
-         * di tema terang maupun gelap. */
-        <div className="rounded-card-lg border border-border-subtle bg-surface-sunken p-5 sm:p-8 lg:p-10">
-          {children}
-        </div>
-      ) : (
-        children
-      )}
+      <div className="mt-10 sm:mt-14">{children}</div>
     </div>
   );
 }
 
 /**
- * Blok pembuka besar di atas kepala halaman.
+ * Blok pembuka besar di atas isi halaman.
  *
- * Judulnya dirender sebagai `<p>`, BUKAN heading. Halaman hanya boleh punya
- * satu `<h1>`, dan itu milik judul halamannya; menjadikan kalimat pembuka ini
- * heading kedua membuat struktur dokumen menyesatkan bagi pembaca layar dan
- * bagi mesin pencari.
+ * Judulnya adalah `<h1>` halaman ini — satu-satunya. Dulu ia `<p>` karena
+ * ada kepala bagian terpisah yang memegang `<h1>`; sejak kepala itu dihapus,
+ * judul di sinilah heading utamanya, dan menjadikannya `<p>` akan membuat
+ * halaman sama sekali tidak punya `<h1>`.
  */
 function PageHero({
   eyebrow,
@@ -261,9 +231,9 @@ function PageHero({
           </div>
         ) : null}
 
-        <p className="font-heading text-4xl font-bold leading-[1.05] tracking-tight text-text sm:text-5xl lg:text-6xl">
+        <h1 className="font-heading text-4xl font-bold leading-[1.05] tracking-tight text-text sm:text-5xl lg:text-6xl">
           {headline}
-        </p>
+        </h1>
 
         {description ? (
           <p className="prosa mt-5 text-base text-text-muted sm:text-lg">

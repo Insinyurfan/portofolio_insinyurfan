@@ -163,18 +163,20 @@ function LogoKeahlian({
   nama: string;
 }) {
   const kelas =
-    "flex size-12 items-center justify-center overflow-hidden rounded-card border border-border-subtle bg-surface";
+    "flex size-12 items-center justify-center overflow-hidden rounded-card border border-border-subtle";
 
   if (logoUrl) {
     return (
-      <div className={kelas}>
+      // Ubin putih: latar putih pada logo menyatu dengannya, sehingga tidak
+      // muncul kotak di dalam kotak.
+      <div className={cn(kelas, "bg-surface-raised")}>
         <Image
           src={logoUrl}
           // Nama alatnya sudah tertulis tepat di bawah logo ini.
           alt=""
           width={48}
           height={48}
-          className="size-full object-contain p-1.5"
+          className="size-full object-contain p-1"
         />
       </div>
     );
@@ -188,7 +190,7 @@ function LogoKeahlian({
     .join("");
 
   return (
-    <div className={kelas} aria-hidden="true">
+    <div className={cn(kelas, "bg-surface-sunken")} aria-hidden="true">
       <span className="font-heading text-sm font-bold text-text-subtle">
         {inisial || "?"}
       </span>
