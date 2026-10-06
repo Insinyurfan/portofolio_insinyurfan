@@ -1,3 +1,4 @@
+import { ArrowDownRight } from "lucide-react";
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -116,16 +117,17 @@ export function ButtonExternal({
 }
 
 /**
- * Pembungkus halaman: tautan pulang, pembuka, lalu isinya.
+ * Pembungkus halaman: blok pembuka, kepala bagian, lalu isinya.
  *
- * Tautan "Kembali ke beranda" selalu dirender. Navbar memang sudah memuat
- * tautan beranda, tetapi di halaman dalam yang panjang navbar ikut tergulung
+ * Blok pembuka SELALU dirender. Kalau pemilik belum menulis judul sendiri di
+ * dashboard, judul halamannya yang dipakai — jadi halaman tidak pernah tampil
+ * tanpa pembuka, dan mengisinya di dashboard hanya mengganti teksnya, bukan
+ * memunculkan sesuatu yang sebelumnya tidak ada.
+ *
+ * Tautan "Kembali ke beranda" berada DI DALAM blok pembuka. Navbar memang
+ * sudah memuat tautan beranda, tetapi di halaman panjang navbar ikut tergulung
  * ke atas, sementara tautan ini berada tepat di awal konten utama — dan ia
- * ikut terbaca pembaca layar sebagai bagian dari halaman, bukan navigasi situs.
- *
- * `hero` bersifat opsional dan datang dari database. Halaman yang pembukanya
- * belum diisi pemilik merender bentuk tanpa pembuka, persis seperti sebelum
- * fitur ini ada.
+ * terbaca pembaca layar sebagai bagian halaman, bukan navigasi situs.
  */
 export function PageShell({
   title,
@@ -142,7 +144,7 @@ export function PageShell({
   eyebrow?: string;
   /** Keterangan jumlah isi, misalnya "2 jenjang". Disembunyikan bila kosong. */
   jumlah?: string;
-  /** Blok pembuka besar; null berarti tidak dirender. */
+  /** Pembuka dari dashboard; setiap bagian yang kosong jatuh ke nilai halaman. */
   hero?: {
     eyebrow: string | null;
     headline: string | null;
@@ -156,58 +158,30 @@ export function PageShell({
   panel?: boolean;
   children: ReactNode;
 }) {
+  // Nilai dari dashboard menang; yang kosong jatuh ke nilai halaman. Dengan
+  // begitu pembuka selalu punya isi yang masuk akal sejak awal.
+  const labelPembuka = hero?.eyebrow?.trim() || eyebrow;
+  const judulPembuka = hero?.headline?.trim() || title;
+  const deskripsiPembuka = hero?.description?.trim() || description;
+
   return (
-    <div className="wadah py-10 sm:py-14">
-      <Link
-        href="/"
-        className="group inline-flex items-center gap-2 rounded-pill text-sm font-medium text-text-muted transition-colors hover:text-accent"
-      >
-        <span
-          aria-hidden="true"
-          className="transition-transform group-hover:-translate-x-0.5"
-        >
-          ←
-        </span>
-        Kembali ke beranda
-      </Link>
+    <div className="wadah py-8 sm:py-12">
+      <PageHero
+        eyebrow={labelPembuka}
+        headline={judulPembuka}
+        description={deskripsiPembuka}
+        jumlah={jumlah}
+      />
 
-      {hero?.headline ? (
-        <PageHero hero={hero} jumlah={jumlah} />
-      ) : null}
-
-      <header
-        className={
-          hero?.headline
-            ? "mt-8 mb-8 sm:mt-10 sm:mb-12"
-            : "mt-6 mb-8 sm:mt-8 sm:mb-12"
-        }
-      >
-        {eyebrow || (jumlah && !hero?.headline) ? (
-          <div className="mb-3 flex flex-wrap items-center gap-3">
-            {eyebrow ? (
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-subtle">
-                {eyebrow}
-              </p>
-            ) : null}
-            {/* Hitungan hanya muncul sekali: kalau ada pembuka, ia tampil di
-                sana, bukan diulang di kepala bagian. */}
-            {jumlah && !hero?.headline ? <Badge tone="accent">{jumlah}</Badge> : null}
-          </div>
+      <header className="mt-10 mb-8 sm:mt-14 sm:mb-10">
+        {/* Label yang sama dengan pembuka, bukan prop halaman saja: kalau
+         * pemilik mengganti labelnya di dashboard, keduanya ikut berubah. */}
+        {labelPembuka ? (
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-text-subtle">
+            {labelPembuka}
+          </p>
         ) : null}
-
-        <h1
-          className={
-            hero?.headline
-              ? "text-2xl sm:text-3xl"
-              : "text-3xl sm:text-4xl lg:text-5xl"
-          }
-        >
-          {title}
-        </h1>
-
-        {description ? (
-          <p className="prosa mt-3 text-base text-text-muted">{description}</p>
-        ) : null}
+        <h1 className="text-2xl sm:text-3xl">{title}</h1>
       </header>
 
       {panel ? (
@@ -230,58 +204,83 @@ export function PageShell({
  * Blok pembuka besar di atas kepala halaman.
  *
  * Judulnya dirender sebagai `<p>`, BUKAN heading. Halaman hanya boleh punya
- * satu `<h1>`, dan itu milik judul halamannya; menjadikan kalimat editorial
- * ini heading kedua membuat struktur dokumen menyesatkan bagi pembaca layar
- * dan bagi mesin pencari.
+ * satu `<h1>`, dan itu milik judul halamannya; menjadikan kalimat pembuka ini
+ * heading kedua membuat struktur dokumen menyesatkan bagi pembaca layar dan
+ * bagi mesin pencari.
  */
 function PageHero({
-  hero,
+  eyebrow,
+  headline,
+  description,
   jumlah,
 }: {
-  hero: {
-    eyebrow: string | null;
-    headline: string | null;
-    description: string | null;
-  };
+  eyebrow?: string;
+  headline: string;
+  description?: string;
   jumlah?: string;
 }) {
   return (
     <section
       aria-label="Pembuka halaman"
-      className="relative mt-6 overflow-hidden rounded-card-lg border border-border-subtle bg-accent-soft px-6 py-10 sm:mt-8 sm:px-10 sm:py-14"
+      className="relative overflow-hidden rounded-card-lg border border-border-subtle bg-linear-to-br from-accent-soft via-surface-raised to-surface-raised px-6 py-10 sm:px-12 sm:py-16 lg:px-16 lg:py-20"
     >
-      {/* Bentuk hias; tidak membawa makna, jadi disembunyikan dari pembaca layar. */}
+      {/* Bentuk hias; tidak membawa makna, jadi disembunyikan dari pembaca
+       * layar. Lingkarannya sengaja meluber keluar tepi kanan atas — itulah
+       * yang membuat kotaknya terasa punya kedalaman alih-alih rata. */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute -right-16 -top-16 size-56 rounded-pill bg-surface-raised/40 sm:size-72"
+        className="pointer-events-none absolute -right-20 -top-24 size-64 rounded-pill bg-surface-raised/50 sm:-right-24 sm:size-96"
       />
 
       <div className="relative">
-        {hero.eyebrow || jumlah ? (
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            {hero.eyebrow ? (
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-soft-text">
-                {hero.eyebrow}
+        <Link
+          href="/"
+          className="group inline-flex items-center gap-2 rounded-pill text-sm font-medium text-text-muted transition-colors hover:text-accent"
+        >
+          <span
+            aria-hidden="true"
+            className="transition-transform group-hover:-translate-x-0.5"
+          >
+            ←
+          </span>
+          Kembali ke beranda
+        </Link>
+
+        {eyebrow || jumlah ? (
+          <div className="mt-8 mb-4 flex flex-wrap items-center gap-3 sm:mt-10">
+            {eyebrow ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-text-subtle">
+                {eyebrow}
               </p>
             ) : null}
             {jumlah ? (
-              <span className="rounded-pill bg-surface-raised px-2.5 py-0.5 text-xs font-medium text-text-muted">
+              <span className="rounded-pill border border-border-subtle bg-surface-raised px-2.5 py-0.5 text-xs font-medium text-text-muted">
                 {jumlah}
               </span>
             ) : null}
           </div>
         ) : null}
 
-        <p className="font-heading text-3xl font-bold leading-tight tracking-tight text-text sm:text-4xl lg:text-5xl">
-          {hero.headline}
+        <p className="font-heading text-4xl font-bold leading-[1.05] tracking-tight text-text sm:text-5xl lg:text-6xl">
+          {headline}
         </p>
 
-        {hero.description ? (
-          <p className="prosa mt-4 text-base text-accent-soft-text sm:text-lg">
-            {hero.description}
+        {description ? (
+          <p className="prosa mt-5 text-base text-text-muted sm:text-lg">
+            {description}
           </p>
         ) : null}
       </div>
+
+      {/* Panah sudut: penanda arah baca ke isi di bawahnya.
+       *
+       * Ikon, BUKAN karakter "↘". Sebagian peramban merender karakter itu
+       * sebagai emoji berwarna, sehingga panahnya muncul biru mencolok dan
+       * merusak warna halaman. */}
+      <ArrowDownRight
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-6 right-6 size-7 text-text-subtle sm:bottom-10 sm:right-10 sm:size-9"
+      />
     </section>
   );
 }

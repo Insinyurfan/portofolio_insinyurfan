@@ -300,8 +300,10 @@ export async function getPageIntro(page: string): Promise<PageIntro | null> {
 
   laporkan("getPageIntro", error);
 
-  // Judul kosong diperlakukan sama dengan "belum diisi": blok pembuka tanpa
-  // judul hanya menampilkan label kecil yang menggantung tanpa konteks.
-  if (!data || data.headline === null || data.headline.trim() === "") return null;
-  return data;
+  // Baris tetap dikembalikan meski judulnya kosong. Blok pembuka SELALU
+  // dirender dan jatuh ke judul halaman bila judulnya belum diisi, jadi label
+  // kecil dan deskripsi yang sudah diisi pemilik tetap terpakai. Versi
+  // sebelumnya mengembalikan null di sini, dan akibatnya keduanya terbuang
+  // diam-diam selama judulnya masih kosong.
+  return data ?? null;
 }
