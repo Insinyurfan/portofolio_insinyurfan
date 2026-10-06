@@ -43,9 +43,22 @@ export function Modal({
   // render ulang, sehingga aria-labelledby tidak pernah menunjuk id usang.
   const idJudul = useId();
 
-  // Fokus kembali ke pemicunya setelah ditutup.
+  /**
+   * Fokus kembali ke pemicunya SETELAH dialog pernah dibuka.
+   *
+   * Penjaga `pernahTerbuka` wajib: tanpa itu efek ini ikut berjalan saat
+   * komponen pertama kali dipasang — dengan `terbuka` masih false — dan
+   * langsung merebut fokus ke tombol pemicunya begitu halaman dimuat. Akibatnya
+   * pengguna keyboard mendarat di tengah halaman, melewati tautan lompat dan
+   * seluruh navigasi, tanpa pernah menekan apa pun.
+   */
+  const pernahTerbuka = useRef(false);
   useEffect(() => {
-    if (!terbuka) pemicuRef?.current?.focus();
+    if (terbuka) {
+      pernahTerbuka.current = true;
+      return;
+    }
+    if (pernahTerbuka.current) pemicuRef?.current?.focus();
   }, [terbuka, pemicuRef]);
 
   useEffect(() => {

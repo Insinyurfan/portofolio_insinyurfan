@@ -5,6 +5,7 @@ import { Badge, Card, EmptyState, PageShell } from "@/client/components/ui/primi
 import { ProfilePhoto } from "@/client/components/ui/profile-photo";
 import { Reveal } from "@/client/components/ui/reveal";
 import { keParagraf } from "@/shared/format";
+import { fotoUtama } from "@/shared/profil";
 import {
   getPageIntro,
   getProfile,
@@ -95,7 +96,7 @@ export default async function TentangPage() {
 
           <Reveal delay={100} className="order-first lg:order-last">
             <ProfilePhoto
-              photoUrl={profile.photo_url}
+              photoUrl={fotoUtama(profile)}
               fullName={profile.full_name}
               size={256}
               className="size-44 sm:size-64"

@@ -261,6 +261,7 @@ export type Database = {
           location: string | null
           logo_url: string | null
           photo_url: string | null
+          photos: string[]
           roles: string[]
           singleton: boolean
           site_name: string | null
@@ -280,6 +281,7 @@ export type Database = {
           location?: string | null
           logo_url?: string | null
           photo_url?: string | null
+          photos?: string[]
           roles?: string[]
           singleton?: boolean
           site_name?: string | null
@@ -299,6 +301,7 @@ export type Database = {
           location?: string | null
           logo_url?: string | null
           photo_url?: string | null
+          photos?: string[]
           roles?: string[]
           singleton?: boolean
           site_name?: string | null

@@ -6,6 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 
 import { FileField } from "@/client/components/admin/file-field";
+import { GalleryField } from "@/client/components/admin/gallery-field";
 import { StringListField } from "@/client/components/admin/managers/string-list-field";
 import {
   Button,
@@ -49,6 +50,7 @@ export function ProfileManager({ profile }: { profile: Profile | null }) {
       site_name: profile?.site_name ?? "",
       logo_url: profile?.logo_url ?? "",
       photo_url: profile?.photo_url ?? "",
+      photos: profile?.photos ?? [],
       cv_url: profile?.cv_url ?? "",
       is_published: profile?.is_published ?? true,
     },
@@ -160,15 +162,15 @@ export function ProfileManager({ profile }: { profile: Profile | null }) {
 
         <Controller
           control={control}
-          name="photo_url"
+          name="photos"
           render={({ field }) => (
-            <FileField
+            <GalleryField
               label="Foto profil"
-              nilai={field.value ?? null}
+              nilai={field.value ?? []}
               prefiks="profile"
-              hint="JPG, PNG, WebP, AVIF, GIF, atau SVG. Maksimal 5 MB. Foto lama otomatis dihapus setelah penggantian tersimpan."
-              onChange={(url) => field.onChange(url ?? "")}
+              onChange={field.onChange}
               onSedangMengunggah={setMengunggah}
+              hint="Boleh lebih dari satu — hero beranda menampilkannya sebagai galeri yang dapat digeser. Foto PERTAMA menjadi foto utama, yang dipakai di halaman Tentang."
             />
           )}
         />

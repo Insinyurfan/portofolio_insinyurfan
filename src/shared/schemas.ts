@@ -54,6 +54,19 @@ const tanggalOpsional = z
 const urutan = z.coerce.number().int().min(0).default(0);
 const terbit = z.coerce.boolean().default(true);
 
+/**
+ * Daftar teks: baris kosong atau hanya spasi dibuang sebelum disimpan.
+ *
+ * Dipakai untuk daftar poin (fokus pembelajaran, aktivitas, kontribusi) dan
+ * untuk galeri. Pembuangan dilakukan di sini, bukan di tampilan, supaya baris
+ * kosong tidak pernah tersimpan dan tidak perlu disaring ulang di tiap tempat
+ * yang membacanya.
+ */
+const daftarTeks = z
+  .array(z.string())
+  .default([])
+  .transform((arr) => arr.map((v) => v.trim()).filter((v) => v !== ""));
+
 /** id untuk aksi sunting; kosong berarti pembuatan item baru. */
 export const idOpsional = z.string().uuid().optional().nullable();
 
@@ -90,6 +103,8 @@ export const profileSchema = z.object({
     ),
   is_open_to_work: z.coerce.boolean().default(false),
   photo_url: urlOpsional,
+  // Daftar foto untuk hero beranda. Yang pertama menjadi foto utama.
+  photos: daftarTeks,
   cv_url: urlOpsional,
   is_published: terbit,
 });
@@ -117,19 +132,6 @@ const tahun = z.coerce
   .int()
   .min(1900, "Tahun tidak masuk akal.")
   .max(2100, "Tahun tidak masuk akal.");
-
-/**
- * Daftar teks: baris kosong atau hanya spasi dibuang sebelum disimpan.
- *
- * Dipakai untuk daftar poin (fokus pembelajaran, aktivitas, kontribusi) dan
- * untuk galeri. Pembuangan dilakukan di sini, bukan di tampilan, supaya baris
- * kosong tidak pernah tersimpan dan tidak perlu disaring ulang di tiap tempat
- * yang membacanya.
- */
-const daftarTeks = z
-  .array(z.string())
-  .default([])
-  .transform((arr) => arr.map((v) => v.trim()).filter((v) => v !== ""));
 
 export const educationSchema = z
   .object({

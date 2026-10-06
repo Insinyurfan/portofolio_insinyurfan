@@ -27,9 +27,21 @@ export function CvPreview({
 
   const tutup = useCallback(() => setTerbuka(false), []);
 
-  // Fokus kembali ke tombol pembuka setelah modal ditutup.
+  /**
+   * Fokus kembali ke tombol pembuka SETELAH modal pernah dibuka.
+   *
+   * Penjaga `pernahTerbuka` wajib: tanpa itu efek ini ikut berjalan saat
+   * komponen pertama kali dipasang dan langsung merebut fokus ke tombol
+   * "Pratinjau CV" begitu beranda dimuat — pengguna keyboard mendarat di
+   * tengah halaman tanpa menekan apa pun.
+   */
+  const pernahTerbuka = useRef(false);
   useEffect(() => {
-    if (!terbuka && pemicuRef.current) pemicuRef.current.focus();
+    if (terbuka) {
+      pernahTerbuka.current = true;
+      return;
+    }
+    if (pernahTerbuka.current) pemicuRef.current?.focus();
   }, [terbuka]);
 
   useEffect(() => {

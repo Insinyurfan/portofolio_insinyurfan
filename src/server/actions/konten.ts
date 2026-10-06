@@ -178,7 +178,7 @@ export const simpanProfilAction = withAdminAction(
     const supabase = await createSessionSupabaseClient();
     const { data: lama } = await supabase
       .from("profile")
-      .select("id, photo_url, cv_url, logo_url")
+      .select("id, photo_url, photos, cv_url, logo_url")
       .limit(1)
       .maybeSingle();
 
@@ -189,6 +189,11 @@ export const simpanProfilAction = withAdminAction(
       if (lama.photo_url && lama.photo_url !== input.photo_url) {
         await hapusBerkas(lama.photo_url);
       }
+      // Foto yang dibuang dari daftar ikut dihapus dari Storage.
+      const fotoDibuang = (lama.photos ?? []).filter(
+        (f) => !input.photos.includes(f),
+      );
+      if (fotoDibuang.length > 0) await hapusBerkas(...fotoDibuang);
       if (lama.cv_url && lama.cv_url !== input.cv_url) {
         await hapusBerkas(lama.cv_url);
       }
