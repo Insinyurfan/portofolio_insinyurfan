@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { Badge, Card, EmptyState, PageShell } from "@/client/components/ui/primitives";
-import { Reveal } from "@/client/components/ui/reveal";
+import { SkillsTabs } from "@/client/components/skills/skills-tabs";
+import { EmptyState, PageShell } from "@/client/components/ui/primitives";
 import {
   getPageIntro,
   getProfile,
@@ -22,42 +22,29 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function KeahlianPage() {
-  const intro = await getPageIntro("keahlian");
-  // Query sudah membuang kategori yang tidak punya keahlian terbit.
-  const groups = await getSkillsByCategory();
+  const [intro, groups] = await Promise.all([
+    getPageIntro("keahlian"),
+    // Query sudah membuang kategori yang tidak punya keahlian terbit.
+    getSkillsByCategory(),
+  ]);
+
+  const jumlahKeahlian = groups.reduce((n, g) => n + g.skills.length, 0);
 
   return (
     <PageShell
       hero={intro}
+      eyebrow="Alat & teknologi"
       title="Keahlian"
       description="Alat dan teknologi yang saya pakai sehari-hari, dikelompokkan per kategori."
+      jumlah={jumlahKeahlian > 0 ? `${jumlahKeahlian} item` : undefined}
     >
       {groups.length === 0 ? (
         <EmptyState
           title="Belum ada keahlian"
-          description="Tambahkan kategori beserta keahliannya di Supabase atau jalankan skrip seed untuk memasukkan data contoh."
+          description="Tambahkan kategori beserta keahliannya lewat dashboard admin untuk menampilkannya di sini."
         />
       ) : (
-        <div className="bento-grid">
-          {groups.map((group, index) => (
-            <Reveal key={group.id} delay={index * 80}>
-              <Card className="h-full">
-                <h2 className="font-heading text-lg font-bold text-text">
-                  {group.name}
-                </h2>
-
-                <ul className="mt-4 flex flex-wrap gap-2">
-                  {group.skills.map((skill) => (
-                    <li key={skill.id}>
-                      {/* Ikon bersifat opsional: tanpa ikon, nama saja sudah cukup. */}
-                      <Badge>{skill.name}</Badge>
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
+        <SkillsTabs groups={groups} />
       )}
     </PageShell>
   );

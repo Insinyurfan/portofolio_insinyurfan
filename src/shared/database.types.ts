@@ -419,6 +419,8 @@ export type Database = {
       skill_categories: {
         Row: {
           created_at: string
+          description: string | null
+          eyebrow: string | null
           icon: string | null
           id: string
           is_published: boolean
@@ -428,6 +430,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
+          eyebrow?: string | null
           icon?: string | null
           id?: string
           is_published?: boolean
@@ -437,6 +441,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
+          eyebrow?: string | null
           icon?: string | null
           id?: string
           is_published?: boolean
@@ -453,7 +459,10 @@ export type Database = {
           icon: string | null
           id: string
           is_published: boolean
+          level: string | null
+          logo_url: string | null
           name: string
+          since_year: number | null
           sort_order: number
           updated_at: string
         }
@@ -463,7 +472,10 @@ export type Database = {
           icon?: string | null
           id?: string
           is_published?: boolean
+          level?: string | null
+          logo_url?: string | null
           name: string
+          since_year?: number | null
           sort_order?: number
           updated_at?: string
         }
@@ -473,7 +485,10 @@ export type Database = {
           icon?: string | null
           id?: string
           is_published?: boolean
+          level?: string | null
+          logo_url?: string | null
           name?: string
+          since_year?: number | null
           sort_order?: number
           updated_at?: string
         }

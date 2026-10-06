@@ -172,15 +172,34 @@ export const skillCategorySchema = z.object({
   id: idOpsional,
   name: teksWajib(80, "Nama kategori"),
   icon: teksOpsional(60, "Ikon"),
+  eyebrow: teksOpsional(40, "Label kecil"),
+  description: teksOpsional(300, "Deskripsi kategori"),
   sort_order: urutan,
   is_published: terbit,
 });
+
+/** Tiga tingkat penguasaan; sama persis dengan constraint di database. */
+export const TINGKAT_KEAHLIAN = ["dasar", "menengah", "mahir"] as const;
 
 export const skillSchema = z.object({
   id: idOpsional,
   category_id: z.string().uuid("Kategori wajib dipilih."),
   name: teksWajib(80, "Nama keahlian"),
   icon: teksOpsional(60, "Ikon"),
+  logo_url: urlOpsional,
+  // Kosong diperlakukan sebagai "tidak diisi", bukan nol: tahun 0 akan tampil
+  // sebagai "Sejak 0" di halaman publik.
+  since_year: z
+    .union([
+      z.coerce.number().int().min(1970).max(2100),
+      z.literal(""),
+      z.null(),
+      z.undefined(),
+    ])
+    .transform((v) => (v === "" || v === undefined ? null : v)),
+  level: z
+    .union([z.enum(TINGKAT_KEAHLIAN), z.literal(""), z.null(), z.undefined()])
+    .transform((v) => (v === "" || v === undefined ? null : v)),
   sort_order: urutan,
   is_published: terbit,
 });

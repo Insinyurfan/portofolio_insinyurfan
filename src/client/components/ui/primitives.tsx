@@ -133,6 +133,7 @@ export function PageShell({
   eyebrow,
   jumlah,
   hero,
+  panel = true,
   children,
 }: {
   title: string;
@@ -147,6 +148,12 @@ export function PageShell({
     headline: string | null;
     description: string | null;
   } | null;
+  /**
+   * Isi halaman dibungkus panel bersudut membulat, bukan menempel langsung ke
+   * latar. Dimatikan hanya untuk halaman yang isinya memang sudah berupa
+   * kartu-kartu lebar dan akan terasa bertumpuk kalau dibungkus lagi.
+   */
+  panel?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -203,7 +210,18 @@ export function PageShell({
         ) : null}
       </header>
 
-      {children}
+      {panel ? (
+        /* `surface-sunken`, bukan `surface-raised`: kartu di dalam halaman
+         * sudah memakai `surface-raised`, jadi panel berwarna sama akan
+         * membuat keduanya menyatu dan "kotak"-nya justru hilang. Dengan
+         * sunken, panelnya terbaca sebagai wadah dan kartunya tetap menonjol —
+         * di tema terang maupun gelap. */
+        <div className="rounded-card-lg border border-border-subtle bg-surface-sunken p-5 sm:p-8 lg:p-10">
+          {children}
+        </div>
+      ) : (
+        children
+      )}
     </div>
   );
 }

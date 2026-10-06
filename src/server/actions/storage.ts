@@ -41,6 +41,8 @@ export const PREFIKS_MEDIA = [
   "education",
   // Logo organisasi dan dokumentasi di kartu pengalaman.
   "experiences",
+  // Logo alat di kartu keahlian.
+  "skills",
 ] as const;
 
 export type PrefiksMedia = (typeof PREFIKS_MEDIA)[number];

@@ -3,9 +3,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import type { z } from "zod";
 
+import { FileField } from "@/client/components/admin/file-field";
 import { ItemList } from "@/client/components/admin/item-list";
 import {
   Button,
@@ -14,13 +15,18 @@ import {
   Input,
   Panel,
   Select,
+  Textarea,
 } from "@/client/components/admin/ui";
 import { useAksi } from "@/client/components/admin/use-aksi";
 import {
   simpanKategoriKeahlianAction,
   simpanKeahlianAction,
 } from "@/server/actions/konten";
-import { skillCategorySchema, skillSchema } from "@/shared/schemas";
+import {
+  TINGKAT_KEAHLIAN,
+  skillCategorySchema,
+  skillSchema,
+} from "@/shared/schemas";
 import type { Skill, SkillCategory } from "@/shared/types";
 
 type NilaiKategori = z.input<typeof skillCategorySchema>;
@@ -30,10 +36,26 @@ type NilaiKeahlian = z.input<typeof skillSchema>;
 /** Hasil setelah transform zod — inilah bentuk yang diterima aksi server. */
 type KeluaranKeahlian = z.output<typeof skillSchema>;
 
+/**
+ * Mempersempit nilai tingkat dari database menjadi nilai yang diterima form.
+ *
+ * Database sudah membatasinya lewat check constraint, tetapi tipenya tetap
+ * `string | null`. Diperiksa sungguhan di sini, bukan dipaksa dengan cast:
+ * kalau suatu saat ada nilai di luar ketiganya, form kembali ke "belum
+ * dipilih" alih-alih menyimpan nilai yang akan ditolak database.
+ */
+function tingkatSah(nilai: string | null): "" | (typeof TINGKAT_KEAHLIAN)[number] {
+  return TINGKAT_KEAHLIAN.includes(nilai as (typeof TINGKAT_KEAHLIAN)[number])
+    ? (nilai as (typeof TINGKAT_KEAHLIAN)[number])
+    : "";
+}
+
 const KATEGORI_KOSONG: NilaiKategori = {
   id: null,
   name: "",
   icon: "",
+  eyebrow: "",
+  description: "",
   sort_order: 0,
   is_published: true,
 };
@@ -43,6 +65,9 @@ const KEAHLIAN_KOSONG: NilaiKeahlian = {
   category_id: "",
   name: "",
   icon: "",
+  logo_url: "",
+  since_year: "",
+  level: "",
   sort_order: 0,
   is_published: true,
 };
@@ -63,6 +88,7 @@ export function SkillsManager({
   const { jalankan, sedangBerjalan } = useAksi();
   const [formKategori, setFormKategori] = useState(false);
   const [formKeahlian, setFormKeahlian] = useState(false);
+  const [mengunggah, setMengunggah] = useState(false);
 
   const fk = useForm<NilaiKategori, unknown, KeluaranKategori>({
     resolver: zodResolver(skillCategorySchema),
@@ -81,6 +107,8 @@ export function SkillsManager({
             id: item.id,
             name: item.name,
             icon: item.icon ?? "",
+            eyebrow: item.eyebrow ?? "",
+            description: item.description ?? "",
             sort_order: item.sort_order,
             is_published: item.is_published,
           }
@@ -98,6 +126,9 @@ export function SkillsManager({
             category_id: item.category_id,
             name: item.name,
             icon: item.icon ?? "",
+            logo_url: item.logo_url ?? "",
+            since_year: item.since_year ?? "",
+            level: tingkatSah(item.level),
             sort_order: item.sort_order,
             is_published: item.is_published,
           }
@@ -163,6 +194,26 @@ export function SkillsManager({
                     placeholder="Bahasa Pemrograman"
                   />
                 )}
+              </Field>
+
+              <Field
+                id="kategori-eyebrow"
+                label="Label kecil"
+                hint="Tampil di atas nama kategori dengan huruf kapital. Misalnya: Creative toolkit."
+                error={fk.formState.errors.eyebrow?.message}
+              >
+                {(a) => (
+                  <Input {...a} {...fk.register("eyebrow")} placeholder="Creative toolkit" />
+                )}
+              </Field>
+
+              <Field
+                id="kategori-description"
+                label="Deskripsi kategori"
+                hint="Satu paragraf pengantar, tampil di samping judul kategori."
+                error={fk.formState.errors.description?.message}
+              >
+                {(a) => <Textarea {...a} {...fk.register("description")} rows={3} />}
               </Field>
 
               <label className="flex items-center gap-2 text-sm text-adm-fg">
@@ -292,13 +343,67 @@ export function SkillsManager({
                 )}
               </Field>
 
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field
+                  id="skill-since"
+                  label="Sejak tahun"
+                  hint="Tampil sebagai “Sejak 2023”. Dikosongkan berarti tidak dirender."
+                  error={fs.formState.errors.since_year?.message}
+                >
+                  {(a) => (
+                    <Input
+                      {...a}
+                      {...fs.register("since_year")}
+                      type="number"
+                      min={1970}
+                      max={2100}
+                      placeholder="2023"
+                    />
+                  )}
+                </Field>
+
+                <Field
+                  id="skill-level"
+                  label="Tingkat"
+                  error={fs.formState.errors.level?.message}
+                >
+                  {(a) => (
+                    <Select {...a} {...fs.register("level")}>
+                      <option value="">— belum dipilih —</option>
+                      {TINGKAT_KEAHLIAN.map((t) => (
+                        <option key={t} value={t}>
+                          {t.charAt(0).toUpperCase() + t.slice(1)}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
+                </Field>
+              </div>
+
+              <Controller
+                control={fs.control}
+                name="logo_url"
+                render={({ field }) => (
+                  <FileField
+                    label="Logo keahlian"
+                    nilai={field.value ?? null}
+                    prefiks="skills"
+                    hint="Logo alat atau bahasanya. Dikosongkan berarti kartu memakai inisial namanya."
+                    onChange={(url) => field.onChange(url ?? "")}
+                    onSedangMengunggah={setMengunggah}
+                  />
+                )}
+              />
+
               <label className="flex items-center gap-2 text-sm text-adm-fg">
                 <Checkbox {...fs.register("is_published")} />
                 Tampilkan di halaman publik
               </label>
 
               <div className="flex gap-2">
-                <Button type="submit" disabled={sedangBerjalan}>
+                {/* Ikut nonaktif selama logo masih diunggah: menyimpan di
+                    tengah unggahan akan menyimpan baris tanpa logonya. */}
+                <Button type="submit" disabled={sedangBerjalan || mengunggah}>
                   {sedangBerjalan ? "Menyimpan…" : "Simpan"}
                 </Button>
                 <Button
