@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 
 import { cn } from "@/shared/cn";
 
@@ -109,7 +110,7 @@ export function Modal({
 
   if (!terbuka) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
       // Klik di luar kotak menutup dialog, klik di dalamnya tidak.
@@ -154,6 +155,7 @@ export function Modal({
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
