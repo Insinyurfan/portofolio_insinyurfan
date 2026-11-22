@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SiGithub } from "react-icons/si";
 
+import { ProjectGallery } from "@/client/components/projects/project-gallery";
 import {
   Badge,
   ButtonExternal,
@@ -172,21 +173,7 @@ export default async function ProyekDetailPage({
         <section className="mt-12">
           <SectionHeading>Galeri</SectionHeading>
 
-          <ul className="grid list-none gap-4 sm:grid-cols-2">
-            {project.gallery.map((src, index) => (
-              <Reveal as="li" key={src} delay={index * 60}>
-                <div className="relative aspect-16/10 w-full overflow-hidden rounded-card border border-border-subtle bg-surface-sunken">
-                  <Image
-                    src={src}
-                    alt={`Galeri proyek ${project.title} — gambar ${index + 1}`}
-                    fill
-                    sizes="(max-width: 640px) 100vw, 50vw"
-                    className="object-cover"
-                  />
-                </div>
-              </Reveal>
-            ))}
-          </ul>
+          <ProjectGallery gambar={project.gallery} judul={project.title} />
         </section>
       ) : null}
     </article>

@@ -92,8 +92,9 @@ export default async function PublicLayout({
             nama: namaSitus(profile?.site_name),
             logoUrl: profile?.logo_url ?? null,
           }}
+          cv={profile?.cv_url ? { cvUrl: profile.cv_url, namaPemilik: profile.full_name } : null}
         />
-        <main id="konten-utama" className="flex-1">
+        <main id="konten-utama" className="flex-1 scroll-mt-28 sm:scroll-mt-20">
           {children}
         </main>
         <Footer profile={profile} socialLinks={socialLinks} />

@@ -18,6 +18,7 @@ import {
   Textarea,
 } from "@/client/components/admin/ui";
 import { useAksi } from "@/client/components/admin/use-aksi";
+import { useScrollKeForm } from "@/client/components/admin/use-scroll-ke-form";
 import {
   simpanKategoriKeahlianAction,
   simpanKeahlianAction,
@@ -86,6 +87,8 @@ export function SkillsManager({
   skills: Skill[];
 }) {
   const { jalankan, sedangBerjalan } = useAksi();
+  const kategori = useScrollKeForm();
+  const keahlian = useScrollKeForm();
   const [formKategori, setFormKategori] = useState(false);
   const [formKeahlian, setFormKeahlian] = useState(false);
   const [mengunggah, setMengunggah] = useState(false);
@@ -116,6 +119,7 @@ export function SkillsManager({
     );
     setFormKategori(true);
     setFormKeahlian(false);
+    kategori.arahkan();
   }
 
   function bukaKeahlian(item?: Skill) {
@@ -140,6 +144,7 @@ export function SkillsManager({
     );
     setFormKeahlian(true);
     setFormKategori(false);
+    keahlian.arahkan();
   }
 
   return (
@@ -149,7 +154,7 @@ export function SkillsManager({
         <h2 className="text-base font-bold text-adm-fg">Kategori</h2>
 
         {formKategori ? (
-          <Panel>
+          <Panel {...kategori.panel}>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-semibold text-adm-fg">
                 {fk.getValues("id") ? "Sunting kategori" : "Kategori baru"}
@@ -281,7 +286,7 @@ export function SkillsManager({
             bawah sebuah kategori.
           </p>
         ) : formKeahlian ? (
-          <Panel>
+          <Panel {...keahlian.panel}>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-semibold text-adm-fg">
                 {fs.getValues("id") ? "Sunting keahlian" : "Keahlian baru"}

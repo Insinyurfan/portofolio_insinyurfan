@@ -26,16 +26,24 @@ export function Modal({
   label,
   pemicuRef,
   lebar = "sedang",
+  className,
+  classNameIsi,
+  isiBisaDifokuskan = false,
+  aksi,
   children,
 }: {
   terbuka: boolean;
   onTutup: () => void;
   /** Judul yang terlihat; sekaligus menjadi nama dialognya. */
-  judul: string;
+  judul: React.ReactNode;
   /** Label kecil di atas judul, misalnya "Riwayat pendidikan". */
   label?: string;
   pemicuRef?: React.RefObject<HTMLElement | null>;
   lebar?: "sedang" | "lebar";
+  className?: string;
+  classNameIsi?: string;
+  isiBisaDifokuskan?: boolean;
+  aksi?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const dialogRef = useRef<HTMLDivElement | null>(null);
@@ -59,7 +67,7 @@ export function Modal({
       pernahTerbuka.current = true;
       return;
     }
-    if (pernahTerbuka.current) pemicuRef?.current?.focus();
+    if (pernahTerbuka.current) pemicuRef?.current?.focus({ preventScroll: true });
   }, [terbuka, pemicuRef]);
 
   useEffect(() => {
@@ -84,7 +92,7 @@ export function Modal({
       if (!dialog) return;
 
       const fokusable = dialog.querySelectorAll<HTMLElement>(
-        "a[href], button:not([disabled])",
+        'a[href], button:not([disabled]), [tabindex="0"]',
       );
       if (fokusable.length === 0) return;
 
@@ -126,6 +134,7 @@ export function Modal({
         className={cn(
           "flex max-h-[90dvh] w-full flex-col overflow-hidden rounded-card border border-border-subtle bg-surface-raised shadow-card-hover",
           lebar === "lebar" ? "max-w-5xl" : "max-w-3xl",
+          className,
         )}
       >
         <div className="flex items-start justify-between gap-4 border-b border-border-subtle p-5 sm:p-6">
@@ -143,17 +152,25 @@ export function Modal({
             </h2>
           </div>
 
-          <button
-            type="button"
-            onClick={onTutup}
-            aria-label="Tutup"
-            className="shrink-0 rounded-pill border border-border-subtle p-2 text-text-muted transition-colors hover:bg-surface-sunken hover:text-text"
-          >
-            <X className="size-4" aria-hidden="true" />
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            {aksi}
+            <button
+              type="button"
+              onClick={onTutup}
+              aria-label="Tutup"
+              className="shrink-0 rounded-pill border border-border-subtle p-2 text-text-muted transition-colors hover:bg-surface-sunken hover:text-text"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">{children}</div>
+        <div
+          tabIndex={isiBisaDifokuskan ? 0 : undefined}
+          className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6", classNameIsi)}
+        >
+          {children}
+        </div>
       </div>
     </div>,
     document.body,

@@ -33,10 +33,7 @@ export function SectionBeranda({
     <section
       id={id}
       aria-labelledby={idJudul}
-      className="border-t border-border-subtle py-12 sm:py-16"
-      // Tautan sesama halaman tidak boleh mendarat tepat di bawah navbar yang
-      // menempel di atas, sehingga judul bagiannya tertutup.
-      style={{ scrollMarginTop: "5rem" }}
+      className="scroll-mt-28 border-t border-border-subtle py-12 sm:scroll-mt-20 sm:py-16"
     >
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">

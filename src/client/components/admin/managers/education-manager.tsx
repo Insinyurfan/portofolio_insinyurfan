@@ -19,6 +19,7 @@ import {
   Textarea,
 } from "@/client/components/admin/ui";
 import { useAksi } from "@/client/components/admin/use-aksi";
+import { useScrollKeForm } from "@/client/components/admin/use-scroll-ke-form";
 import { simpanPendidikanAction } from "@/server/actions/konten";
 import { educationSchema } from "@/shared/schemas";
 import { formatRentangTahun } from "@/shared/format";
@@ -49,6 +50,7 @@ const KOSONG: Nilai = {
 
 export function EducationManager({ items }: { items: Education[] }) {
   const { jalankan, sedangBerjalan } = useAksi();
+  const { panel, arahkan } = useScrollKeForm();
   const [terbuka, setTerbuka] = useState(false);
   const [mengunggah, setMengunggah] = useState(false);
 
@@ -83,6 +85,7 @@ export function EducationManager({ items }: { items: Education[] }) {
         : { ...KOSONG, sort_order: items.length + 1 },
     );
     setTerbuka(true);
+    arahkan();
   }
 
   async function simpan() {
@@ -105,7 +108,7 @@ export function EducationManager({ items }: { items: Education[] }) {
   return (
     <div className="space-y-4">
       {terbuka ? (
-        <Panel>
+        <Panel {...panel}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-semibold text-adm-fg">
               {getValues("id") ? "Sunting pendidikan" : "Pendidikan baru"}

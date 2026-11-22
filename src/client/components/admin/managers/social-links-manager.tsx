@@ -9,6 +9,7 @@ import type { z } from "zod";
 import { ItemList } from "@/client/components/admin/item-list";
 import { Button, Checkbox, Field, Input, Panel } from "@/client/components/admin/ui";
 import { useAksi } from "@/client/components/admin/use-aksi";
+import { useScrollKeForm } from "@/client/components/admin/use-scroll-ke-form";
 import { simpanTautanSosialAction } from "@/server/actions/konten";
 import { socialLinkSchema } from "@/shared/schemas";
 import type { SocialLink } from "@/shared/types";
@@ -27,6 +28,7 @@ const KOSONG: Nilai = {
 
 export function SocialLinksManager({ items }: { items: SocialLink[] }) {
   const { jalankan, sedangBerjalan } = useAksi();
+  const { panel, arahkan } = useScrollKeForm();
   const [formTerbuka, setFormTerbuka] = useState(false);
 
   const form = useForm<Nilai, unknown, Keluaran>({
@@ -48,6 +50,7 @@ export function SocialLinksManager({ items }: { items: SocialLink[] }) {
         : { ...KOSONG, sort_order: items.length + 1 },
     );
     setFormTerbuka(true);
+    arahkan();
   }
 
   async function simpan() {
@@ -70,7 +73,7 @@ export function SocialLinksManager({ items }: { items: SocialLink[] }) {
   return (
     <div className="space-y-4">
       {formTerbuka ? (
-        <Panel>
+        <Panel {...panel}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-semibold text-adm-fg">
               {form.getValues("id") ? "Sunting tautan" : "Tautan baru"}

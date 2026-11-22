@@ -14,6 +14,7 @@ import {
   Textarea,
 } from "@/client/components/admin/ui";
 import { useAksi } from "@/client/components/admin/use-aksi";
+import { useScrollKeForm } from "@/client/components/admin/use-scroll-ke-form";
 import { simpanPembukaHalamanAction } from "@/server/actions/konten";
 import { pageIntroSchema } from "@/shared/schemas";
 import type { PageIntro } from "@/shared/types";
@@ -51,6 +52,7 @@ export function PageIntrosManager({ items }: { items: PageIntro[] }) {
 
 function FormSatuHalaman({ item }: { item: PageIntro }) {
   const { jalankan, sedangBerjalan } = useAksi();
+  const { panel, arahkan } = useScrollKeForm();
   const [terbuka, setTerbuka] = useState(false);
 
   const { register, handleSubmit, setError, formState, getValues } = useForm<
@@ -73,10 +75,13 @@ function FormSatuHalaman({ item }: { item: PageIntro }) {
   const terisi = item.headline !== null && item.headline.trim() !== "";
 
   return (
-    <Panel>
+    <Panel {...panel}>
       <button
         type="button"
-        onClick={() => setTerbuka((v) => !v)}
+        onClick={() => {
+          setTerbuka(!terbuka);
+          if (!terbuka) arahkan();
+        }}
         aria-expanded={terbuka}
         className="flex w-full items-center justify-between gap-3 text-left"
       >

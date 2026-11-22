@@ -1,4 +1,4 @@
-import { Download, Mail, MapPin } from "lucide-react";
+import { Mail, MapPin } from "lucide-react";
 
 import { AchievementGrid } from "@/client/components/achievements/achievement-grid";
 import { EducationCard } from "@/client/components/education/education-card";
@@ -9,12 +9,11 @@ import { TypingRoles } from "@/client/components/home/typing-roles";
 import { SocialIconLinks } from "@/client/components/layout/social-icon-links";
 import { ProjectCard } from "@/client/components/projects/project-card";
 import { ContactForm } from "@/client/components/public/contact-form";
-import { CvPreview } from "@/client/components/public/cv-preview";
+import { CvActions } from "@/client/components/public/cv-preview";
 import { RatingsSection } from "@/client/components/public/ratings-section";
 import { SkillsTabs } from "@/client/components/skills/skills-tabs";
 import {
   Badge,
-  ButtonExternal,
   ButtonLink,
   Card,
   EmptyState,
@@ -123,23 +122,13 @@ export default async function BerandaPage() {
               </p>
             ) : null}
 
-            <div className="mt-7 flex flex-wrap gap-3">
+            <div className="mt-7 flex flex-wrap items-center gap-3">
               <ButtonLink href="#proyek">Lihat Proyek</ButtonLink>
               <ButtonLink href="#kontak" variant="outline">
                 Kontak
               </ButtonLink>
-              {/* Kedua tombol CV hanya dirender bila berkasnya memang ada. */}
               {profile.cv_url ? (
-                <>
-                  <CvPreview
-                    cvUrl={profile.cv_url}
-                    namaPemilik={profile.full_name}
-                  />
-                  <ButtonExternal href={profile.cv_url}>
-                    <Download className="size-4" aria-hidden="true" />
-                    Unduh CV
-                  </ButtonExternal>
-                </>
+                <CvActions cvUrl={profile.cv_url} namaPemilik={profile.full_name} />
               ) : null}
             </div>
 

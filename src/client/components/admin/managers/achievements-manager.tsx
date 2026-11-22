@@ -18,6 +18,7 @@ import {
   Select,
 } from "@/client/components/admin/ui";
 import { useAksi } from "@/client/components/admin/use-aksi";
+import { useScrollKeForm } from "@/client/components/admin/use-scroll-ke-form";
 import { simpanPencapaianAction } from "@/server/actions/konten";
 import { achievementSchema } from "@/shared/schemas";
 import { formatTanggal, labelAchievementCategory } from "@/shared/format";
@@ -43,6 +44,7 @@ const KOSONG: Nilai = {
 
 export function AchievementsManager({ items }: { items: Achievement[] }) {
   const { jalankan, sedangBerjalan } = useAksi();
+  const { panel, arahkan } = useScrollKeForm();
   const [terbuka, setTerbuka] = useState(false);
   const [mengunggah, setMengunggah] = useState(false);
 
@@ -70,6 +72,7 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
         : { ...KOSONG, sort_order: items.length + 1 },
     );
     setTerbuka(true);
+    arahkan();
   }
 
   async function simpan() {
@@ -92,7 +95,7 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
   return (
     <div className="space-y-4">
       {terbuka ? (
-        <Panel>
+        <Panel {...panel}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-semibold text-adm-fg">
               {getValues("id") ? "Sunting pencapaian" : "Pencapaian baru"}

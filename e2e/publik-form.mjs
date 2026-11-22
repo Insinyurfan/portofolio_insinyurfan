@@ -427,19 +427,22 @@ try {
     await pub2.waitForTimeout(1500);
     cek("PDF belum diambil sebelum modal dibuka", sebelum.length === 0, `${sebelum.length} permintaan`);
 
+    const pemicuCv = pub2.getByRole("banner").getByRole("button", { name: "Pratinjau CV" });
     const scrollSebelum = await pub2.evaluate(() => window.scrollY);
-    await pub2.getByRole("button", { name: "Pratinjau CV" }).click();
-    await pub2.waitForTimeout(1200);
+    await pemicuCv.click();
 
-    cek("modal pratinjau terbuka", (await pub2.getByRole("dialog").count()) > 0);
+    const dialogCv = pub2.getByRole("dialog", { name: /^Pratinjau CV\s+\S/ });
+    await dialogCv.waitFor();
+    cek("modal pratinjau terbuka dengan nama pemilik CV", (await dialogCv.count()) === 1);
+    await dialogCv.locator("canvas").first().waitFor();
     cek(
-      "modal diumumkan sebagai dialog beserta namanya",
-      ((await pub2.getByRole("dialog").getAttribute("aria-label")) ?? "").includes("CV"),
+      "CV tampil sebagai halaman dokumen",
+      (await dialogCv.locator("iframe, object, embed").count()) === 0,
     );
     cek(
       "tombol unduh dan buka di tab baru tersedia",
-      (await pub2.getByRole("link", { name: "Unduh" }).count()) > 0 &&
-        (await pub2.getByRole("link", { name: "Buka di tab baru" }).count()) > 0,
+      (await dialogCv.getByRole("link", { name: "Unduh CV" }).count()) > 0 &&
+        (await dialogCv.getByRole("link", { name: "Buka PDF di tab baru" }).count()) > 0,
     );
 
     const fokusDiDialog = await pub2.evaluate(() => {
