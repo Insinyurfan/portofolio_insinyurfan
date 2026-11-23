@@ -131,6 +131,7 @@ export type Database = {
           description: string | null
           end_date: string | null
           gallery: string[]
+          gallery_focus: Json
           highlights: string[]
           id: string
           is_ongoing: boolean
@@ -150,6 +151,7 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           gallery?: string[]
+          gallery_focus?: Json
           highlights?: string[]
           id?: string
           is_ongoing?: boolean
@@ -169,6 +171,7 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           gallery?: string[]
+          gallery_focus?: Json
           highlights?: string[]
           id?: string
           is_ongoing?: boolean

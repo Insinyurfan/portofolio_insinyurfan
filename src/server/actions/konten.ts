@@ -282,7 +282,12 @@ export const simpanPengalamanAction = withAdminAction(
   experienceSchema,
   async (input) => {
     const lama = input.id ? await ambilBaris("experiences", input.id) : null;
-    const hasil = await simpanBaris("experiences", input);
+    const { gallery_focus, ...isian } = input;
+    // Isian dari dashboard yang dibuka sebelum rilis ini tidak membawa pengaturan foto.
+    const fokus = gallery_focus === undefined
+      ? undefined
+      : Object.fromEntries(Object.entries(gallery_focus).filter(([src]) => input.gallery.includes(src)));
+    const hasil = await simpanBaris("experiences", { ...isian, gallery_focus: fokus });
     await bersihkanBerkasLama(lama, input);
     return hasil;
   },

@@ -1,6 +1,7 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Maximize2 } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { gayaFoto, type FokusGaleri } from "@/shared/fokus-galeri";
 
 /**
  * Bagian-bagian isi dialog detail, dipakai bersama oleh pendidikan dan
@@ -50,11 +51,13 @@ export function GaleriDetail({
   judul,
   gambar,
   alt,
+  fokus,
 }: {
   judul: string;
   gambar: string[];
   /** Keterangan konteks, dipakai menyusun alt tiap gambar. */
   alt: string;
+  fokus?: FokusGaleri;
 }) {
   if (gambar.length === 0) return null;
 
@@ -65,14 +68,25 @@ export function GaleriDetail({
       </h3>
       <ul className="mt-3 grid list-none grid-cols-2 gap-3 sm:grid-cols-3">
         {gambar.map((src, index) => (
-          <li key={src} className="overflow-hidden rounded-card border border-border-subtle">
-            <Image
-              src={src}
-              alt={`${alt} — foto ${index + 1}`}
-              width={480}
-              height={360}
-              className="h-32 w-full object-cover sm:h-36"
-            />
+          <li key={`${index}-${src}`}>
+            <a
+              href={src}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Buka foto ${index + 1} ${alt} ukuran penuh di tab baru`}
+              className="group relative block aspect-16/10 cursor-zoom-in overflow-hidden rounded-card border border-border-subtle bg-surface-sunken hover:border-accent"
+            >
+              <Image
+                src={src}
+                alt=""
+                fill
+                sizes="(max-width: 639px) 50vw, (max-width: 1024px) 33vw, 24rem"
+                style={gayaFoto(fokus?.[src])}
+              />
+              <span className="absolute right-2 bottom-2 rounded-pill border border-border-subtle bg-surface-raised p-1.5 text-text group-hover:text-accent">
+                <Maximize2 className="size-3.5" aria-hidden="true" />
+              </span>
+            </a>
           </li>
         ))}
       </ul>

@@ -23,6 +23,7 @@ import {
 import { useAksi } from "@/client/components/admin/use-aksi";
 import { useScrollKeForm } from "@/client/components/admin/use-scroll-ke-form";
 import { simpanPengalamanAction } from "@/server/actions/konten";
+import { bacaFokusGaleri } from "@/shared/fokus-galeri";
 import { experienceSchema } from "@/shared/schemas";
 import { formatRentangTanggal, labelExperienceType } from "@/shared/format";
 import type { Experience, ExperienceType } from "@/shared/types";
@@ -46,6 +47,7 @@ const KOSONG: Nilai = {
   logo_url: "",
   highlights: [],
   gallery: [],
+  gallery_focus: {},
   website_url: "",
   sort_order: 0,
   is_published: true,
@@ -63,13 +65,14 @@ export function ExperiencesManager({ items }: { items: Experience[] }) {
     resolver: zodResolver(experienceSchema),
     defaultValues: KOSONG,
   });
-  const { register, handleSubmit, reset, setError, formState, getValues, control } =
+  const { register, handleSubmit, reset, setError, setValue, formState, getValues, control } =
     form;
 
   // Masih berjalan → field tanggal selesai dinonaktifkan, sesuai spesifikasi.
   // useWatch, bukan watch(): watch() mengembalikan nilai yang tidak dapat
   // dimemoisasi React Compiler, dan itu memicu peringatan kompilasi.
   const masihBerjalan = useWatch({ control, name: "is_ongoing" });
+  const fokusGaleri = useWatch({ control, name: "gallery_focus" });
 
   function buka(item?: Experience) {
     reset(
@@ -87,6 +90,7 @@ export function ExperiencesManager({ items }: { items: Experience[] }) {
             logo_url: item.logo_url ?? "",
             highlights: item.highlights,
             gallery: item.gallery,
+            gallery_focus: bacaFokusGaleri(item.gallery_focus),
             website_url: item.website_url ?? "",
             sort_order: item.sort_order,
             is_published: item.is_published,
@@ -277,7 +281,16 @@ export function ExperiencesManager({ items }: { items: Experience[] }) {
                   onChange={field.onChange}
                   onSedangMengunggah={setMengunggahGaleri}
                   disabled={sedangBerjalan}
-                  hint="Tiga foto pertama tampil sebagai cuplikan di kartu; semuanya tampil di dialog detail."
+                  fokus={{
+                    nilai: fokusGaleri ?? {},
+                    onChange: (src, posisi) => {
+                      const berikutnya = { ...getValues("gallery_focus") };
+                      if (posisi) berikutnya[src] = posisi;
+                      else delete berikutnya[src];
+                      setValue("gallery_focus", berikutnya, { shouldDirty: true });
+                    },
+                  }}
+                  hint="Ubah urutan atau pilih Atur posisi pada tiap foto. Foto tampil utuh secara default."
                 />
               )}
             />

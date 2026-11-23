@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { Button, Input } from "@/client/components/admin/ui";
 
@@ -17,12 +17,14 @@ export function StringListField({
   onChange,
   placeholder,
   hint,
+  renderItem,
 }: {
   label: string;
   nilai: string[];
   onChange: (nilai: string[]) => void;
   placeholder?: string;
   hint?: string;
+  renderItem?: (item: string, index: number) => ReactNode;
 }) {
   const [baru, setBaru] = useState("");
 
@@ -79,9 +81,11 @@ export function StringListField({
                 </Button>
               </div>
 
-              <span className="min-w-0 flex-1 truncate text-sm text-adm-fg">
-                {item}
-              </span>
+              {renderItem ? (
+                <div className="min-w-0 flex-1">{renderItem(item, index)}</div>
+              ) : (
+                <span className="min-w-0 flex-1 truncate text-sm text-adm-fg">{item}</span>
+              )}
 
               <Button
                 variant="ghost"

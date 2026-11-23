@@ -4,11 +4,13 @@ import { Check, ImageIcon, Upload, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { StringListField } from "@/client/components/admin/managers/string-list-field";
+import { PengaturanPosisiFoto } from "@/client/components/admin/pengaturan-posisi-foto";
 import { siapkanFoto } from "@/client/lib/siapkan-foto";
 import { unggahMedia } from "@/client/lib/unggah-media";
 import type { PrefiksMedia } from "@/server/actions/storage";
 import { siapkanUnggahMediaAction } from "@/server/actions/unggah-media";
 import { cn } from "@/shared/cn";
+import type { FokusFoto, FokusGaleri } from "@/shared/fokus-galeri";
 import { PILIH_FOTO } from "@/shared/media";
 
 const LABEL_STATUS = {
@@ -35,6 +37,7 @@ export function GalleryField({
   disabled = false,
   onChange,
   onSedangMengunggah,
+  fokus,
 }: {
   label: string;
   nilai: string[];
@@ -43,6 +46,7 @@ export function GalleryField({
   disabled?: boolean;
   onChange: (nilai: string[]) => void;
   onSedangMengunggah?: (sedang: boolean) => void;
+  fokus?: { nilai: FokusGaleri; onChange: (src: string, posisi?: FokusFoto) => void };
 }) {
   const [mengunggah, setMengunggah] = useState(false);
   const [antrean, setAntrean] = useState<FotoUnggahan[]>([]);
@@ -196,6 +200,14 @@ export function GalleryField({
           onChange={onChange}
           placeholder="https://…"
           hint={hint ?? "Urutan di sini adalah urutan yang tampil di halaman."}
+          renderItem={fokus ? (src, index) => (
+            <PengaturanPosisiFoto
+              src={src}
+              nomor={index + 1}
+              fokus={fokus.nilai[src]}
+              onChange={(posisi) => fokus.onChange(src, posisi)}
+            />
+          ) : undefined}
         />
       </fieldset>
     </div>

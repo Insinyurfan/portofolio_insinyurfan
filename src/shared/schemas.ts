@@ -226,6 +226,10 @@ export const experienceSchema = z
     logo_url: urlOpsional,
     highlights: daftarTeks,
     gallery: daftarTeks,
+    gallery_focus: z.record(z.string(), z.object({
+      x: z.number().int().min(0).max(100),
+      y: z.number().int().min(0).max(100),
+    })).optional(),
     website_url: urlOpsional,
     sort_order: urutan,
     is_published: terbit,

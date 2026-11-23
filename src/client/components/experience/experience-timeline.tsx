@@ -14,6 +14,7 @@ import { Modal } from "@/client/components/ui/modal";
 import { Badge } from "@/client/components/ui/primitives";
 import { Reveal } from "@/client/components/ui/reveal";
 import { formatRentangTanggal, labelExperienceType } from "@/shared/format";
+import { bacaFokusGaleri, gayaFoto, type FokusGaleri } from "@/shared/fokus-galeri";
 import type { Experience } from "@/shared/types";
 
 /**
@@ -61,6 +62,7 @@ export function ExperienceTimeline({ items }: { items: Experience[] }) {
 function KartuPengalaman({ item }: { item: Experience }) {
   const [terbuka, setTerbuka] = useState(false);
   const pemicuRef = useRef<HTMLButtonElement | null>(null);
+  const fokus = bacaFokusGaleri(item.gallery_focus);
 
   const rentang = formatRentangTanggal(
     item.start_date,
@@ -107,7 +109,7 @@ function KartuPengalaman({ item }: { item: Experience }) {
 
             {adaDetail ? (
               <div className="mt-5 flex flex-wrap items-center gap-4">
-                <CuplikanGaleri gambar={item.gallery} nama={item.organization} />
+                <CuplikanGaleri gambar={item.gallery} nama={item.organization} fokus={fokus} />
 
                 <button
                   ref={pemicuRef}
@@ -170,6 +172,7 @@ function KartuPengalaman({ item }: { item: Experience }) {
               judul="Dokumentasi"
               gambar={item.gallery}
               alt={item.organization}
+              fokus={fokus}
             />
             <TombolKunjungi url={item.website_url} label="Kunjungi situs organisasi" />
           </div>
@@ -180,22 +183,23 @@ function KartuPengalaman({ item }: { item: Experience }) {
 }
 
 /** Tiga foto pertama sebagai cuplikan di kartu. */
-function CuplikanGaleri({ gambar, nama }: { gambar: string[]; nama: string }) {
+function CuplikanGaleri({ gambar, nama, fokus }: { gambar: string[]; nama: string; fokus: FokusGaleri }) {
   if (gambar.length === 0) return null;
 
   return (
     <ul className="flex list-none items-center gap-2">
       {gambar.slice(0, 3).map((src, index) => (
         <li
-          key={src}
-          className="size-14 overflow-hidden rounded-card border border-border-subtle"
+          key={`${index}-${src}`}
+          className="size-14 overflow-hidden rounded-card border border-border-subtle bg-surface-sunken"
         >
           <Image
             src={src}
             alt={`${nama} — foto ${index + 1}`}
             width={112}
             height={112}
-            className="size-full object-cover"
+            className="size-full"
+            style={gayaFoto(fokus[src])}
           />
         </li>
       ))}
