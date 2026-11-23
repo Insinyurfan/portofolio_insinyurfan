@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 
 import { STORAGE_BUCKET } from "@/shared/constants";
 import { env } from "@/shared/env";
+import { EKSTENSI_GAMBAR_WEB } from "@/shared/media";
 import { createSessionSupabaseClient } from "@/server/db/session";
 import { AksiError } from "@/server/actions/admin";
 
@@ -51,15 +52,6 @@ export type PrefiksMedia = (typeof PREFIKS_MEDIA)[number];
 export function adalahPrefiksMedia(nilai: string): nilai is PrefiksMedia {
   return (PREFIKS_MEDIA as readonly string[]).includes(nilai);
 }
-
-const JENIS_GAMBAR: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "image/avif": "avif",
-  "image/gif": "gif",
-  "image/svg+xml": "svg",
-};
 
 const MAKS_GAMBAR = 5 * 1024 * 1024; // 5 MB
 const MAKS_PDF = 10 * 1024 * 1024; // 10 MB
@@ -113,8 +105,8 @@ function buatPathUnggahan(
     }
     ekstensi = "pdf";
   } else {
-    const cocok = JENIS_GAMBAR[file.type];
-    if (!Object.hasOwn(JENIS_GAMBAR, file.type) || !cocok) {
+    const cocok = EKSTENSI_GAMBAR_WEB.get(file.type);
+    if (!cocok) {
       throw new AksiError(
         "Format gambar tidak didukung. Gunakan JPG, PNG, WebP, AVIF, GIF, atau SVG.",
         "validasi",

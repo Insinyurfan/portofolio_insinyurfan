@@ -5,12 +5,13 @@ import { Trash2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { toastGagal } from "@/client/components/admin/toaster";
-import { keWebp } from "@/client/lib/ke-webp";
+import { siapkanFoto } from "@/client/lib/siapkan-foto";
 import { unggahMedia } from "@/client/lib/unggah-media";
 import { Button } from "@/client/components/admin/ui";
 import { unggahAction } from "@/server/actions/konten";
 import type { PrefiksMedia } from "@/server/actions/storage";
 import { siapkanUnggahMediaAction } from "@/server/actions/unggah-media";
+import { PILIH_FOTO } from "@/shared/media";
 
 /**
  * Field unggah berkas dengan pratinjau.
@@ -48,6 +49,7 @@ export function FileField({
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const unggahan = useRef<AbortController | null>(null);
+  const urlPratinjau = useRef<string | null>(null);
   const [mengunggah, setMengunggah] = useState(false);
   const [pratinjauLokal, setPratinjauLokal] = useState<string | null>(null);
 
@@ -56,15 +58,16 @@ export function FileField({
       unggahan.current.abort();
       onSedangMengunggah?.(false);
     }
+    if (urlPratinjau.current) URL.revokeObjectURL(urlPratinjau.current);
   }, [onSedangMengunggah]);
-  useEffect(() => {
-    if (pratinjauLokal) return () => URL.revokeObjectURL(pratinjauLokal);
-  }, [pratinjauLokal]);
 
-  const accept =
-    jenis === "pdf"
-      ? "application/pdf"
-      : "image/jpeg,image/png,image/webp,image/avif,image/gif,image/svg+xml";
+  const accept = jenis === "pdf" ? "application/pdf" : PILIH_FOTO;
+
+  function tampilkanPratinjau(file?: File) {
+    if (urlPratinjau.current) URL.revokeObjectURL(urlPratinjau.current);
+    urlPratinjau.current = file ? URL.createObjectURL(file) : null;
+    setPratinjauLokal(urlPratinjau.current);
+  }
 
   function setStatus(sedang: boolean) {
     setMengunggah(sedang);
@@ -77,19 +80,16 @@ export function FileField({
     unggahan.current = controller;
     // Pratinjau lokal tampil seketika, sebelum unggahan selesai.
     if (jenis === "gambar") {
-      setPratinjauLokal(URL.createObjectURL(dipilih));
+      tampilkanPratinjau(dipilih);
     }
 
     setStatus(true);
 
-    // JPEG dan PNG dikonversi ke WebP di peramban lebih dulu, sehingga yang
-    // melintasi jaringan dan tersimpan di Storage sudah berukuran kecil.
-    // keWebp mengembalikan berkas aslinya bila konversi tidak menguntungkan
-    // atau tidak didukung, jadi langkah ini tidak pernah menggagalkan unggahan.
     try {
-      const file = jenis === "gambar" ? await keWebp(dipilih) : dipilih;
+      const file = jenis === "gambar" ? await siapkanFoto(dipilih) : dipilih;
       if (controller.signal.aborted) return;
-      if (unggahLangsung) {
+      if (file !== dipilih) tampilkanPratinjau(file);
+      if (jenis === "gambar" || unggahLangsung) {
         const hasil = await siapkanUnggahMediaAction({ type: file.type, size: file.size, prefiks, jenis });
         if (!hasil.ok) throw new Error(hasil.message);
         if (!hasil.data) throw new Error("Unggahan tidak dapat disiapkan.");
@@ -112,7 +112,7 @@ export function FileField({
       unggahan.current = null;
       if (!controller.signal.aborted) {
         setStatus(false);
-        setPratinjauLokal(null);
+        tampilkanPratinjau();
         if (inputRef.current) inputRef.current.value = "";
       }
     }
@@ -206,9 +206,7 @@ export function FileField({
           {/* Dijelaskan sekali di sini, bukan diulang di setiap hint field. */}
           {jenis === "gambar" ? (
             <p className="text-xs text-adm-fg-subtle">
-              JPG dan PNG otomatis diubah ke WebP dan diperkecil bila lebih dari
-              1600 piksel, supaya ukurannya jauh lebih ringan tanpa perbedaan
-              yang terlihat. SVG, GIF, dan AVIF dibiarkan apa adanya.
+              Foto seperti HEIC/HEIF, TIFF, dan BMP dikonversi otomatis saat dipilih.
             </p>
           ) : null}
 

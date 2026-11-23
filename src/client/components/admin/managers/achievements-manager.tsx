@@ -196,9 +196,8 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
                       label="Gambar sertifikat"
                       nilai={field.value ?? null}
                       prefiks="achievements"
-                      unggahLangsung
                       disabled={sedangBerjalan}
-                      hint="JPG, PNG, WebP, AVIF, GIF, atau SVG. Maksimal 5 MB."
+                      hint="Maksimal 5 MB setelah optimasi."
                       onChange={(url) => field.onChange(url ?? "")}
                       onSedangMengunggah={setMengunggahGambar}
                     />

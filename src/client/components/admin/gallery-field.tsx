@@ -4,11 +4,12 @@ import { Check, ImageIcon, Upload, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { StringListField } from "@/client/components/admin/managers/string-list-field";
-import { keWebp } from "@/client/lib/ke-webp";
+import { siapkanFoto } from "@/client/lib/siapkan-foto";
 import { unggahMedia } from "@/client/lib/unggah-media";
 import type { PrefiksMedia } from "@/server/actions/storage";
 import { siapkanUnggahMediaAction } from "@/server/actions/unggah-media";
 import { cn } from "@/shared/cn";
+import { PILIH_FOTO } from "@/shared/media";
 
 const LABEL_STATUS = {
   menunggu: "Menunggu giliran",
@@ -81,8 +82,16 @@ export function GalleryField({
       for (const [index, dipilih] of files.entries()) {
         perbarui(index, { status: "menyiapkan" });
         try {
-          const file = await keWebp(dipilih);
+          const file = await siapkanFoto(dipilih);
           if (controller.signal.aborted) return;
+
+          if (file !== dipilih) {
+            const lama = pratinjauAktif.current[index];
+            if (lama) URL.revokeObjectURL(lama);
+            const pratinjau = URL.createObjectURL(file);
+            pratinjauAktif.current[index] = pratinjau;
+            perbarui(index, { pratinjau });
+          }
 
           const hasil = await siapkanUnggahMediaAction({
             type: file.type,
@@ -146,7 +155,7 @@ export function GalleryField({
           <label className="inline-flex items-center">
             <input
               type="file"
-              accept="image/jpeg,image/png,image/webp,image/avif,image/gif,image/svg+xml"
+              accept={PILIH_FOTO}
               multiple
               className="peer sr-only"
               aria-label={`Pilih foto untuk ${label}`}
@@ -176,7 +185,7 @@ export function GalleryField({
         ) : null}
 
         <p className="text-xs text-adm-fg-subtle">
-          Bisa memilih beberapa foto. Maksimal 5 MB per foto setelah optimasi.
+          Bisa memilih beberapa foto, termasuk HEIC/HEIF, TIFF, dan BMP. Maksimal 5 MB per foto setelah optimasi.
         </p>
       </section>
 
