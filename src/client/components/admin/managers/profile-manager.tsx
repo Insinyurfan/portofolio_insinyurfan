@@ -34,7 +34,10 @@ type Keluaran = z.output<typeof profileSchema>;
  */
 export function ProfileManager({ profile }: { profile: Profile | null }) {
   const { jalankan, sedangBerjalan } = useAksi();
-  const [mengunggah, setMengunggah] = useState(false);
+  const [mengunggahLogo, setMengunggahLogo] = useState(false);
+  const [mengunggahCv, setMengunggahCv] = useState(false);
+  const [mengunggahGaleri, setMengunggahGaleri] = useState(false);
+  const mengunggah = mengunggahGaleri || mengunggahLogo || mengunggahCv;
 
   const form = useForm<Nilai, unknown, Keluaran>({
     resolver: zodResolver(profileSchema),
@@ -61,6 +64,7 @@ export function ProfileManager({ profile }: { profile: Profile | null }) {
     <Panel>
       <form
         onSubmit={handleSubmit(async () => {
+          if (mengunggah) return;
           const nilai = getValues();
           await jalankan(() => simpanProfilAction(nilai), {
             onFieldError: (f) => {
@@ -110,7 +114,7 @@ export function ProfileManager({ profile }: { profile: Profile | null }) {
               prefiks="logo"
               hint="Tampil di samping nama situs. Rasio apa pun boleh — gambar disesuaikan tanpa terpotong. Dikosongkan berarti header hanya menampilkan nama. Logo lama otomatis dihapus setelah penggantian tersimpan."
               onChange={(url) => field.onChange(url ?? "")}
-              onSedangMengunggah={setMengunggah}
+              onSedangMengunggah={setMengunggahLogo}
             />
           )}
         />
@@ -168,8 +172,9 @@ export function ProfileManager({ profile }: { profile: Profile | null }) {
               label="Foto profil"
               nilai={field.value ?? []}
               prefiks="profile"
+              disabled={sedangBerjalan}
               onChange={field.onChange}
-              onSedangMengunggah={setMengunggah}
+              onSedangMengunggah={setMengunggahGaleri}
               hint="Boleh lebih dari satu — hero beranda menampilkannya sebagai galeri yang dapat digeser. Foto PERTAMA menjadi foto utama, yang dipakai di halaman Tentang."
             />
           )}
@@ -186,7 +191,7 @@ export function ProfileManager({ profile }: { profile: Profile | null }) {
               jenis="pdf"
               hint="Hanya PDF, maksimal 10 MB. Tombol Unduh CV di beranda mengarah ke berkas ini."
               onChange={(url) => field.onChange(url ?? "")}
-              onSedangMengunggah={setMengunggah}
+              onSedangMengunggah={setMengunggahCv}
             />
           )}
         />

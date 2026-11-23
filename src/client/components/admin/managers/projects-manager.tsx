@@ -47,9 +47,11 @@ const KOSONG: Nilai = {
 
 export function ProjectsManager({ items }: { items: Project[] }) {
   const { jalankan, sedangBerjalan } = useAksi();
-  const { panel, arahkan } = useScrollKeForm();
+  const { panel, versiForm, arahkan } = useScrollKeForm();
   const [terbuka, setTerbuka] = useState(false);
-  const [mengunggah, setMengunggah] = useState(false);
+  const [mengunggahBerkas, setMengunggahBerkas] = useState(false);
+  const [mengunggahGaleri, setMengunggahGaleri] = useState(false);
+  const mengunggah = mengunggahGaleri || mengunggahBerkas;
 
   const form = useForm<Nilai, unknown, Keluaran>({
     resolver: zodResolver(projectSchema),
@@ -91,6 +93,8 @@ export function ProjectsManager({ items }: { items: Project[] }) {
   }
 
   async function simpan() {
+    if (mengunggah) return;
+
     // Nilai MENTAH form: server yang mem-parse dan mentransformnya.
     const nilai = getValues();
 
@@ -119,6 +123,7 @@ export function ProjectsManager({ items }: { items: Project[] }) {
               variant="ghost"
               size="icon"
               onClick={() => setTerbuka(false)}
+              disabled={mengunggahGaleri}
               aria-label="Tutup form"
             >
               <X aria-hidden="true" />
@@ -203,7 +208,7 @@ export function ProjectsManager({ items }: { items: Project[] }) {
                   prefiks="projects"
                   hint="Rasio 16:10 paling pas. Maksimal 5 MB."
                   onChange={(url) => field.onChange(url ?? "")}
-                  onSedangMengunggah={setMengunggah}
+                  onSedangMengunggah={setMengunggahBerkas}
                 />
               )}
             />
@@ -213,11 +218,13 @@ export function ProjectsManager({ items }: { items: Project[] }) {
               name="gallery"
               render={({ field }) => (
                 <GalleryField
+                  key={versiForm}
                   label="Galeri gambar"
                   nilai={field.value ?? []}
                   prefiks="projects"
                   onChange={field.onChange}
-                  onSedangMengunggah={setMengunggah}
+                  onSedangMengunggah={setMengunggahGaleri}
+                  disabled={sedangBerjalan}
                   hint="Urutan di sini adalah urutan yang tampil di halaman detail."
                 />
               )}
@@ -258,7 +265,7 @@ export function ProjectsManager({ items }: { items: Project[] }) {
               <Button
                 variant="outline"
                 onClick={() => setTerbuka(false)}
-                disabled={sedangBerjalan}
+                disabled={sedangBerjalan || mengunggahGaleri}
               >
                 Batal
               </Button>
@@ -283,6 +290,7 @@ export function ProjectsManager({ items }: { items: Project[] }) {
           is_published: p.is_published,
           penanda: p.featured ? <Badge tone="success">Featured</Badge> : undefined,
         }))}
+        suntingDinonaktifkan={mengunggahGaleri}
         onSunting={(id) => {
           const item = items.find((p) => p.id === id);
           if (item) buka(item);

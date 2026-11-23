@@ -87,11 +87,11 @@ export function pathKeUrl(path: string): string {
  * Validasi jenis dan ukuran terjadi DI SINI, di server — bukan hanya lewat
  * atribut `accept` di form, yang bisa dilewati begitu saja.
  */
-export async function unggahBerkas(
-  file: File,
+function buatPathUnggahan(
+  file: Pick<File, "type" | "size">,
   prefiks: PrefiksMedia,
   jenis: "gambar" | "pdf",
-): Promise<string> {
+): string {
   if (file.size === 0) {
     throw new AksiError("Berkas kosong atau gagal terbaca.", "validasi");
   }
@@ -114,7 +114,7 @@ export async function unggahBerkas(
     ekstensi = "pdf";
   } else {
     const cocok = JENIS_GAMBAR[file.type];
-    if (!cocok) {
+    if (!Object.hasOwn(JENIS_GAMBAR, file.type) || !cocok) {
       throw new AksiError(
         "Format gambar tidak didukung. Gunakan JPG, PNG, WebP, AVIF, GIF, atau SVG.",
         "validasi",
@@ -132,7 +132,15 @@ export async function unggahBerkas(
   // Nama dihasilkan sistem: dua unggahan dengan nama asal yang sama tidak
   // pernah saling menimpa, dan nama berkas dari perangkat admin tidak ikut
   // terbit di URL publik.
-  const path = `${prefiks}/${randomUUID()}.${ekstensi}`;
+  return `${prefiks}/${randomUUID()}.${ekstensi}`;
+}
+
+export async function unggahBerkas(
+  file: File,
+  prefiks: PrefiksMedia,
+  jenis: "gambar" | "pdf",
+): Promise<string> {
+  const path = buatPathUnggahan(file, prefiks, jenis);
 
   const supabase = await createSessionSupabaseClient();
   const { error } = await supabase.storage
@@ -145,6 +153,24 @@ export async function unggahBerkas(
   }
 
   return pathKeUrl(path);
+}
+
+export async function siapkanUnggahGambar(
+  file: Pick<File, "type" | "size">,
+  prefiks: PrefiksMedia,
+): Promise<{ urlUnggah: string; urlPublik: string }> {
+  const path = buatPathUnggahan(file, prefiks, "gambar");
+  const supabase = await createSessionSupabaseClient();
+  const { data, error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .createSignedUploadUrl(path);
+
+  if (error) {
+    console.error("[storage] gagal menyiapkan unggahan:", error.message);
+    throw new AksiError("Unggahan tidak dapat disiapkan. Coba lagi.", "server");
+  }
+
+  return { urlUnggah: data.signedUrl, urlPublik: pathKeUrl(path) };
 }
 
 /**

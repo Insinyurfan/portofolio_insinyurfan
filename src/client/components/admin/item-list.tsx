@@ -45,6 +45,7 @@ export function ItemList({
   tabel,
   items,
   onSunting,
+  suntingDinonaktifkan = false,
   labelHapus,
   emptyTitle,
   emptyDescription,
@@ -53,6 +54,7 @@ export function ItemList({
   tabel: TabelUrut;
   items: ItemDaftar[];
   onSunting: (id: string) => void;
+  suntingDinonaktifkan?: boolean;
   /** Akibat turunan yang harus disebut di dialog konfirmasi. */
   labelHapus?: (item: ItemDaftar) => string;
   emptyTitle: string;
@@ -186,6 +188,7 @@ export function ItemList({
                 <Button
                   variant="ghost"
                   size="icon"
+                  disabled={suntingDinonaktifkan}
                   onClick={() => onSunting(item.id)}
                   aria-label={`Sunting ${item.judul}`}
                 >

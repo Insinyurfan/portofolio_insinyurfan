@@ -18,6 +18,7 @@ export function useScrollKeForm() {
 
   return {
     panel: { ref, tabIndex: -1, className: "scroll-mt-4" },
+    versiForm: permintaan,
     arahkan: () => setPermintaan((nilai) => nilai + 1),
   };
 }

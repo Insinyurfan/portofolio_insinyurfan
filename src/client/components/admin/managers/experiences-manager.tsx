@@ -53,9 +53,11 @@ const KOSONG: Nilai = {
 
 export function ExperiencesManager({ items }: { items: Experience[] }) {
   const { jalankan, sedangBerjalan } = useAksi();
-  const { panel, arahkan } = useScrollKeForm();
+  const { panel, versiForm, arahkan } = useScrollKeForm();
   const [terbuka, setTerbuka] = useState(false);
-  const [mengunggah, setMengunggah] = useState(false);
+  const [mengunggahBerkas, setMengunggahBerkas] = useState(false);
+  const [mengunggahGaleri, setMengunggahGaleri] = useState(false);
+  const mengunggah = mengunggahGaleri || mengunggahBerkas;
 
   const form = useForm<Nilai, unknown, Keluaran>({
     resolver: zodResolver(experienceSchema),
@@ -96,6 +98,8 @@ export function ExperiencesManager({ items }: { items: Experience[] }) {
   }
 
   async function simpan() {
+    if (mengunggah) return;
+
     // Nilai MENTAH form: server yang mem-parse dan mentransformnya.
     const nilai = getValues();
 
@@ -124,6 +128,7 @@ export function ExperiencesManager({ items }: { items: Experience[] }) {
               variant="ghost"
               size="icon"
               onClick={() => setTerbuka(false)}
+              disabled={mengunggahGaleri}
               aria-label="Tutup form"
             >
               <X aria-hidden="true" />
@@ -241,7 +246,7 @@ export function ExperiencesManager({ items }: { items: Experience[] }) {
                   prefiks="experiences"
                   hint="Tampil di kartu pengalaman. Dikosongkan berarti kartu memakai inisial nama organisasi."
                   onChange={(url) => field.onChange(url ?? "")}
-                  onSedangMengunggah={setMengunggah}
+                  onSedangMengunggah={setMengunggahBerkas}
                 />
               )}
             />
@@ -265,11 +270,13 @@ export function ExperiencesManager({ items }: { items: Experience[] }) {
               name="gallery"
               render={({ field }) => (
                 <GalleryField
+                  key={versiForm}
                   label="Dokumentasi"
                   nilai={field.value ?? []}
                   prefiks="experiences"
                   onChange={field.onChange}
-                  onSedangMengunggah={setMengunggah}
+                  onSedangMengunggah={setMengunggahGaleri}
+                  disabled={sedangBerjalan}
                   hint="Tiga foto pertama tampil sebagai cuplikan di kartu; semuanya tampil di dialog detail."
                 />
               )}
@@ -289,7 +296,7 @@ export function ExperiencesManager({ items }: { items: Experience[] }) {
               <Button
                 variant="outline"
                 onClick={() => setTerbuka(false)}
-                disabled={sedangBerjalan}
+                disabled={sedangBerjalan || mengunggahGaleri}
               >
                 Batal
               </Button>
@@ -316,6 +323,7 @@ export function ExperiencesManager({ items }: { items: Experience[] }) {
           is_published: i.is_published,
           penanda: <Badge>{labelExperienceType(i.type)}</Badge>,
         }))}
+        suntingDinonaktifkan={mengunggahGaleri}
         onSunting={(id) => {
           const item = items.find((i) => i.id === id);
           if (item) buka(item);
