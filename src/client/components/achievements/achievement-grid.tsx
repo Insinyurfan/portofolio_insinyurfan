@@ -1,213 +1,154 @@
 "use client";
 
-import { ExternalLink, X } from "lucide-react";
+import { Award, ExternalLink, FileText } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
-import { Badge } from "@/client/components/ui/primitives";
-import { formatTanggal, labelAchievementCategory } from "@/shared/format";
+import { PdfPages } from "@/client/components/public/pdf-pages";
+import { Modal } from "@/client/components/ui/modal";
+import { Badge, ButtonExternal } from "@/client/components/ui/primitives";
+import { formatTanggal } from "@/shared/format";
+import { daftarKategori, kategoriSertifikat, kunciKategori } from "@/shared/sertifikat";
 import type { Achievement } from "@/shared/types";
 
-/**
- * Grid pencapaian beserta preview gambar.
- *
- * Preview memenuhi syarat spesifikasi: ditutup lewat tombol tutup, Escape, dan
- * klik di luar; fokus terkurung di dalamnya selama terbuka; dan fokus kembali
- * ke kartu asal setelah ditutup.
- */
-export function AchievementGrid({ achievements }: { achievements: Achievement[] }) {
+export function AchievementGrid({
+  achievements,
+  denganFilter = false,
+}: {
+  achievements: Achievement[];
+  denganFilter?: boolean;
+}) {
+  const [filter, setFilter] = useState("");
   const [aktif, setAktif] = useState<Achievement | null>(null);
-  const pemicuRef = useRef<HTMLButtonElement | null>(null);
-  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const pemicuRef = useRef<HTMLButtonElement>(null);
+  const tutup = useCallback(() => setAktif(null), []);
 
-  const tutup = useCallback(() => {
-    setAktif(null);
-    pemicuRef.current?.focus();
-    pemicuRef.current = null;
-  }, []);
-
-  function buka(achievement: Achievement, pemicu: HTMLButtonElement) {
-    pemicuRef.current = pemicu;
-    setAktif(achievement);
-  }
-
-  // Escape menutup; Tab dikurung di dalam dialog.
-  useEffect(() => {
-    if (!aktif) return;
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        tutup();
-        return;
-      }
-
-      if (event.key !== "Tab") return;
-
-      const dialog = dialogRef.current;
-      if (!dialog) return;
-
-      const fokusable = dialog.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled])',
-      );
-      if (fokusable.length === 0) return;
-
-      const pertama = fokusable[0];
-      const terakhir = fokusable[fokusable.length - 1];
-      if (!pertama || !terakhir) return;
-
-      if (event.shiftKey && document.activeElement === pertama) {
-        event.preventDefault();
-        terakhir.focus();
-      } else if (!event.shiftKey && document.activeElement === terakhir) {
-        event.preventDefault();
-        pertama.focus();
-      }
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [aktif, tutup]);
-
-  // Fokus masuk ke dialog, dan halaman di belakang tidak ikut ter-scroll.
-  useEffect(() => {
-    if (!aktif) return;
-
-    dialogRef.current?.querySelector<HTMLElement>("button")?.focus();
-
-    const sebelumnya = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = sebelumnya;
-    };
-  }, [aktif]);
+  const kategori = daftarKategori(achievements.map(kategoriSertifikat));
+  const terlihat = filter
+    ? achievements.filter((item) => kunciKategori(kategoriSertifikat(item)) === filter)
+    : achievements;
 
   return (
     <>
-      <ul className="bento-grid list-none">
-        {achievements.map((item) => (
-          <li key={item.id}>
-            <button
-              type="button"
-              onClick={(event) => buka(item, event.currentTarget)}
-              className="group flex h-full w-full flex-col overflow-hidden rounded-card border border-border-subtle bg-surface-raised text-left shadow-card transition-shadow hover:shadow-card-hover"
+      {denganFilter ? (
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+          <label className="block min-w-0 text-sm font-semibold text-text">
+            Kategori sertifikat
+            <select
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              className="mt-2 block max-w-full rounded-card border border-border-strong bg-surface-raised px-4 py-2.5 font-medium text-text"
             >
-              <div className="relative aspect-4/3 w-full overflow-hidden bg-surface-sunken">
-                {item.image_url ? (
-                  <Image
-                    src={item.image_url}
-                    alt={`Gambar pencapaian ${item.title}`}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                  />
-                ) : (
-                  <div
-                    aria-hidden="true"
-                    className="flex h-full w-full items-center justify-center"
-                  >
-                    <span className="font-heading text-sm font-semibold text-text-subtle">
-                      Tanpa gambar
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-1 flex-col p-5">
-                <Badge tone="accent">{labelAchievementCategory(item.category)}</Badge>
-
-                <h2 className="mt-3 font-heading text-base font-bold text-text">
-                  {item.title}
-                </h2>
-
-                <p className="mt-1 text-sm text-text-muted">
-                  {[item.issuer, item.issued_date ? formatTanggal(item.issued_date) : null]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-
-                <span className="mt-4 text-sm font-semibold text-accent">
-                  Lihat pratinjau
-                </span>
-              </div>
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      {aktif ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4"
-          onClick={(event) => {
-            // Klik di area luar menutup preview.
-            if (event.target === event.currentTarget) tutup();
-          }}
-        >
-          <div
-            ref={dialogRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label={`Pratinjau pencapaian: ${aktif.title}`}
-            className="max-h-full w-full max-w-2xl overflow-auto rounded-card border border-border-subtle bg-surface-raised p-4 shadow-card-hover sm:p-6"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <h3 className="font-heading text-lg font-bold text-text">
-                  {aktif.title}
-                </h3>
-                <p className="mt-1 text-sm text-text-muted">
-                  {[
-                    labelAchievementCategory(aktif.category),
-                    aktif.issuer,
-                    aktif.issued_date ? formatTanggal(aktif.issued_date) : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={tutup}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-pill border border-border-subtle text-text-muted transition-colors hover:border-accent hover:text-accent"
-                aria-label="Tutup pratinjau"
-              >
-                <X className="size-4" aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className="relative mt-4 aspect-4/3 w-full overflow-hidden rounded-card bg-surface-sunken">
-              {aktif.image_url ? (
-                <Image
-                  src={aktif.image_url}
-                  alt={`Gambar pencapaian ${aktif.title}`}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 672px"
-                  className="object-contain"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center px-6 text-center">
-                  <p className="text-sm text-text-muted">
-                    Pencapaian ini belum memiliki gambar.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {aktif.verification_url ? (
-              <a
-                href={aktif.verification_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center gap-2 rounded-pill bg-accent px-5 py-2.5 text-sm font-semibold text-accent-contrast transition-colors hover:bg-accent-hover"
-              >
-                <ExternalLink className="size-4" aria-hidden="true" />
-                Verifikasi pencapaian
-              </a>
-            ) : null}
-          </div>
+              <option value="">Semua kategori</option>
+              {kategori.map((label) => (
+                <option key={kunciKategori(label)} value={kunciKategori(label)}>{label}</option>
+              ))}
+            </select>
+          </label>
+          <p role="status" className="text-sm text-text-muted">{terlihat.length} sertifikat</p>
         </div>
       ) : null}
+
+      <ul className="grid list-none items-start gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        {terlihat.map((item) => {
+          const Ikon = item.pdf_url ? FileText : Award;
+          const info = [item.issuer, item.issued_date ? formatTanggal(item.issued_date) : null]
+            .filter(Boolean).join(" · ");
+          return (
+            <li key={item.id} className="min-w-0">
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                onClick={(event) => {
+                  pemicuRef.current = event.currentTarget;
+                  setAktif(item);
+                }}
+                className="group block w-full overflow-hidden rounded-card border border-border-subtle bg-surface-raised text-left shadow-card transition-shadow hover:shadow-card-hover"
+              >
+                {item.image_url ? (
+                  <span className="relative block h-44 w-full border-b border-border-subtle bg-surface-sunken">
+                    <Image
+                      src={item.image_url}
+                      alt=""
+                      fill
+                      sizes="(max-width: 639px) 100vw, (max-width: 1279px) 50vw, (max-width: 1535px) 33vw, 25vw"
+                      className="object-contain"
+                    />
+                  </span>
+                ) : null}
+                <span className="block space-y-2 p-5">
+                  <span className="flex flex-wrap items-center gap-2">
+                    {!item.image_url ? (
+                      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-card bg-accent-soft text-accent-soft-text">
+                        <Ikon className="size-4" aria-hidden="true" />
+                      </span>
+                    ) : null}
+                    <Badge tone="accent">{kategoriSertifikat(item)}</Badge>
+                  </span>
+                  <span className="block font-heading text-base font-bold text-text">{item.title}</span>
+                  {info ? <span className="block text-sm text-text-muted">{info}</span> : null}
+                  <span className="block text-sm font-semibold text-accent group-hover:underline">
+                    {item.pdf_url || item.image_url ? "Lihat sertifikat" : "Lihat detail"}
+                  </span>
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <Modal
+        terbuka={aktif !== null}
+        onTutup={tutup}
+        pemicuRef={pemicuRef}
+        judul={aktif?.title}
+        label={aktif ? kategoriSertifikat(aktif) : undefined}
+        lebar="lebar"
+        isiBisaDifokuskan={!!aktif?.pdf_url}
+        aksi={aktif?.pdf_url ? (
+          <a
+            href={aktif.pdf_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Buka PDF di tab baru"
+            className="inline-flex items-center gap-1.5 rounded-pill border border-border-strong px-3 py-2 text-sm font-semibold text-text transition-colors hover:border-accent hover:text-accent"
+          >
+            PDF <ExternalLink className="size-3.5" aria-hidden="true" />
+          </a>
+        ) : null}
+      >
+        {aktif ? (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-text-muted">
+                {[aktif.issuer, aktif.issued_date ? formatTanggal(aktif.issued_date) : null]
+                  .filter(Boolean).join(" · ")}
+              </p>
+              {aktif.verification_url ? (
+                <ButtonExternal href={aktif.verification_url}>Verifikasi sertifikat</ButtonExternal>
+              ) : null}
+            </div>
+
+            {aktif.pdf_url ? (
+              <div className="bg-surface-sunken p-2">
+                <PdfPages key={aktif.pdf_url} url={aktif.pdf_url} label="sertifikat" />
+              </div>
+            ) : aktif.image_url ? (
+              <div className="relative h-[58dvh] overflow-hidden rounded-card bg-surface-sunken">
+                <Image
+                  src={aktif.image_url}
+                  alt={`Sertifikat ${aktif.title}`}
+                  fill
+                  unoptimized
+                  className="object-contain"
+                />
+              </div>
+            ) : (
+              <p className="text-sm text-text-muted">Berkas sertifikat belum tersedia.</p>
+            )}
+          </div>
+        ) : null}
+      </Modal>
     </>
   );
 }

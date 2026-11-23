@@ -393,7 +393,7 @@ try {
     ["/keahlian", "Keahlian"],
     ["/pengalaman", "Pengalaman"],
     ["/proyek", "Proyek"],
-    ["/pencapaian", "Pencapaian"],
+    ["/sertifikat", "Sertifikat"],
     ["/kontak", "Kontak"],
   ];
 

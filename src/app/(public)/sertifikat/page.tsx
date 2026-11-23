@@ -15,29 +15,27 @@ export async function generateMetadata(): Promise<Metadata> {
   const nama = profile?.full_name ?? "Portofolio";
 
   return {
-    title: "Pencapaian",
+    title: "Sertifikat",
     description: `Sertifikat dan penghargaan yang diperoleh ${nama}.`,
-    alternates: { canonical: "/pencapaian" },
+    alternates: { canonical: "/sertifikat" },
   };
 }
 
-export default async function PencapaianPage() {
-  const intro = await getPageIntro("pencapaian");
-  const achievements = await getAchievements();
+export default async function SertifikatPage() {
+  const [intro, achievements] = await Promise.all([getPageIntro("pencapaian"), getAchievements()]);
 
   return (
     <PageShell
-      hero={intro}
-      title="Pencapaian"
-      description="Sertifikat dan penghargaan. Klik salah satu kartu untuk melihat pratinjaunya."
+      hero={intro?.headline?.trim().toLowerCase() === "pencapaian" ? { ...intro, headline: "Sertifikat" } : intro}
+      title="Sertifikat"
+      description="Sertifikat dari sertifikasi, kegiatan kampus, dan pelatihan."
     >
       {achievements.length === 0 ? (
         <EmptyState
-          title="Belum ada pencapaian"
-          description="Tambahkan sertifikat atau penghargaan di Supabase atau jalankan skrip seed untuk memasukkan data contoh."
+          title="Belum ada sertifikat"
         />
       ) : (
-        <AchievementGrid achievements={achievements} />
+        <AchievementGrid achievements={achievements} denganFilter />
       )}
     </PageShell>
   );

@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(env.siteUrl),
   title: "Portofolio — CV Digital",
   description:
-    "Portofolio dan curriculum vitae digital berisi proyek, pengalaman, keahlian, dan pencapaian.",
+    "Portofolio dan curriculum vitae digital berisi proyek, pengalaman, keahlian, dan sertifikat.",
 };
 
 export default function RootLayout({

@@ -17,7 +17,7 @@ const HALAMAN = [
   "/keahlian",
   "/pengalaman",
   "/proyek",
-  "/pencapaian",
+  "/sertifikat",
   "/kontak",
   "/proyek/sistem-informasi-perpustakaan",
 ];
@@ -155,13 +155,13 @@ try {
       String(await filterAktif.getAttribute("aria-current")),
     );
 
-    // Preview pencapaian: buka dengan keyboard, tutup dengan Escape.
-    await page.goto(`${BASE}/pencapaian`, { waitUntil: "load" });
+    // Pratinjau sertifikat: buka dengan keyboard, tutup dengan Escape.
+    await page.goto(`${BASE}/sertifikat`, { waitUntil: "load" });
     await page.waitForTimeout(500);
     await page.locator("ul > li button").first().focus();
     await page.keyboard.press("Enter");
     await page.waitForTimeout(600);
-    cek("pratinjau pencapaian terbuka", (await page.getByRole("dialog").count()) > 0);
+    cek("pratinjau sertifikat terbuka", (await page.getByRole("dialog").count()) > 0);
     const fokusDiDialog = await page.evaluate(() => {
       const d = document.querySelector('[role="dialog"]');
       return d ? d.contains(document.activeElement) : false;

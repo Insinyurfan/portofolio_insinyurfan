@@ -4,14 +4,14 @@ import { adminGetAchievements } from "@/server/db/queries-admin";
 
 export const dynamic = "force-dynamic";
 
-export default async function PencapaianAdminPage() {
+export default async function SertifikatAdminPage() {
   const items = await adminGetAchievements();
 
   return (
     <>
       <PageHeader
-        title="Pencapaian"
-        description="Sertifikat dan penghargaan yang tampil sebagai grid di halaman publik."
+        title="Sertifikat"
+        description="Kelompokkan sertifikat berdasarkan kegiatan dan unggah berkas PDF atau gambar."
       />
       <AchievementsManager items={items} />
     </>

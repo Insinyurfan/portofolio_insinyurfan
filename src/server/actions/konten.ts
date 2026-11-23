@@ -208,7 +208,7 @@ export const simpanProfilAction = withAdminAction(
 );
 
 // ---------------------------------------------------------------------------
-// Tautan sosial, pendidikan, keahlian, pengalaman, pencapaian
+// Tautan sosial, pendidikan, keahlian, pengalaman, sertifikat
 // ---------------------------------------------------------------------------
 
 export const simpanTautanSosialAction = withAdminAction(
@@ -292,21 +292,22 @@ export const simpanPengalamanAction = withAdminAction(
   },
 );
 
-export const simpanPencapaianAction = withAdminAction(
+export const simpanSertifikatAction = withAdminAction(
   achievementSchema,
   async (input) => {
     const lama = input.id ? await ambilBaris("achievements", input.id) : null;
     const hasil = await simpanBaris("achievements", input);
 
-    const gambarLama = lama?.image_url as string | null | undefined;
-    if (gambarLama && gambarLama !== input.image_url) {
-      await hapusBerkas(gambarLama);
-    }
+    const berkasLama = [lama?.image_url, lama?.pdf_url].filter(
+      (url): url is string =>
+        typeof url === "string" && url !== input.image_url && url !== input.pdf_url,
+    );
+    if (berkasLama.length > 0) await hapusBerkas(...new Set(berkasLama));
 
     return hasil;
   },
   {
-    sukses: (i) => (i.id ? "Pencapaian diperbarui." : "Pencapaian ditambahkan."),
+    sukses: (i) => (i.id ? "Sertifikat diperbarui." : "Sertifikat ditambahkan."),
     revalidasi: "achievements",
   },
 );
@@ -426,9 +427,10 @@ export const hapusItemAction = withAdminAction(
       const url: Array<string | null> = [];
       if (typeof baris.thumbnail_url === "string") url.push(baris.thumbnail_url);
       if (typeof baris.image_url === "string") url.push(baris.image_url);
+      if (typeof baris.pdf_url === "string") url.push(baris.pdf_url);
       if (typeof baris.logo_url === "string") url.push(baris.logo_url);
       if (Array.isArray(baris.gallery)) url.push(...(baris.gallery as string[]));
-      if (url.length > 0) await hapusBerkas(...url);
+      if (url.length > 0) await hapusBerkas(...new Set(url));
     }
 
     return { slug: (baris?.slug as string | undefined) ?? undefined };

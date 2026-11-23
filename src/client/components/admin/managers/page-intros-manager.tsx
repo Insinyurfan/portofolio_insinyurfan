@@ -29,7 +29,7 @@ const NAMA_HALAMAN: Record<string, string> = {
   keahlian: "Keahlian",
   pengalaman: "Pengalaman",
   proyek: "Proyek",
-  pencapaian: "Pencapaian",
+  pencapaian: "Sertifikat",
   kontak: "Kontak",
 };
 

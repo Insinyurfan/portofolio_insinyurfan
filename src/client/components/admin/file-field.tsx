@@ -2,13 +2,15 @@
 
 import { Trash2, Upload } from "lucide-react";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { toastGagal } from "@/client/components/admin/toaster";
 import { keWebp } from "@/client/lib/ke-webp";
+import { unggahMedia } from "@/client/lib/unggah-media";
 import { Button } from "@/client/components/admin/ui";
 import { unggahAction } from "@/server/actions/konten";
 import type { PrefiksMedia } from "@/server/actions/storage";
+import { siapkanUnggahMediaAction } from "@/server/actions/unggah-media";
 
 /**
  * Field unggah berkas dengan pratinjau.
@@ -28,6 +30,8 @@ export function FileField({
   nilai,
   prefiks,
   jenis = "gambar",
+  unggahLangsung = false,
+  disabled = false,
   hint,
   onChange,
   onSedangMengunggah,
@@ -36,13 +40,26 @@ export function FileField({
   nilai: string | null;
   prefiks: PrefiksMedia;
   jenis?: "gambar" | "pdf";
+  unggahLangsung?: boolean;
+  disabled?: boolean;
   hint?: string;
   onChange: (url: string | null) => void;
   onSedangMengunggah?: (sedang: boolean) => void;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const unggahan = useRef<AbortController | null>(null);
   const [mengunggah, setMengunggah] = useState(false);
   const [pratinjauLokal, setPratinjauLokal] = useState<string | null>(null);
+
+  useEffect(() => () => {
+    if (unggahan.current) {
+      unggahan.current.abort();
+      onSedangMengunggah?.(false);
+    }
+  }, [onSedangMengunggah]);
+  useEffect(() => {
+    if (pratinjauLokal) return () => URL.revokeObjectURL(pratinjauLokal);
+  }, [pratinjauLokal]);
 
   const accept =
     jenis === "pdf"
@@ -55,6 +72,9 @@ export function FileField({
   }
 
   async function pilihBerkas(dipilih: File) {
+    if (disabled || unggahan.current) return;
+    const controller = new AbortController();
+    unggahan.current = controller;
     // Pratinjau lokal tampil seketika, sebelum unggahan selesai.
     if (jenis === "gambar") {
       setPratinjauLokal(URL.createObjectURL(dipilih));
@@ -66,27 +86,36 @@ export function FileField({
     // melintasi jaringan dan tersimpan di Storage sudah berukuran kecil.
     // keWebp mengembalikan berkas aslinya bila konversi tidak menguntungkan
     // atau tidak didukung, jadi langkah ini tidak pernah menggagalkan unggahan.
-    const file = jenis === "gambar" ? await keWebp(dipilih) : dipilih;
-
-    const formData = new FormData();
-    formData.set("file", file);
-    formData.set("prefiks", prefiks);
-    formData.set("jenis", jenis);
-
-    const hasil = await unggahAction(formData);
-    setStatus(false);
-
-    if (!hasil.ok) {
-      // Berkas ditolak: field tetap merujuk gambar sebelumnya.
-      setPratinjauLokal(null);
-      toastGagal(hasil.message);
-      if (inputRef.current) inputRef.current.value = "";
-      return;
+    try {
+      const file = jenis === "gambar" ? await keWebp(dipilih) : dipilih;
+      if (controller.signal.aborted) return;
+      if (unggahLangsung) {
+        const hasil = await siapkanUnggahMediaAction({ type: file.type, size: file.size, prefiks, jenis });
+        if (!hasil.ok) throw new Error(hasil.message);
+        if (!hasil.data) throw new Error("Unggahan tidak dapat disiapkan.");
+        await unggahMedia(file, hasil.data.urlUnggah, controller.signal);
+        if (!controller.signal.aborted) onChange(hasil.data.urlPublik);
+      } else {
+        const formData = new FormData();
+        formData.set("file", file);
+        formData.set("prefiks", prefiks);
+        formData.set("jenis", jenis);
+        const hasil = await unggahAction(formData);
+        if (!hasil.ok) throw new Error(hasil.message);
+        if (!controller.signal.aborted && hasil.data) onChange(hasil.data.url);
+      }
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        toastGagal(error instanceof Error ? error.message : "Berkas gagal diunggah.");
+      }
+    } finally {
+      unggahan.current = null;
+      if (!controller.signal.aborted) {
+        setStatus(false);
+        setPratinjauLokal(null);
+        if (inputRef.current) inputRef.current.value = "";
+      }
     }
-
-    setPratinjauLokal(null);
-    onChange(hasil.data?.url ?? null);
-    if (inputRef.current) inputRef.current.value = "";
   }
 
   const sumberPratinjau = pratinjauLokal ?? nilai;
@@ -132,6 +161,7 @@ export function FileField({
             ref={inputRef}
             type="file"
             accept={accept}
+            disabled={disabled || mengunggah}
             className="sr-only"
             onChange={(event) => {
               const file = event.target.files?.[0];
@@ -144,7 +174,7 @@ export function FileField({
             <Button
               variant="outline"
               size="sm"
-              disabled={mengunggah}
+              disabled={disabled || mengunggah}
               onClick={() => inputRef.current?.click()}
             >
               <Upload aria-hidden="true" />
@@ -155,7 +185,7 @@ export function FileField({
               <Button
                 variant="ghost"
                 size="sm"
-                disabled={mengunggah}
+                disabled={disabled || mengunggah}
                 className="text-adm-danger hover:bg-adm-danger-soft"
                 onClick={() => onChange(null)}
                 // Label menyebut field-nya. Halaman profil punya tiga field

@@ -32,7 +32,7 @@ const ITEM = [
   { href: "/admin/keahlian", label: "Keahlian", icon: Wrench },
   { href: "/admin/pengalaman", label: "Pengalaman", icon: Briefcase },
   { href: "/admin/proyek", label: "Proyek", icon: FolderKanban },
-  { href: "/admin/pencapaian", label: "Pencapaian", icon: Award },
+  { href: "/admin/sertifikat", label: "Sertifikat", icon: Award },
   { href: "/admin/pesan", label: "Pesan", icon: Mail },
   { href: "/admin/rating", label: "Rating", icon: Star },
 ] as const;

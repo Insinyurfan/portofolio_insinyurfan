@@ -1,10 +1,10 @@
 "use client";
 
-export function unggahGambar(
+export function unggahMedia(
   file: File,
   url: string,
   signal: AbortSignal,
-  onProgres: (persen: number) => void,
+  onProgres?: (persen: number) => void,
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     signal.throwIfAborted();
@@ -14,11 +14,13 @@ export function unggahGambar(
 
     xhr.open("PUT", url);
     xhr.timeout = 120_000;
-    xhr.upload.onprogress = ({ loaded, total, lengthComputable }) => {
-      if (lengthComputable && total > 0) {
-        onProgres(Math.min(99, Math.floor((loaded / total) * 100)));
-      }
-    };
+    if (onProgres) {
+      xhr.upload.onprogress = ({ loaded, total, lengthComputable }) => {
+        if (lengthComputable && total > 0) {
+          onProgres(Math.min(99, Math.floor((loaded / total) * 100)));
+        }
+      };
+    }
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) resolve();
       else reject(new Error("Berkas gagal diunggah. Coba pilih berkasnya lagi."));

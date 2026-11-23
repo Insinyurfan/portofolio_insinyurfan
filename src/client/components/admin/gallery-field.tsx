@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from "react";
 
 import { StringListField } from "@/client/components/admin/managers/string-list-field";
 import { keWebp } from "@/client/lib/ke-webp";
-import { unggahGambar } from "@/client/lib/unggah-gambar";
+import { unggahMedia } from "@/client/lib/unggah-media";
 import type { PrefiksMedia } from "@/server/actions/storage";
-import { siapkanUnggahGaleriAction } from "@/server/actions/unggah-galeri";
+import { siapkanUnggahMediaAction } from "@/server/actions/unggah-media";
 import { cn } from "@/shared/cn";
 
 const LABEL_STATUS = {
@@ -84,10 +84,11 @@ export function GalleryField({
           const file = await keWebp(dipilih);
           if (controller.signal.aborted) return;
 
-          const hasil = await siapkanUnggahGaleriAction({
+          const hasil = await siapkanUnggahMediaAction({
             type: file.type,
             size: file.size,
             prefiks,
+            jenis: "gambar",
           });
           if (controller.signal.aborted) return;
           if (!hasil.ok) {
@@ -106,7 +107,7 @@ export function GalleryField({
 
           const { urlUnggah, urlPublik } = hasil.data;
           perbarui(index, { status: "mengunggah" });
-          await unggahGambar(file, urlUnggah, controller.signal, (persen) =>
+          await unggahMedia(file, urlUnggah, controller.signal, (persen) =>
             perbarui(index, { persen }),
           );
           if (controller.signal.aborted) return;

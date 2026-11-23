@@ -35,7 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const templateJudul = nama ? `%s — ${nama}` : `%s — ${label}`;
   const deskripsi =
     profile?.tagline ??
-    "Portofolio dan curriculum vitae digital berisi proyek, pengalaman, keahlian, dan pencapaian.";
+    "Portofolio dan curriculum vitae digital berisi proyek, pengalaman, keahlian, dan sertifikat.";
 
   return {
     metadataBase: new URL(env.siteUrl),

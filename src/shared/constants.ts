@@ -21,6 +21,6 @@ export const NAV_ITEMS = [
   { href: "/keahlian", label: "Keahlian" },
   { href: "/pengalaman", label: "Pengalaman" },
   { href: "/proyek", label: "Proyek" },
-  { href: "/pencapaian", label: "Pencapaian" },
+  { href: "/sertifikat", label: "Sertifikat" },
   { href: "/kontak", label: "Kontak" },
 ] as const;

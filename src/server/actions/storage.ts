@@ -155,11 +155,12 @@ export async function unggahBerkas(
   return pathKeUrl(path);
 }
 
-export async function siapkanUnggahGambar(
+export async function siapkanUnggahMedia(
   file: Pick<File, "type" | "size">,
   prefiks: PrefiksMedia,
+  jenis: "gambar" | "pdf",
 ): Promise<{ urlUnggah: string; urlPublik: string }> {
-  const path = buatPathUnggahan(file, prefiks, "gambar");
+  const path = buatPathUnggahan(file, prefiks, jenis);
   const supabase = await createSessionSupabaseClient();
   const { data, error } = await supabase.storage
     .from(STORAGE_BUCKET)

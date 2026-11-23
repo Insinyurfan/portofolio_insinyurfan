@@ -3,7 +3,7 @@
 import type { PDFDocumentLoadingTask, PDFDocumentProxy, RenderTask } from "pdfjs-dist";
 import { useEffect, useRef, useState } from "react";
 
-export function PdfPages({ url }: { url: string }) {
+export function PdfPages({ url, label = "CV" }: { url: string; label?: string }) {
   const [dokumen, setDokumen] = useState<PDFDocumentProxy>();
   const [gagal, setGagal] = useState(false);
 
@@ -38,13 +38,13 @@ export function PdfPages({ url }: { url: string }) {
   if (gagal) {
     return (
       <p role="status" className="p-8 text-center text-sm text-text-muted">
-        Pratinjau CV gagal dimuat. Buka PDF di tab baru atau unduh CV dari tombol di atas.
+        Pratinjau {label} gagal dimuat. Buka PDF di tab baru.
       </p>
     );
   }
 
   if (!dokumen) {
-    return <p role="status" className="p-8 text-center text-sm text-text-muted">Memuat CV…</p>;
+    return <p role="status" className="p-8 text-center text-sm text-text-muted">Memuat {label}…</p>;
   }
 
   return (

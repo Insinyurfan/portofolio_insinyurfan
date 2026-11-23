@@ -29,6 +29,12 @@ function supabaseImageHost(): string {
 }
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      { source: "/pencapaian", destination: "/sertifikat", permanent: true },
+      { source: "/admin/pencapaian", destination: "/admin/sertifikat", permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       {

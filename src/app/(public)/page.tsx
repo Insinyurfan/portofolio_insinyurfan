@@ -242,13 +242,13 @@ export default async function BerandaPage() {
         )}
       </SectionBeranda>
 
-      {/* ----------------------------------------------------------- Pencapaian */}
+      {/* ----------------------------------------------------------- Sertifikat */}
       {achievements.length > 0 ? (
         <SectionBeranda
           id="pencapaian"
           eyebrow="Penghargaan"
-          judul="Pencapaian"
-          tautan={{ href: "/pencapaian", label: "Lihat semua" }}
+          judul="Sertifikat"
+          tautan={{ href: "/sertifikat", label: "Lihat semua" }}
         >
           <AchievementGrid achievements={achievements} />
         </SectionBeranda>

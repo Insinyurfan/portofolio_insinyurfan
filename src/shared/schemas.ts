@@ -292,7 +292,7 @@ export const projectSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
-// Pencapaian
+// Sertifikat
 // ---------------------------------------------------------------------------
 
 export const achievementSchema = z.object({
@@ -303,7 +303,9 @@ export const achievementSchema = z.object({
   category: z.enum(["certificate", "award"], {
     message: "Kategori wajib dipilih.",
   }),
+  certificate_category: teksOpsional(80, "Kategori"),
   image_url: urlOpsional,
+  pdf_url: urlOpsional,
   verification_url: urlOpsional,
   sort_order: urutan,
   is_published: terbit,

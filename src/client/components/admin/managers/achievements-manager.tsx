@@ -15,20 +15,18 @@ import {
   Field,
   Input,
   Panel,
-  Select,
 } from "@/client/components/admin/ui";
 import { useAksi } from "@/client/components/admin/use-aksi";
 import { useScrollKeForm } from "@/client/components/admin/use-scroll-ke-form";
-import { simpanPencapaianAction } from "@/server/actions/konten";
+import { simpanSertifikatAction } from "@/server/actions/konten";
 import { achievementSchema } from "@/shared/schemas";
-import { formatTanggal, labelAchievementCategory } from "@/shared/format";
-import type { Achievement, AchievementCategory } from "@/shared/types";
+import { formatTanggal } from "@/shared/format";
+import { daftarKategori, kategoriSertifikat, SARAN_KATEGORI_SERTIFIKAT } from "@/shared/sertifikat";
+import type { Achievement } from "@/shared/types";
 
 type Nilai = z.input<typeof achievementSchema>;
 /** Hasil setelah transform zod — inilah bentuk yang diterima aksi server. */
 type Keluaran = z.output<typeof achievementSchema>;
-
-const KATEGORI: AchievementCategory[] = ["certificate", "award"];
 
 const KOSONG: Nilai = {
   id: null,
@@ -36,7 +34,9 @@ const KOSONG: Nilai = {
   issuer: "",
   issued_date: "",
   category: "certificate",
+  certificate_category: "",
   image_url: "",
+  pdf_url: "",
   verification_url: "",
   sort_order: 0,
   is_published: true,
@@ -44,9 +44,13 @@ const KOSONG: Nilai = {
 
 export function AchievementsManager({ items }: { items: Achievement[] }) {
   const { jalankan, sedangBerjalan } = useAksi();
-  const { panel, arahkan } = useScrollKeForm();
+  const { panel, versiForm, arahkan } = useScrollKeForm();
   const [terbuka, setTerbuka] = useState(false);
-  const [mengunggah, setMengunggah] = useState(false);
+  const [mengunggahGambar, setMengunggahGambar] = useState(false);
+  const [mengunggahPdf, setMengunggahPdf] = useState(false);
+  const mengunggah = mengunggahGambar || mengunggahPdf;
+  const sibuk = sedangBerjalan || mengunggah;
+  const saranKategori = daftarKategori([...SARAN_KATEGORI_SERTIFIKAT, ...items.map(kategoriSertifikat)]);
 
   const form = useForm<Nilai, unknown, Keluaran>({
     resolver: zodResolver(achievementSchema),
@@ -64,7 +68,9 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
             issuer: item.issuer ?? "",
             issued_date: item.issued_date ?? "",
             category: item.category,
+            certificate_category: kategoriSertifikat(item),
             image_url: item.image_url ?? "",
+            pdf_url: item.pdf_url ?? "",
             verification_url: item.verification_url ?? "",
             sort_order: item.sort_order,
             is_published: item.is_published,
@@ -76,10 +82,11 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
   }
 
   async function simpan() {
+    if (sibuk) return;
     // Nilai MENTAH form: server yang mem-parse dan mentransformnya.
     const nilai = getValues();
 
-    const ok = await jalankan(() => simpanPencapaianAction(nilai), {
+    const ok = await jalankan(() => simpanSertifikatAction(nilai), {
       onFieldError: (fields) => {
         for (const [k, p] of Object.entries(fields)) {
           setError(k as keyof Nilai, { message: p });
@@ -98,12 +105,13 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
         <Panel {...panel}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-semibold text-adm-fg">
-              {getValues("id") ? "Sunting pencapaian" : "Pencapaian baru"}
+              {getValues("id") ? "Sunting sertifikat" : "Sertifikat baru"}
             </h2>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTerbuka(false)}
+              disabled={sibuk}
               aria-label="Tutup form"
             >
               <X aria-hidden="true" />
@@ -138,36 +146,66 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
             </div>
 
             <Field
-              id="category"
+              id="certificate_category"
               label="Kategori"
-              required
-              error={formState.errors.category?.message}
+              hint="Pilih kategori yang sudah ada atau ketik nama kategori baru."
+              error={formState.errors.certificate_category?.message}
             >
               {(a) => (
-                <Select {...a} {...register("category")}>
-                  {KATEGORI.map((k) => (
-                    <option key={k} value={k}>
-                      {labelAchievementCategory(k)}
-                    </option>
-                  ))}
-                </Select>
-              )}
-            </Field>
-
-            <Controller
-              control={control}
-              name="image_url"
-              render={({ field }) => (
-                <FileField
-                  label="Gambar sertifikat"
-                  nilai={field.value ?? null}
-                  prefiks="achievements"
-                  hint="JPG, PNG, WebP, AVIF, GIF, atau SVG. Maksimal 5 MB."
-                  onChange={(url) => field.onChange(url ?? "")}
-                  onSedangMengunggah={setMengunggah}
+                <Input
+                  {...a}
+                  {...register("certificate_category")}
+                  list="saran-kategori-sertifikat"
+                  maxLength={80}
+                  placeholder="Misalnya, Kegiatan Kampus"
                 />
               )}
-            />
+            </Field>
+            <datalist id="saran-kategori-sertifikat">
+              {saranKategori.map((kategori) => <option key={kategori} value={kategori} />)}
+            </datalist>
+
+            <fieldset key={versiForm} className="space-y-3 rounded-adm border border-adm-border p-4">
+              <legend className="px-1 text-sm font-semibold text-adm-fg">Berkas sertifikat</legend>
+              <p className="text-sm text-adm-fg-muted">
+                Unggah PDF atau gambar. Jika keduanya ada, gambar dipakai sebagai sampul.
+              </p>
+              <div className="grid gap-4 xl:grid-cols-2">
+                <Controller
+                  control={control}
+                  name="pdf_url"
+                  render={({ field }) => (
+                    <FileField
+                      label="PDF sertifikat"
+                      nilai={field.value ?? null}
+                      prefiks="achievements"
+                      jenis="pdf"
+                      unggahLangsung
+                      disabled={sedangBerjalan}
+                      hint="Maksimal 10 MB."
+                      onChange={(url) => field.onChange(url ?? "")}
+                      onSedangMengunggah={setMengunggahPdf}
+                    />
+                  )}
+                />
+                <Controller
+                  control={control}
+                  name="image_url"
+                  render={({ field }) => (
+                    <FileField
+                      label="Gambar sertifikat"
+                      nilai={field.value ?? null}
+                      prefiks="achievements"
+                      unggahLangsung
+                      disabled={sedangBerjalan}
+                      hint="JPG, PNG, WebP, AVIF, GIF, atau SVG. Maksimal 5 MB."
+                      onChange={(url) => field.onChange(url ?? "")}
+                      onSedangMengunggah={setMengunggahGambar}
+                    />
+                  )}
+                />
+              </div>
+            </fieldset>
 
             <Field
               id="verification_url"
@@ -185,13 +223,13 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
 
             <div className="flex gap-2">
               {/* Tombol simpan ditahan selama unggahan berjalan. */}
-              <Button type="submit" disabled={sedangBerjalan || mengunggah}>
+              <Button type="submit" disabled={sibuk}>
                 {sedangBerjalan ? "Menyimpan…" : "Simpan"}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setTerbuka(false)}
-                disabled={sedangBerjalan}
+                disabled={sibuk}
               >
                 Batal
               </Button>
@@ -201,7 +239,7 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
       ) : (
         <Button onClick={() => buka()}>
           <Plus aria-hidden="true" />
-          Tambah pencapaian
+          Tambah sertifikat
         </Button>
       )}
 
@@ -214,18 +252,19 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
             .filter(Boolean)
             .join(" · "),
           is_published: i.is_published,
-          penanda: <Badge>{labelAchievementCategory(i.category)}</Badge>,
+          penanda: <Badge>{kategoriSertifikat(i)}</Badge>,
         }))}
+        suntingDinonaktifkan={sibuk}
         onSunting={(id) => {
           const item = items.find((i) => i.id === id);
           if (item) buka(item);
         }}
         labelHapus={(item) =>
-          `"${item.judul}" akan dihapus permanen beserta berkas gambarnya di Storage, dan langsung hilang dari halaman Pencapaian.`
+          `"${item.judul}" beserta berkas PDF atau gambarnya akan dihapus permanen dari halaman Sertifikat.`
         }
-        emptyTitle="Belum ada pencapaian"
-        emptyDescription="Tambahkan sertifikat atau penghargaan agar grid di halaman Pencapaian terisi."
-        emptyAction={<Button onClick={() => buka()}>Tambah pencapaian</Button>}
+        emptyTitle="Belum ada sertifikat"
+        emptyDescription="Tambahkan sertifikat pertama untuk ditampilkan di halaman publik."
+        emptyAction={!terbuka ? <Button onClick={() => buka()}>Tambah sertifikat</Button> : undefined}
       />
     </div>
   );

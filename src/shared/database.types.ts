@@ -17,12 +17,14 @@ export type Database = {
       achievements: {
         Row: {
           category: Database["public"]["Enums"]["achievement_category"]
+          certificate_category: string | null
           created_at: string
           id: string
           image_url: string | null
           is_published: boolean
           issued_date: string | null
           issuer: string | null
+          pdf_url: string | null
           sort_order: number
           title: string
           updated_at: string
@@ -30,12 +32,14 @@ export type Database = {
         }
         Insert: {
           category: Database["public"]["Enums"]["achievement_category"]
+          certificate_category?: string | null
           created_at?: string
           id?: string
           image_url?: string | null
           is_published?: boolean
           issued_date?: string | null
           issuer?: string | null
+          pdf_url?: string | null
           sort_order?: number
           title: string
           updated_at?: string
@@ -43,12 +47,14 @@ export type Database = {
         }
         Update: {
           category?: Database["public"]["Enums"]["achievement_category"]
+          certificate_category?: string | null
           created_at?: string
           id?: string
           image_url?: string | null
           is_published?: boolean
           issued_date?: string | null
           issuer?: string | null
+          pdf_url?: string | null
           sort_order?: number
           title?: string
           updated_at?: string

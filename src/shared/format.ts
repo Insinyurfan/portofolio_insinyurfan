@@ -1,4 +1,4 @@
-import type { AchievementCategory, ExperienceType } from "@/shared/types";
+import type { ExperienceType } from "@/shared/types";
 
 /**
  * Helper tampilan.
@@ -16,17 +16,8 @@ const EXPERIENCE_TYPE_LABEL: Record<ExperienceType, string> = {
   freelance: "Freelance",
 };
 
-const ACHIEVEMENT_CATEGORY_LABEL: Record<AchievementCategory, string> = {
-  certificate: "Sertifikat",
-  award: "Penghargaan",
-};
-
 export function labelExperienceType(type: ExperienceType): string {
   return EXPERIENCE_TYPE_LABEL[type];
-}
-
-export function labelAchievementCategory(category: AchievementCategory): string {
-  return ACHIEVEMENT_CATEGORY_LABEL[category];
 }
 
 const BULAN_TAHUN = new Intl.DateTimeFormat("id-ID", {
@@ -53,7 +44,7 @@ export function formatBulanTahun(nilai: string): string {
   return tanggal ? BULAN_TAHUN.format(tanggal) : nilai;
 }
 
-/** "15 Maret 2025" — untuk tanggal pencapaian. */
+/** "15 Maret 2025" — untuk tanggal terbit sertifikat. */
 export function formatTanggal(nilai: string): string {
   const tanggal = keDate(nilai);
   return tanggal ? TANGGAL_LENGKAP.format(tanggal) : nilai;

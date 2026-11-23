@@ -49,7 +49,7 @@ const PATH_PER_ENTITAS: Record<Entitas, string[]> = {
   skill_categories: ["/keahlian", "/"],
   skills: ["/keahlian", "/"],
   experiences: ["/pengalaman", "/"],
-  achievements: ["/pencapaian", "/"],
+  achievements: ["/sertifikat", "/"],
   projects: ["/proyek", "/sitemap.xml", "/"],
 
   // Pembuka halaman muncul di SEMUA halaman profil sekaligus, jadi
