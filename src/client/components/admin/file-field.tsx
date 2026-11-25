@@ -3,6 +3,7 @@
 import { Trash2, Upload } from "lucide-react";
 
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 
 import { toastGagal } from "@/client/components/admin/toaster";
 import { siapkanFoto } from "@/client/lib/siapkan-foto";
@@ -35,6 +36,7 @@ export function FileField({
   unggahLangsung = false,
   disabled = false,
   hint,
+  pratinjauCadangan,
   onChange,
   onSedangMengunggah,
 }: {
@@ -45,6 +47,7 @@ export function FileField({
   unggahLangsung?: boolean;
   disabled?: boolean;
   hint?: string;
+  pratinjauCadangan?: { url: string; latarGelap?: boolean; keterangan: ReactNode } | null;
   onChange: (url: string | null) => void;
   onSedangMengunggah?: (sedang: boolean) => void;
 }) {
@@ -122,7 +125,8 @@ export function FileField({
     }
   }
 
-  const sumberPratinjau = pratinjauLokal ?? nilai;
+  const cadanganAktif = !pratinjauLokal && !nilai ? pratinjauCadangan : null;
+  const sumberPratinjau = pratinjauLokal || nilai || cadanganAktif?.url;
 
   return (
     <div className="space-y-1.5">
@@ -130,7 +134,11 @@ export function FileField({
 
       <div className="flex flex-wrap items-start gap-3">
         {jenis === "gambar" ? (
-          <div className="relative size-24 shrink-0 overflow-hidden rounded-adm border border-adm-border bg-adm-panel-muted">
+          <div className={cn(
+            "relative size-24 shrink-0 overflow-hidden rounded-adm border border-adm-border bg-adm-panel-muted",
+            prefiks === "issuer-logos" && sumberPratinjau &&
+              (cadanganAktif?.latarGelap ? "bg-logo-background-inverse" : "bg-logo-background"),
+          )}>
             {sumberPratinjau ? (
               // next/image tidak dipakai untuk pratinjau lokal (blob:), dan
               // untuk konsistensi juga tidak untuk pratinjau tersimpan — ini
@@ -205,6 +213,7 @@ export function FileField({
             ) : null}
           </div>
 
+          {jenis === "gambar" ? cadanganAktif?.keterangan : null}
           {hint ? <p className="text-xs text-adm-fg-subtle">{hint}</p> : null}
 
           {jenis === "gambar" ? (

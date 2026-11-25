@@ -27,25 +27,48 @@ export function daftarKategori(items: string[]) {
   return [...kategori.values()].sort((a, b) => a.localeCompare(b, "id-ID"));
 }
 
-const LOGO_PENERBIT: Record<string, string> = {
-  "cisco": "cisco.svg",
-  "ebiz education enterprise": "ebiz.png",
-  "hmti universitas bani saleh": "hmti.webp",
-  "institut bisnis muhammadiyah bekasi": "ibm-bekasi.png",
-  "kemdiktisaintek": "kemdiktisaintek.png",
-  "kementerian komunikasi dan digital": "komdigi.png",
-  "komdigi": "komdigi.png",
-  "komdigi digital entrepreneurship academy": "komdigi.png",
-  "komdigi micro skill": "komdigi.png",
-  "oracle academy": "oracle-academy.png",
-  "pt bentang inspirasi teknologi": "bentang-inspirasi-teknologi.webp",
-  "universitas bani saleh": "bani-saleh.webp",
-  "world friends korea": "world-friends-korea.svg",
+const LOGO_KOMDIGI = {
+  berkas: "komdigi.png",
+  sumber: "https://e-penyiaran.komdigi.go.id/assets/media/logos/komdiginew.png",
 };
 
-export function logoPenerbitSertifikat(item: Pick<Achievement, "issuer" | "issuer_logo_url">) {
-  if (item.issuer_logo_url) return item.issuer_logo_url;
-  const nama = item.issuer?.split("·")[0]?.trim().toLocaleLowerCase("id-ID").replace(/\s+/g, " ");
+const LOGO_PENERBIT: Record<string, { berkas: string; sumber: string; latarGelap?: boolean }> = {
+  cisco: {
+    berkas: "cisco.svg",
+    sumber: "https://commons.wikimedia.org/wiki/File:Cisco_logo_blue_2016.svg",
+  },
+  "ebiz education enterprise": {
+    berkas: "ebiz.png",
+    sumber: "https://www.ebiz.co.id/images/logo.png",
+  },
+  "hmti universitas bani saleh": { berkas: "hmti.webp", sumber: "/pengalaman" },
+  "institut bisnis muhammadiyah bekasi": {
+    berkas: "ibm-bekasi.png",
+    sumber: "https://www.idezia.com/2021/11/Daftar.Online.Institut.Bisnis.Muhammadiyah.Bekasi.html",
+  },
+  kemdiktisaintek: {
+    berkas: "kemdiktisaintek.png",
+    sumber: "https://kemdiktisaintek.go.id/kemdiktisaintek-logo-akronim.png",
+  },
+  "kementerian komunikasi dan digital": LOGO_KOMDIGI,
+  komdigi: LOGO_KOMDIGI,
+  "komdigi digital entrepreneurship academy": LOGO_KOMDIGI,
+  "komdigi micro skill": LOGO_KOMDIGI,
+  "oracle academy": {
+    berkas: "oracle-academy.png",
+    sumber: "https://academy.oracle.com/en/oa-assets/i/logo/oa_logo_reverse.png",
+    latarGelap: true,
+  },
+  "pt bentang inspirasi teknologi": { berkas: "bentang-inspirasi-teknologi.webp", sumber: "/pengalaman" },
+  "universitas bani saleh": { berkas: "bani-saleh.webp", sumber: "/pengalaman" },
+  "world friends korea": {
+    berkas: "world-friends-korea.svg",
+    sumber: "https://www.worldfriendskorea.or.kr/kor/img/logo_hover.svg",
+  },
+};
+
+export function logoOtomatisPenerbit(issuer: string | null | undefined) {
+  const nama = issuer?.split("·")[0]?.trim().toLocaleLowerCase("id-ID").replace(/\s+/g, " ");
   const logo = nama && Object.hasOwn(LOGO_PENERBIT, nama) ? LOGO_PENERBIT[nama] : null;
-  return logo ? `/issuer-logos/${logo}` : null;
+  return logo ? { url: `/issuer-logos/${logo.berkas}`, sumber: logo.sumber, latarGelap: logo.latarGelap } : null;
 }

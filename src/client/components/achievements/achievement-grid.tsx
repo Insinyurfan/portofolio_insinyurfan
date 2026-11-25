@@ -9,7 +9,7 @@ import { Modal } from "@/client/components/ui/modal";
 import { Badge, ButtonExternal } from "@/client/components/ui/primitives";
 import { cn } from "@/shared/cn";
 import { formatTanggal } from "@/shared/format";
-import { daftarKategori, kategoriSertifikat, kunciKategori, logoPenerbitSertifikat } from "@/shared/sertifikat";
+import { daftarKategori, kategoriSertifikat, kunciKategori, logoOtomatisPenerbit } from "@/shared/sertifikat";
 import type { Achievement } from "@/shared/types";
 
 export function AchievementGrid({
@@ -163,7 +163,8 @@ export function AchievementGrid({
 }
 
 function LogoPenerbit({ item }: { item: Achievement }) {
-  const logo = logoPenerbitSertifikat(item);
+  const otomatis = item.issuer_logo_url ? null : logoOtomatisPenerbit(item.issuer);
+  const logo = item.issuer_logo_url || otomatis?.url;
   const [gagal, setGagal] = useState<string | null>(null);
 
   if (logo && gagal !== logo) {
@@ -175,7 +176,7 @@ function LogoPenerbit({ item }: { item: Achievement }) {
         height={64}
         className={cn(
           "size-14 shrink-0 rounded-xl border border-border-subtle object-contain p-1.5 sm:size-16",
-          logo === "/issuer-logos/oracle-academy.png" ? "bg-logo-background-inverse" : "bg-logo-background",
+          otomatis?.latarGelap ? "bg-logo-background-inverse" : "bg-logo-background",
         )}
         onError={() => setGagal(logo)}
       />

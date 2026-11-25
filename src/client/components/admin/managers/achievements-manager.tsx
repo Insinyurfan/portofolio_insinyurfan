@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
 
 import { FileField } from "@/client/components/admin/file-field";
@@ -21,7 +21,7 @@ import { useScrollKeForm } from "@/client/components/admin/use-scroll-ke-form";
 import { simpanSertifikatAction } from "@/server/actions/konten";
 import { achievementSchema } from "@/shared/schemas";
 import { formatTanggal } from "@/shared/format";
-import { daftarKategori, kategoriSertifikat, SARAN_KATEGORI_SERTIFIKAT } from "@/shared/sertifikat";
+import { daftarKategori, kategoriSertifikat, logoOtomatisPenerbit, SARAN_KATEGORI_SERTIFIKAT } from "@/shared/sertifikat";
 import type { Achievement } from "@/shared/types";
 
 type Nilai = z.input<typeof achievementSchema>;
@@ -60,6 +60,8 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
   });
   const { register, handleSubmit, reset, setError, formState, getValues, control } =
     form;
+  const penerbit = useWatch({ control, name: "issuer" });
+  const logoOtomatis = logoOtomatisPenerbit(penerbit);
 
   function buka(item?: Achievement) {
     reset(
@@ -158,7 +160,28 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
                   nilai={field.value ?? null}
                   prefiks="issuer-logos"
                   disabled={sibuk}
-                  hint={formState.errors.issuer_logo_url?.message ?? "Opsional. Unggah logo penerbit yang akan tampil di samping nama dan di detail sertifikat."}
+                  pratinjauCadangan={logoOtomatis ? {
+                    ...logoOtomatis,
+                    keterangan: (
+                      <p className="text-xs text-adm-fg-subtle">
+                        <span className="font-semibold text-adm-fg">Logo otomatis</span>
+                        {" · "}
+                        <a
+                          href={logoOtomatis.sumber}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-adm-primary underline underline-offset-2"
+                        >
+                          Lihat sumber
+                        </a>
+                      </p>
+                    ),
+                  } : null}
+                  hint={formState.errors.issuer_logo_url?.message ?? (
+                    field.value
+                      ? "Logo unggahan untuk sertifikat ini."
+                      : "Jika tersedia, logo otomatis mengikuti nama penerbit. Unggah logo sendiri untuk memilih gambar lain."
+                  )}
                   onChange={(url) => field.onChange(url ?? "")}
                   onSedangMengunggah={setMengunggahLogo}
                 />
