@@ -1,4 +1,4 @@
-import { ExperienceFilter } from "@/client/components/experience/experience-filter";
+import { ExperienceFilter, jenisPengalamanTersedia } from "@/client/components/experience/experience-filter";
 import { ExperienceTimeline } from "@/client/components/experience/experience-timeline";
 import { EmptyState } from "@/client/components/ui/primitives";
 import type { Experience, ExperienceType } from "@/shared/types";
@@ -22,22 +22,9 @@ export function ExperienceSection({
   terfilter: Experience[];
   aktif: ExperienceType | null;
 }) {
-  // Pilihan filter dibangun dari data, bukan dari daftar yang ditulis di kode:
-  // jenis yang belum pernah dipakai tidak ditawarkan, sehingga pengunjung tidak
-  // pernah menemui halaman filter yang kosong.
-  const urutan: ExperienceType[] = [
-    "work",
-    "internship",
-    "organization",
-    "freelance",
-  ];
-  const tersedia = urutan.filter((jenis) =>
-    semua.some((item) => item.type === jenis),
-  );
-
   return (
-    <>
-      <ExperienceFilter tersedia={tersedia} aktif={aktif} />
+    <div className="space-y-8">
+      <ExperienceFilter tersedia={jenisPengalamanTersedia(semua)} aktif={aktif} />
 
       {terfilter.length === 0 ? (
         <EmptyState
@@ -51,6 +38,6 @@ export function ExperienceSection({
       ) : (
         <ExperienceTimeline items={terfilter} />
       )}
-    </>
+    </div>
   );
 }

@@ -15,7 +15,7 @@ export const revalidate = 300; // = REVALIDATE di src/shared/constants.ts; Next 
  * dalamnya tetap berada di "/", "/tentang", dan seterusnya.
  */
 /**
- * Nama situs: yang tampil di header dan dipakai sebagai label merek.
+ * Nama situs yang tampil di header.
  *
  * Diatur pemilik lewat /admin/profil. Kosong berarti "Portofolio", sehingga
  * situs yang profilnya belum diisi tetap punya header yang masuk akal.
@@ -31,7 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
   // Tanpa profil, judulnya tidak boleh jadi "Portofolio — Portofolio".
   const nama = profile?.full_name ?? null;
   const label = namaSitus(profile?.site_name);
-  const judulDasar = nama ? `${nama} — ${label}` : `${label} — CV Digital`;
+  const judulDasar = nama || `${label} — CV Digital`;
   const templateJudul = nama ? `%s — ${nama}` : `%s — ${label}`;
   const deskripsi =
     profile?.tagline ??
@@ -40,6 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(env.siteUrl),
     title: { default: judulDasar, template: templateJudul },
+    icons: profile?.logo_url ? { icon: profile.logo_url } : undefined,
     description: deskripsi,
     alternates: { canonical: "/" },
     openGraph: {

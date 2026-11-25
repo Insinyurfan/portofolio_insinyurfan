@@ -59,7 +59,12 @@ Halaman `/keahlian` SHALL menampilkan skill terbit yang dikelompokkan menurut ka
 
 ### Requirement: Halaman Pengalaman menampilkan timeline dengan tipe
 
-Halaman `/pengalaman` SHALL menampilkan pengalaman terbit sebagai timeline menurut urutan tersimpan. Setiap entri SHALL menampilkan posisi, instansi, tipe yang dapat dibaca manusia dalam bahasa Indonesia, rentang tanggal, dan deskripsi. Entri yang masih berjalan SHALL ditampilkan dengan penanda "Sekarang" sebagai ganti tanggal selesai.
+Halaman `/pengalaman` dan bagian Pengalaman di beranda SHALL menampilkan pengalaman terbit sebagai timeline berdasarkan tanggal mulai, dari terlama ke terbaru. Jika tanggal mulai sama, urutan tersimpan menentukan urutan tampilan. Setiap entri SHALL menampilkan posisi, instansi, tipe yang dapat dibaca manusia dalam bahasa Indonesia, rentang tanggal, dan deskripsi. Entri yang masih berjalan SHALL ditampilkan dengan penanda "Sekarang" sebagai ganti tanggal selesai.
+
+#### Scenario: Menyaring kategori pengalaman
+
+- **WHEN** pengunjung memilih kategori pengalaman di beranda atau halaman Pengalaman
+- **THEN** hanya entri dalam kategori itu yang ditampilkan, dengan urutan tanggal mulai dari terlama ke terbaru
 
 #### Scenario: Pengalaman yang masih berjalan
 

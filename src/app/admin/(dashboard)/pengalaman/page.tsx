@@ -11,7 +11,7 @@ export default async function PengalamanAdminPage() {
     <>
       <PageHeader
         title="Pengalaman"
-        description="Pengalaman kerja, magang, organisasi, dan freelance."
+        description="Di situs publik, pengalaman diurutkan dari tanggal mulai terlama. Urutan manual berlaku untuk tanggal mulai yang sama."
       />
       <ExperiencesManager items={items} />
     </>

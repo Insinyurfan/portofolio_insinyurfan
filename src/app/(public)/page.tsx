@@ -2,7 +2,7 @@ import { Mail, MapPin } from "lucide-react";
 
 import { AchievementGrid } from "@/client/components/achievements/achievement-grid";
 import { EducationCard } from "@/client/components/education/education-card";
-import { ExperienceTimeline } from "@/client/components/experience/experience-timeline";
+import { ExperienceHome } from "@/client/components/experience/experience-timeline";
 import { ProfileCarousel } from "@/client/components/home/profile-carousel";
 import { SectionBeranda } from "@/client/components/home/section-beranda";
 import { TypingRoles } from "@/client/components/home/typing-roles";
@@ -191,28 +191,10 @@ export default async function BerandaPage() {
       ) : null}
 
       {/* ------------------------------------------------------------- Keahlian */}
-      {skillGroups.length > 0 ? (
-        <SectionBeranda
-          id="keahlian"
-          eyebrow="Alat & teknologi"
-          judul="Keahlian"
-          tautan={{ href: "/keahlian", label: "Lihat semua" }}
-        >
-          <SkillsTabs groups={skillGroups} />
-        </SectionBeranda>
-      ) : null}
+      {skillGroups.length > 0 ? <SkillsTabs groups={skillGroups} /> : null}
 
       {/* ----------------------------------------------------------- Pengalaman */}
-      {experiences.length > 0 ? (
-        <SectionBeranda
-          id="pengalaman"
-          eyebrow="Rekam jejak"
-          judul="Pengalaman"
-          tautan={{ href: "/pengalaman", label: "Lihat semua" }}
-        >
-          <ExperienceTimeline items={experiences} />
-        </SectionBeranda>
-      ) : null}
+      {experiences.length > 0 ? <ExperienceHome items={experiences} /> : null}
 
       {/* --------------------------------------------------------------- Proyek */}
       <SectionBeranda

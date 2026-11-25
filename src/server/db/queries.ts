@@ -117,6 +117,7 @@ export async function getExperiences(): Promise<Experience[]> {
     .from("experiences")
     .select("*")
     .eq("is_published", true)
+    .order("start_date", { ascending: true })
     .order("sort_order", { ascending: true })
     .order("id", { ascending: true });
 

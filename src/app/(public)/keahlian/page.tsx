@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { SkillsTabs } from "@/client/components/skills/skills-tabs";
-import { EmptyState, PageShell } from "@/client/components/ui/primitives";
 import {
   getPageIntro,
   getProfile,
@@ -28,24 +27,9 @@ export default async function KeahlianPage() {
     getSkillsByCategory(),
   ]);
 
-  const jumlahKeahlian = groups.reduce((n, g) => n + g.skills.length, 0);
-
   return (
-    <PageShell
-      hero={intro}
-      eyebrow="Alat & teknologi"
-      title="Keahlian"
-      description="Alat dan teknologi yang saya pakai sehari-hari, dikelompokkan per kategori."
-      jumlah={jumlahKeahlian > 0 ? `${jumlahKeahlian} item` : undefined}
-    >
-      {groups.length === 0 ? (
-        <EmptyState
-          title="Belum ada keahlian"
-          description="Tambahkan kategori beserta keahliannya lewat dashboard admin untuk menampilkannya di sini."
-        />
-      ) : (
-        <SkillsTabs groups={groups} />
-      )}
-    </PageShell>
+    <div className="wadah py-8 sm:py-12">
+      <SkillsTabs groups={groups} intro={intro} halaman />
+    </div>
   );
 }

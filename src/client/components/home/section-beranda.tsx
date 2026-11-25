@@ -17,6 +17,7 @@ export function SectionBeranda({
   judul,
   deskripsi,
   tautan,
+  kontrol,
   children,
 }: {
   id: string;
@@ -25,6 +26,7 @@ export function SectionBeranda({
   deskripsi?: string;
   /** Tautan ke halaman penuh bagian ini, misalnya "Lihat semua". */
   tautan?: { href: string; label: string };
+  kontrol?: ReactNode;
   children: ReactNode;
 }) {
   const idJudul = `${id}-judul`;
@@ -52,14 +54,19 @@ export function SectionBeranda({
           ) : null}
         </div>
 
-        {tautan ? (
-          <Link
-            href={tautan.href}
-            className="inline-flex items-center gap-1.5 rounded-pill border border-border-subtle px-4 py-2 text-sm font-medium text-text-muted transition-colors hover:border-accent hover:text-accent"
-          >
-            {tautan.label}
-            <span aria-hidden="true">→</span>
-          </Link>
+        {tautan || kontrol ? (
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            {kontrol}
+            {tautan ? (
+              <Link
+                href={tautan.href}
+                className="inline-flex items-center gap-1.5 rounded-pill border border-border-subtle px-4 py-2 text-sm font-medium text-text-muted transition-colors hover:border-accent hover:text-accent"
+              >
+                {tautan.label}
+                <span aria-hidden="true">→</span>
+              </Link>
+            ) : null}
+          </div>
         ) : null}
       </div>
 

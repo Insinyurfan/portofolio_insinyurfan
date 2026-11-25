@@ -5,6 +5,8 @@ import { ArrowUpRight, CalendarDays, MapPin, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState } from "react";
 
+import { ExperienceFilter, jenisPengalamanTersedia } from "@/client/components/experience/experience-filter";
+import { SectionBeranda } from "@/client/components/home/section-beranda";
 import {
   DaftarPoin,
   GaleriDetail,
@@ -15,7 +17,24 @@ import { Badge } from "@/client/components/ui/primitives";
 import { Reveal } from "@/client/components/ui/reveal";
 import { formatRentangTanggal, labelExperienceType } from "@/shared/format";
 import { bacaFokusGaleri, gayaFoto, type FokusGaleri } from "@/shared/fokus-galeri";
-import type { Experience } from "@/shared/types";
+import type { Experience, ExperienceType } from "@/shared/types";
+
+export function ExperienceHome({ items }: { items: Experience[] }) {
+  const [jenis, pilihJenis] = useState<ExperienceType | null>(null);
+  const terlihat = jenis ? items.filter((item) => item.type === jenis) : items;
+
+  return (
+    <SectionBeranda
+      id="pengalaman"
+      eyebrow="Rekam jejak"
+      judul="Pengalaman"
+      tautan={{ href: "/pengalaman", label: "Lihat semua" }}
+      kontrol={<ExperienceFilter tersedia={jenisPengalamanTersedia(items)} aktif={jenis} onPilih={pilihJenis} />}
+    >
+      <ExperienceTimeline items={terlihat} ringkasan />
+    </SectionBeranda>
+  );
+}
 
 /**
  * Daftar pengalaman sebagai timeline bergaris.
@@ -29,7 +48,7 @@ import type { Experience } from "@/shared/types";
  * baca tanpa menambah keterangan apa pun, karena urutannya sudah jelas dari
  * susunan kartunya.
  */
-export function ExperienceTimeline({ items }: { items: Experience[] }) {
+export function ExperienceTimeline({ items, ringkasan = false }: { items: Experience[]; ringkasan?: boolean }) {
   return (
     <ol className="list-none">
       {items.map((item, index) => (
@@ -52,17 +71,18 @@ export function ExperienceTimeline({ items }: { items: Experience[] }) {
             ) : null}
           </div>
 
-          <KartuPengalaman item={item} />
+          <KartuPengalaman item={item} ringkasan={ringkasan} />
         </Reveal>
       ))}
     </ol>
   );
 }
 
-function KartuPengalaman({ item }: { item: Experience }) {
+function KartuPengalaman({ item, ringkasan }: { item: Experience; ringkasan: boolean }) {
   const [terbuka, setTerbuka] = useState(false);
   const pemicuRef = useRef<HTMLButtonElement | null>(null);
   const fokus = bacaFokusGaleri(item.gallery_focus);
+  const Judul = ringkasan ? "h3" : "h2";
 
   const rentang = formatRentangTanggal(
     item.start_date,
@@ -79,19 +99,17 @@ function KartuPengalaman({ item }: { item: Experience }) {
 
   return (
     <>
-      <div className="min-w-0 flex-1 rounded-card border border-border-subtle bg-surface-raised p-5 shadow-card transition-shadow hover:shadow-card-hover sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Badge tone="accent">{labelExperienceType(item.type)}</Badge>
-          <p className="text-sm font-medium text-text-subtle">{rentang}</p>
-        </div>
-
-        <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:gap-5">
-          <LogoOrganisasi logoUrl={item.logo_url} nama={item.organization} />
-
+      <article className="min-w-0 flex-1 rounded-card border border-border-subtle bg-surface-raised p-5 shadow-card transition-shadow hover:shadow-card-hover sm:p-6">
+        <div className="grid gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center sm:gap-7 lg:gap-9">
+          <LogoOrganisasi logoUrl={item.logo_url} nama={item.organization} besar />
           <div className="min-w-0 flex-1">
-            <h2 className="font-heading text-lg font-bold text-text sm:text-xl">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <Badge tone="accent">{labelExperienceType(item.type)}</Badge>
+              <p className="text-sm font-medium text-text-subtle">{rentang}</p>
+            </div>
+            <Judul className="font-heading text-xl font-bold text-text sm:text-2xl">
               {item.position}
-            </h2>
+            </Judul>
             <p className="mt-1 font-medium text-accent">{item.organization}</p>
 
             {item.location ? (
@@ -108,14 +126,15 @@ function KartuPengalaman({ item }: { item: Experience }) {
             ) : null}
 
             {adaDetail ? (
-              <div className="mt-5 flex flex-wrap items-center gap-4">
+              <div className="mt-5 space-y-3">
                 <CuplikanGaleri gambar={item.gallery} nama={item.organization} fokus={fokus} />
 
                 <button
                   ref={pemicuRef}
                   type="button"
+                  aria-haspopup="dialog"
                   onClick={() => setTerbuka(true)}
-                  className="ml-auto inline-flex items-center gap-1.5 rounded-pill text-sm font-semibold text-accent transition-colors hover:text-accent-hover"
+                  className="inline-flex items-center gap-1.5 rounded-pill text-sm font-semibold text-accent transition-colors hover:text-accent-hover"
                 >
                   Buka detail
                   <ArrowUpRight className="size-4" aria-hidden="true" />
@@ -127,7 +146,7 @@ function KartuPengalaman({ item }: { item: Experience }) {
             ) : null}
           </div>
         </div>
-      </div>
+      </article>
 
       {adaDetail ? (
         <Modal
@@ -216,12 +235,16 @@ function CuplikanGaleri({ gambar, nama, fokus }: { gambar: string[]; nama: strin
 function LogoOrganisasi({
   logoUrl,
   nama,
+  besar = false,
 }: {
   logoUrl: string | null;
   nama: string;
+  besar?: boolean;
 }) {
-  const kelas =
-    "flex size-16 sm:size-18 shrink-0 items-center justify-center overflow-hidden rounded-card border border-border-subtle";
+  const kelas = cn(
+    "flex shrink-0 items-center justify-center overflow-hidden rounded-card border border-border-subtle",
+    besar ? "size-28 sm:size-32 lg:size-44 xl:size-48" : "size-16 sm:size-18",
+  );
 
   if (logoUrl) {
     return (
@@ -231,9 +254,9 @@ function LogoOrganisasi({
           // Nama organisasinya sudah tertulis sebagai teks di kartu yang sama,
           // jadi logo di sini bersifat hiasan.
           alt=""
-          width={64}
-          height={64}
-          className="size-full object-contain p-1"
+          width={besar ? 192 : 72}
+          height={besar ? 192 : 72}
+          className={cn("size-full object-contain", besar ? "p-3 sm:p-4" : "p-1")}
         />
       </div>
     );
@@ -248,7 +271,7 @@ function LogoOrganisasi({
 
   return (
     <div className={cn(kelas, "bg-surface-sunken")} aria-hidden="true">
-      <span className="font-heading text-lg font-bold text-text-subtle">
+      <span className={cn("font-heading font-bold text-text-subtle", besar ? "text-3xl" : "text-lg")}>
         {inisial || "?"}
       </span>
     </div>
