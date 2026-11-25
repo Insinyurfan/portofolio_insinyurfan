@@ -113,6 +113,7 @@ export function Navbar({
                 alt=""
                 width={32}
                 height={32}
+                unoptimized
                 // Logo tampil di layar pertama setiap halaman, jadi tidak
                 // di-lazy-load — menundanya membuat header berkedip saat dimuat.
                 preload

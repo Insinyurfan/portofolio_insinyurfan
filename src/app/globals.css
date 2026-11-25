@@ -19,31 +19,31 @@
  */
 :root {
   /* Permukaan */
-  --surface: #f6f9f7;
+  --surface: #ecf9ff;
   --surface-raised: #ffffff;
-  --surface-sunken: #eaf0ed;
+  --surface-sunken: #deedf9;
 
   /* Garis */
-  --border-subtle: #dde6e1;
-  --border-strong: #7a8b83;
+  --border-subtle: #cbdced;
+  --border-strong: #637697;
 
   /* Teks */
-  --text: #0d1714;
-  --text-muted: #44544e;
-  --text-subtle: #5a6b64;
+  --text: #060640;
+  --text-muted: #384769;
+  --text-subtle: #52617e;
 
-  /* Aksen tunggal: hijau zamrud */
-  --accent: #04704f;
-  --accent-hover: #045c41;
+  /* Aksen biru navy */
+  --accent: #060640;
+  --accent-hover: #263f93;
   --accent-contrast: #ffffff;
-  --accent-soft: #e3f2eb;
-  --accent-soft-text: #034b36;
+  --accent-soft: #e2efff;
+  --accent-soft-text: #18285a;
 
   /* Fokus */
-  --focus: #04704f;
+  --focus: #345dbb;
 
   /* Latar gelap di belakang modal */
-  --overlay: rgb(13 23 20 / 0.66);
+  --overlay: rgb(6 6 32 / 0.66);
 }
 
 :root:not([data-theme="light"]) {
@@ -55,25 +55,25 @@
 .dark {
   color-scheme: dark;
 
-  --surface: #0a1210;
-  --surface-raised: #121d19;
-  --surface-sunken: #060c0a;
+  --surface: #0b1024;
+  --surface-raised: #151d36;
+  --surface-sunken: #080d1e;
 
-  --border-subtle: #22302a;
-  --border-strong: #5a7468;
+  --border-subtle: #263656;
+  --border-strong: #6880a8;
 
-  --text: #e9f1ed;
-  --text-muted: #a7bab2;
-  --text-subtle: #8ba199;
+  --text: #eef4ff;
+  --text-muted: #b4c4e3;
+  --text-subtle: #96aacb;
 
-  --accent: #4ade9f;
-  --accent-hover: #6ee7b3;
-  --accent-contrast: #04231a;
-  --accent-soft: #10291f;
-  --accent-soft-text: #7fe9b6;
+  --accent: #8eb5ff;
+  --accent-hover: #b1ceff;
+  --accent-contrast: #091336;
+  --accent-soft: #1d2f59;
+  --accent-soft-text: #c2d8ff;
 
-  --focus: #4ade9f;
-  --overlay: rgb(3 7 6 / 0.78);
+  --focus: #8eb5ff;
+  --overlay: rgb(3 6 18 / 0.78);
 }
 
 @theme inline {
@@ -106,8 +106,8 @@
   --radius-card-lg: 1.75rem;
   --radius-pill: 999px;
 
-  --shadow-card: 0 1px 2px rgb(13 23 20 / 0.04), 0 8px 24px -12px rgb(13 23 20 / 0.10);
-  --shadow-card-hover: 0 2px 4px rgb(13 23 20 / 0.06), 0 16px 40px -16px rgb(13 23 20 / 0.16);
+  --shadow-card: 0 1px 2px rgb(6 6 32 / 0.04), 0 8px 24px -12px rgb(6 6 32 / 0.10);
+  --shadow-card-hover: 0 2px 4px rgb(6 6 32 / 0.06), 0 16px 40px -16px rgb(6 6 32 / 0.16);
 }
 
 @layer base {

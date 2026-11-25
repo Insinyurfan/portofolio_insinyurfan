@@ -63,7 +63,7 @@ async function bacaFoto(file: File, format?: FormatKhusus): Promise<SumberFoto> 
   }
 }
 
-async function kompres(gambar: SumberFoto): Promise<Blob | null> {
+async function kompres(gambar: SumberFoto, keluaran: "image/webp" | "image/png"): Promise<Blob | null> {
   const lebar = gambar.width;
   const tinggi = gambar.height;
   if (lebar <= 0 || tinggi <= 0) return null;
@@ -76,20 +76,26 @@ async function kompres(gambar: SumberFoto): Promise<Blob | null> {
   if (!ctx) return null;
 
   ctx.drawImage(gambar, 0, 0, kanvas.width, kanvas.height);
-  return new Promise((selesai) => kanvas.toBlob(selesai, "image/webp", MUTU_WEBP));
+  return new Promise((selesai) => kanvas.toBlob(selesai, keluaran, MUTU_WEBP));
 }
 
-export async function siapkanFoto(file: File): Promise<File> {
+export async function siapkanFoto(
+  file: File,
+  { pertahankanFormat = false } = {},
+): Promise<File> {
+  if (file.size === 0) throw new Error("Berkas kosong atau gagal dibaca.");
+
   const format = formatDariNama(file);
   const sudahWeb = !format && EKSTENSI_GAMBAR_WEB.has(file.type);
-  // Pertahankan berkas yang sudah efisien, animasi, dan gambar vektor.
-  if (sudahWeb && file.type !== "image/jpeg" && file.type !== "image/png") return file;
-  if (file.size === 0) throw new Error("Berkas kosong atau gagal dibaca.");
+  // Logo web disimpan utuh agar transparansi PNG dan detail gambar tetap asli.
+  if (sudahWeb && (pertahankanFormat || (file.type !== "image/jpeg" && file.type !== "image/png"))) {
+    return file;
+  }
 
   let gambar: SumberFoto | undefined;
   try {
     gambar = await bacaFoto(file, format);
-    const blob = await kompres(gambar);
+    const blob = await kompres(gambar, pertahankanFormat ? "image/png" : "image/webp");
     const ekstensi = blob ? EKSTENSI_GAMBAR_WEB.get(blob.type) : undefined;
     if (blob && ekstensi && (!sudahWeb || (blob.type === "image/webp" && blob.size < file.size))) {
       const nama = file.name.replace(/\.[^.]+$/, "") || "foto";

@@ -11,6 +11,7 @@ import { Button } from "@/client/components/admin/ui";
 import { unggahAction } from "@/server/actions/konten";
 import type { PrefiksMedia } from "@/server/actions/storage";
 import { siapkanUnggahMediaAction } from "@/server/actions/unggah-media";
+import { cn } from "@/shared/cn";
 import { PILIH_FOTO } from "@/shared/media";
 
 /**
@@ -52,6 +53,7 @@ export function FileField({
   const urlPratinjau = useRef<string | null>(null);
   const [mengunggah, setMengunggah] = useState(false);
   const [pratinjauLokal, setPratinjauLokal] = useState<string | null>(null);
+  const logoHeader = prefiks === "logo";
 
   useEffect(() => () => {
     if (unggahan.current) {
@@ -86,7 +88,9 @@ export function FileField({
     setStatus(true);
 
     try {
-      const file = jenis === "gambar" ? await siapkanFoto(dipilih) : dipilih;
+      const file = jenis === "gambar"
+        ? await siapkanFoto(dipilih, { pertahankanFormat: logoHeader })
+        : dipilih;
       if (controller.signal.aborted) return;
       if (file !== dipilih) tampilkanPratinjau(file);
       if (jenis === "gambar" || unggahLangsung) {
@@ -135,7 +139,7 @@ export function FileField({
               <img
                 src={sumberPratinjau}
                 alt={`Pratinjau ${label}`}
-                className="size-full object-cover"
+                className={cn("size-full", logoHeader ? "object-contain" : "object-cover")}
               />
             ) : (
               <span className="flex size-full items-center justify-center text-xs text-adm-fg-subtle">
@@ -203,10 +207,11 @@ export function FileField({
 
           {hint ? <p className="text-xs text-adm-fg-subtle">{hint}</p> : null}
 
-          {/* Dijelaskan sekali di sini, bukan diulang di setiap hint field. */}
           {jenis === "gambar" ? (
             <p className="text-xs text-adm-fg-subtle">
-              Foto seperti HEIC/HEIF, TIFF, dan BMP dikonversi otomatis saat dipilih.
+              {logoHeader
+                ? "PNG transparan dan format web lainnya diunggah dalam format asli. HEIC/HEIF, TIFF, dan BMP dikonversi ke PNG."
+                : "Foto seperti HEIC/HEIF, TIFF, dan BMP dikonversi otomatis saat dipilih."}
             </p>
           ) : null}
 

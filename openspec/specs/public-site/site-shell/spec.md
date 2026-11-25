@@ -21,7 +21,7 @@ Seluruh teks antarmuka pada halaman publik — label navigasi, judul bagian, tek
 
 ### Requirement: Arah visual bersih, terang, dengan satu warna aksen
 
-Halaman publik SHALL memakai gaya bersih dan modern dengan latar terang sebagai default, kartu bersudut membulat, tipografi sans-serif tegas untuk judul, dan tata letak bento grid untuk bagian ikhtisar. Tepat satu warna aksen — hijau zamrud — SHALL dipakai untuk penekanan, tautan, dan tombol utama. Situs SHALL TIDAK memakai estetika gelap bertema terminal/hacker seperti teks hijau monospace di atas latar hitam sebagai tampilan default.
+Halaman publik SHALL memakai gaya bersih dan modern dengan latar biru muda sebagai default, kartu bersudut membulat, tipografi sans-serif tegas untuk judul, dan tata letak bento grid untuk bagian ikhtisar. Aksen biru SHALL dipakai untuk penekanan, tautan, dan tombol utama, dengan navy pada tema terang dan biru muda pada tema gelap.
 
 #### Scenario: Tampilan awal adalah tema terang
 
@@ -31,7 +31,7 @@ Halaman publik SHALL memakai gaya bersih dan modern dengan latar terang sebagai 
 #### Scenario: Aksen konsisten satu warna
 
 - **WHEN** tombol utama, tautan aktif, dan penanda penekanan di seluruh halaman dibandingkan
-- **THEN** semuanya memakai warna aksen hijau zamrud yang sama dari token design system, bukan nilai warna yang ditulis lepas
+- **THEN** semuanya memakai warna aksen biru yang sama dari token design system untuk tema yang sedang aktif
 
 ### Requirement: Navbar responsif dengan menu mobile
 
