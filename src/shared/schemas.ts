@@ -303,6 +303,7 @@ export const achievementSchema = z.object({
   id: idOpsional,
   title: teksWajib(200, "Judul"),
   issuer: teksOpsional(150, "Penerbit"),
+  issuer_logo_url: urlOpsional,
   issued_date: tanggalOpsional,
   category: z.enum(["certificate", "award"], {
     message: "Kategori wajib dipilih.",

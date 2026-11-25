@@ -84,7 +84,15 @@ export function Navbar({
     }
 
     document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    const layarLebar = window.matchMedia("(min-width: 80rem)");
+    function tutupDiDesktop(event: MediaQueryListEvent) {
+      if (event.matches) setTerbuka(false);
+    }
+    layarLebar.addEventListener("change", tutupDiDesktop);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      layarLebar.removeEventListener("change", tutupDiDesktop);
+    };
   }, [terbuka]);
 
   // Fokus masuk ke dalam panel saat dibuka.
@@ -96,16 +104,24 @@ export function Navbar({
 
   return (
     <header className="wadah sticky top-2 z-40 mt-2 sm:top-4 sm:mt-4">
+      {terbuka ? (
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 -z-10 bg-overlay xl:hidden"
+          onClick={tutup}
+        />
+      ) : null}
       <div className="rounded-card-lg border border-border-subtle bg-surface-raised/95 shadow-card backdrop-blur-md">
         <nav
           aria-label="Navigasi utama"
-          className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 sm:flex-nowrap sm:px-4 xl:gap-3 xl:px-5"
+          className="flex items-center justify-between gap-2 px-3 py-2 sm:px-4 xl:gap-3 xl:px-5"
         >
           {/* Nama dan logo berasal dari database, bukan ditulis di kode: keduanya
            * diatur pemilik lewat /admin/profil seperti isi halaman yang lain. */}
           <Link
             href="/"
             className="flex min-w-0 flex-1 items-center gap-2.5 font-heading text-base font-bold tracking-tight text-text xl:max-w-36 xl:flex-none 2xl:max-w-44"
+            onClick={() => { if (terbuka) tutup(); }}
           >
             {identitas.logoUrl ? (
               <Image
@@ -145,61 +161,77 @@ export function Navbar({
             ))}
           </ul>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="hidden shrink-0 items-center xl:flex">
             <ThemeToggle />
-
-            <button
-              ref={tombolRef}
-              type="button"
-              onClick={() => (terbuka ? tutup() : setTerbuka(true))}
-              aria-expanded={terbuka}
-              aria-controls="menu-mobile"
-              aria-label={terbuka ? "Tutup menu navigasi" : "Buka menu navigasi"}
-              className="inline-flex size-9 items-center justify-center rounded-pill border border-border-subtle text-text-muted transition-colors hover:border-accent hover:text-accent xl:hidden"
-            >
-              {terbuka ? (
-                <X className="size-4" aria-hidden="true" />
-              ) : (
-                <Menu className="size-4" aria-hidden="true" />
-              )}
-            </button>
           </div>
 
           {cv ? (
-            <div className="flex justify-center max-sm:w-full">
-              <CvActions {...cv} ringkas onPratinjau={() => setTerbuka(false)} />
+            <div className="hidden shrink-0 justify-center xl:flex">
+              <CvActions {...cv} ringkas />
             </div>
           ) : null}
-        </nav>
 
-        {/* Layar sempit: panel yang dapat dibuka-tutup. */}
-        {terbuka ? (
-          <div
-            ref={panelRef}
-            id="menu-mobile"
-            className="max-h-[65dvh] overflow-y-auto overscroll-contain border-t border-border-subtle px-2 xl:hidden"
+          <button
+            ref={tombolRef}
+            type="button"
+            onClick={() => (terbuka ? tutup() : setTerbuka(true))}
+            aria-expanded={terbuka}
+            aria-controls="menu-mobile"
+            aria-label={terbuka ? "Tutup menu navigasi" : "Buka menu navigasi"}
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-pill border border-border-subtle text-text transition-colors hover:border-accent hover:text-accent xl:hidden"
           >
-            <ul className="py-2">
-              {NAV_ITEMS.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={tutup}
-                    aria-current={aktif(item.href) ? "page" : undefined}
-                    className={cn(
-                      "block rounded-card px-3 py-3 text-sm font-medium transition-colors",
-                      aktif(item.href)
-                        ? "bg-accent-soft text-accent-soft-text"
-                        : "text-text-muted hover:text-accent",
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {terbuka ? (
+              <X className="size-5" aria-hidden="true" />
+            ) : (
+              <Menu className="size-5" aria-hidden="true" />
+            )}
+          </button>
+        </nav>
+      </div>
+
+      <div
+        id="menu-mobile"
+        ref={panelRef}
+        className={cn(
+          "absolute inset-x-4 top-[calc(100%+0.5rem)] mx-auto max-h-[calc(100dvh-5.75rem)] max-w-lg overflow-y-auto overscroll-contain rounded-card-lg border border-border-subtle bg-surface-raised p-2 shadow-card-hover sm:inset-x-6 xl:hidden",
+          !terbuka && "hidden",
+        )}
+      >
+        <nav aria-label="Menu navigasi mobile">
+          <ul className="space-y-0.5">
+            {NAV_ITEMS.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  onClick={tutup}
+                  aria-current={aktif(item.href) ? "page" : undefined}
+                  className={cn(
+                    "block rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                    aktif(item.href)
+                      ? "bg-accent-soft text-accent-soft-text"
+                      : "text-text-muted hover:bg-surface-sunken hover:text-accent",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border-subtle px-2 pt-2">
+          {cv ? (
+            <CvActions
+              {...cv}
+              ringkas
+              onPratinjau={() => setTerbuka(false)}
+              kembaliFokusKe={tombolRef}
+            />
+          ) : null}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-text-muted">Tema</span>
+            <ThemeToggle />
           </div>
-        ) : null}
+        </div>
       </div>
     </header>
   );

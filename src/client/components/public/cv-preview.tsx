@@ -16,11 +16,13 @@ export function CvActions({
   namaPemilik,
   ringkas = false,
   onPratinjau,
+  kembaliFokusKe,
 }: {
   cvUrl: string;
   namaPemilik: string;
   ringkas?: boolean;
   onPratinjau?: () => void;
+  kembaliFokusKe?: React.RefObject<HTMLElement | null>;
 }) {
   const [terbuka, setTerbuka] = useState(false);
   const pemicuRef = useRef<HTMLButtonElement>(null);
@@ -70,7 +72,7 @@ export function CvActions({
       <Modal
         terbuka={terbuka}
         onTutup={tutup}
-        pemicuRef={pemicuRef}
+        pemicuRef={kembaliFokusKe ?? pemicuRef}
         judul={<>Pratinjau CV<span className="sr-only"> {namaPemilik}</span></>}
         className="h-[90dvh] max-w-[80rem]"
         classNameIsi="bg-surface-sunken p-2 sm:p-3"

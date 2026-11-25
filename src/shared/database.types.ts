@@ -24,6 +24,7 @@ export type Database = {
           is_published: boolean
           issued_date: string | null
           issuer: string | null
+          issuer_logo_url: string | null
           pdf_url: string | null
           sort_order: number
           title: string
@@ -39,6 +40,7 @@ export type Database = {
           is_published?: boolean
           issued_date?: string | null
           issuer?: string | null
+          issuer_logo_url?: string | null
           pdf_url?: string | null
           sort_order?: number
           title: string
@@ -54,6 +56,7 @@ export type Database = {
           is_published?: boolean
           issued_date?: string | null
           issuer?: string | null
+          issuer_logo_url?: string | null
           pdf_url?: string | null
           sort_order?: number
           title?: string

@@ -1,14 +1,15 @@
 "use client";
 
-import { Award, ExternalLink, FileText } from "lucide-react";
+import { ArrowUpRight, Award, Building2, ExternalLink, FileText } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useRef, useState } from "react";
 
 import { PdfCover, PdfPages } from "@/client/components/public/pdf-pages";
 import { Modal } from "@/client/components/ui/modal";
 import { Badge, ButtonExternal } from "@/client/components/ui/primitives";
+import { cn } from "@/shared/cn";
 import { formatTanggal } from "@/shared/format";
-import { daftarKategori, kategoriSertifikat, kunciKategori } from "@/shared/sertifikat";
+import { daftarKategori, kategoriSertifikat, kunciKategori, logoPenerbitSertifikat } from "@/shared/sertifikat";
 import type { Achievement } from "@/shared/types";
 
 export function AchievementGrid({
@@ -52,8 +53,6 @@ export function AchievementGrid({
       <ul className="grid list-none gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {terlihat.map((item) => {
           const Ikon = item.pdf_url ? FileText : Award;
-          const info = [item.issuer, item.issued_date ? formatTanggal(item.issued_date) : null]
-            .filter(Boolean).join(" · ");
           return (
             <li key={item.id} className="min-w-0">
               <button
@@ -65,7 +64,15 @@ export function AchievementGrid({
                 }}
                 className="group flex h-full w-full flex-col overflow-hidden rounded-card border border-border-subtle bg-surface-raised text-left shadow-card transition-shadow hover:shadow-card-hover"
               >
-                <span aria-hidden="true" className="relative grid h-44 w-full shrink-0 place-items-center border-b border-border-subtle bg-surface-sunken">
+                <span className="flex w-full flex-1 items-start gap-3 p-4 sm:p-5">
+                  <LogoPenerbit item={item} />
+                  <span className="flex min-w-0 flex-col items-start gap-1.5">
+                    <span className="block font-heading font-bold text-text [overflow-wrap:anywhere]">{item.title}</span>
+                    {item.issuer ? <span className="block text-sm font-medium text-text-muted [overflow-wrap:anywhere]">{item.issuer}</span> : null}
+                    <Badge tone="accent">{kategoriSertifikat(item)}</Badge>
+                  </span>
+                </span>
+                <span aria-hidden="true" className="relative grid h-44 w-full shrink-0 place-items-center border-y border-border-subtle bg-surface-sunken">
                   {item.image_url ? (
                     <Image
                       src={item.image_url}
@@ -81,12 +88,13 @@ export function AchievementGrid({
                     </>
                   )}
                 </span>
-                <span className="flex w-full flex-1 flex-col items-start gap-2 p-5">
-                  <Badge tone="accent">{kategoriSertifikat(item)}</Badge>
-                  <span className="block font-heading text-base font-bold text-text">{item.title}</span>
-                  {info ? <span className="block text-sm text-text-muted">{info}</span> : null}
-                  <span className="mt-auto text-sm font-semibold text-accent group-hover:underline">
+                <span className="flex w-full flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-5">
+                  {item.issued_date ? (
+                    <span className="text-xs text-text-muted sm:text-sm">{formatTanggal(item.issued_date)}</span>
+                  ) : null}
+                  <span className="ml-auto inline-flex items-center gap-1 text-sm font-semibold text-accent group-hover:underline">
                     {item.pdf_url || item.image_url ? "Lihat sertifikat" : "Lihat detail"}
+                    <ArrowUpRight className="size-3.5" aria-hidden="true" />
                   </span>
                 </span>
               </button>
@@ -118,10 +126,13 @@ export function AchievementGrid({
         {aktif ? (
           <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-text-muted">
-                {[aktif.issuer, aktif.issued_date ? formatTanggal(aktif.issued_date) : null]
-                  .filter(Boolean).join(" · ")}
-              </p>
+              <div className="flex min-w-0 flex-wrap items-center gap-3">
+                <LogoPenerbit item={aktif} />
+                <div className="min-w-0">
+                  {aktif.issuer ? <p className="font-semibold text-text [overflow-wrap:anywhere]">{aktif.issuer}</p> : null}
+                  {aktif.issued_date ? <p className="text-sm text-text-muted">{formatTanggal(aktif.issued_date)}</p> : null}
+                </div>
+              </div>
               {aktif.verification_url ? (
                 <ButtonExternal href={aktif.verification_url}>Verifikasi sertifikat</ButtonExternal>
               ) : null}
@@ -148,5 +159,32 @@ export function AchievementGrid({
         ) : null}
       </Modal>
     </>
+  );
+}
+
+function LogoPenerbit({ item }: { item: Achievement }) {
+  const logo = logoPenerbitSertifikat(item);
+  const [gagal, setGagal] = useState<string | null>(null);
+
+  if (logo && gagal !== logo) {
+    return (
+      <Image
+        src={logo}
+        alt=""
+        width={64}
+        height={64}
+        className={cn(
+          "size-14 shrink-0 rounded-xl border border-border-subtle object-contain p-1.5 sm:size-16",
+          logo === "/issuer-logos/oracle-academy.png" ? "bg-logo-background-inverse" : "bg-logo-background",
+        )}
+        onError={() => setGagal(logo)}
+      />
+    );
+  }
+
+  return (
+    <span aria-hidden="true" className="grid size-14 shrink-0 place-items-center rounded-xl border border-border-subtle bg-accent-soft text-accent-soft-text sm:size-16">
+      <Building2 className="size-6" />
+    </span>
   );
 }

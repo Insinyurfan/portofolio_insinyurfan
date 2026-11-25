@@ -303,9 +303,9 @@ export const simpanSertifikatAction = withAdminAction(
     const lama = input.id ? await ambilBaris("achievements", input.id) : null;
     const hasil = await simpanBaris("achievements", input);
 
-    const berkasLama = [lama?.image_url, lama?.pdf_url].filter(
-      (url): url is string =>
-        typeof url === "string" && url !== input.image_url && url !== input.pdf_url,
+    const berkasAktif = [input.image_url, input.pdf_url, input.issuer_logo_url];
+    const berkasLama = [lama?.image_url, lama?.pdf_url, lama?.issuer_logo_url].filter(
+      (url): url is string => typeof url === "string" && !berkasAktif.includes(url),
     );
     if (berkasLama.length > 0) await hapusBerkas(...new Set(berkasLama));
 
@@ -433,6 +433,7 @@ export const hapusItemAction = withAdminAction(
       if (typeof baris.thumbnail_url === "string") url.push(baris.thumbnail_url);
       if (typeof baris.image_url === "string") url.push(baris.image_url);
       if (typeof baris.pdf_url === "string") url.push(baris.pdf_url);
+      if (typeof baris.issuer_logo_url === "string") url.push(baris.issuer_logo_url);
       if (typeof baris.logo_url === "string") url.push(baris.logo_url);
       if (Array.isArray(baris.gallery)) url.push(...(baris.gallery as string[]));
       if (url.length > 0) await hapusBerkas(...new Set(url));

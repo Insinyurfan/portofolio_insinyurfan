@@ -53,7 +53,7 @@ export function FileField({
   const urlPratinjau = useRef<string | null>(null);
   const [mengunggah, setMengunggah] = useState(false);
   const [pratinjauLokal, setPratinjauLokal] = useState<string | null>(null);
-  const logoHeader = prefiks === "logo";
+  const unggahLogo = prefiks === "logo" || prefiks === "issuer-logos";
 
   useEffect(() => () => {
     if (unggahan.current) {
@@ -89,7 +89,7 @@ export function FileField({
 
     try {
       const file = jenis === "gambar"
-        ? await siapkanFoto(dipilih, { pertahankanFormat: logoHeader })
+        ? await siapkanFoto(dipilih, { pertahankanFormat: unggahLogo })
         : dipilih;
       if (controller.signal.aborted) return;
       if (file !== dipilih) tampilkanPratinjau(file);
@@ -139,7 +139,7 @@ export function FileField({
               <img
                 src={sumberPratinjau}
                 alt={`Pratinjau ${label}`}
-                className={cn("size-full", logoHeader ? "object-contain" : "object-cover")}
+                className={cn("size-full", unggahLogo ? "object-contain" : "object-cover")}
               />
             ) : (
               <span className="flex size-full items-center justify-center text-xs text-adm-fg-subtle">
@@ -209,7 +209,7 @@ export function FileField({
 
           {jenis === "gambar" ? (
             <p className="text-xs text-adm-fg-subtle">
-              {logoHeader
+              {unggahLogo
                 ? "PNG transparan dan format web lainnya diunggah dalam format asli. HEIC/HEIF, TIFF, dan BMP dikonversi ke PNG."
                 : "Foto seperti HEIC/HEIF, TIFF, dan BMP dikonversi otomatis saat dipilih."}
             </p>

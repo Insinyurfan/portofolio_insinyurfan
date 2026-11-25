@@ -32,6 +32,7 @@ const KOSONG: Nilai = {
   id: null,
   title: "",
   issuer: "",
+  issuer_logo_url: "",
   issued_date: "",
   category: "certificate",
   certificate_category: "",
@@ -48,7 +49,8 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
   const [terbuka, setTerbuka] = useState(false);
   const [mengunggahGambar, setMengunggahGambar] = useState(false);
   const [mengunggahPdf, setMengunggahPdf] = useState(false);
-  const mengunggah = mengunggahGambar || mengunggahPdf;
+  const [mengunggahLogo, setMengunggahLogo] = useState(false);
+  const mengunggah = mengunggahGambar || mengunggahPdf || mengunggahLogo;
   const sibuk = sedangBerjalan || mengunggah;
   const saranKategori = daftarKategori([...SARAN_KATEGORI_SERTIFIKAT, ...items.map(kategoriSertifikat)]);
 
@@ -66,6 +68,7 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
             id: item.id,
             title: item.title,
             issuer: item.issuer ?? "",
+            issuer_logo_url: item.issuer_logo_url ?? "",
             issued_date: item.issued_date ?? "",
             category: item.category,
             certificate_category: kategoriSertifikat(item),
@@ -144,6 +147,23 @@ export function AchievementsManager({ items }: { items: Achievement[] }) {
                 {(a) => <Input {...a} {...register("issued_date")} type="date" />}
               </Field>
             </div>
+
+            <Controller
+              key={versiForm}
+              control={control}
+              name="issuer_logo_url"
+              render={({ field }) => (
+                <FileField
+                  label="Logo penerbit"
+                  nilai={field.value ?? null}
+                  prefiks="issuer-logos"
+                  disabled={sibuk}
+                  hint={formState.errors.issuer_logo_url?.message ?? "Opsional. Unggah logo penerbit yang akan tampil di samping nama dan di detail sertifikat."}
+                  onChange={(url) => field.onChange(url ?? "")}
+                  onSedangMengunggah={setMengunggahLogo}
+                />
+              )}
+            />
 
             <Field
               id="certificate_category"

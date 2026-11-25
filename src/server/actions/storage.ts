@@ -33,6 +33,7 @@ export const PREFIKS_MEDIA = [
   "profile",
   "projects",
   "achievements",
+  "issuer-logos",
   "cv",
   // Logo header dipisahkan dari "profile" supaya berkasnya mudah dikenali di
   // Storage, dan supaya mengganti foto profil tidak pernah tertukar dengan
