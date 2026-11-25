@@ -3,6 +3,81 @@
 import type { PDFDocumentLoadingTask, PDFDocumentProxy, RenderTask } from "pdfjs-dist";
 import { useEffect, useRef, useState } from "react";
 
+async function muatPerenderPdf() {
+  const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist");
+  GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url,
+  ).href;
+  return getDocument;
+}
+
+export function PdfCover({ url }: { url: string }) {
+  const kanvasRef = useRef<HTMLCanvasElement>(null);
+  const [siap, setSiap] = useState(false);
+
+  useEffect(() => {
+    const kanvas = kanvasRef.current;
+    if (!kanvas) return;
+
+    let dibatalkan = false;
+    let pemuatan: PDFDocumentLoadingTask | undefined;
+    let render: RenderTask | undefined;
+
+    function lepasDokumen() {
+      void pemuatan?.destroy().catch(() => {});
+      pemuatan = undefined;
+    }
+
+    async function tampilkanSampul(kanvas: HTMLCanvasElement) {
+      try {
+        const getDocument = await muatPerenderPdf();
+        if (dibatalkan) return;
+        pemuatan = getDocument({ url, disableAutoFetch: true, disableStream: true });
+        const pdf = await pemuatan.promise;
+        if (dibatalkan) return;
+        const halaman = await pdf.getPage(1);
+        if (dibatalkan) return;
+
+        const asli = halaman.getViewport({ scale: 1 });
+        const skala = Math.min(kanvas.clientWidth / asli.width, kanvas.clientHeight / asli.height);
+        const viewport = halaman.getViewport({ scale: skala * Math.min(window.devicePixelRatio, 2) });
+        kanvas.width = Math.ceil(viewport.width);
+        kanvas.height = Math.ceil(viewport.height);
+        render = halaman.render({ canvas: kanvas, viewport });
+        await render.promise;
+        if (!dibatalkan) setSiap(true);
+      } catch {
+        // Ikon pada kartu tetap terlihat jika sampul gagal dirender.
+      } finally {
+        render = undefined;
+        lepasDokumen();
+      }
+    }
+
+    const pengamat = new IntersectionObserver((entri) => {
+      if (dibatalkan || !entri.some((e) => e.isIntersecting)) return;
+      pengamat.disconnect();
+      void tampilkanSampul(kanvas);
+    }, { rootMargin: "160px" });
+    pengamat.observe(kanvas);
+
+    return () => {
+      dibatalkan = true;
+      pengamat.disconnect();
+      render?.cancel();
+      lepasDokumen();
+    };
+  }, [url]);
+
+  return (
+    <canvas
+      ref={kanvasRef}
+      className={`absolute inset-0 block size-full bg-surface-sunken object-contain ${siap ? "" : "invisible"}`}
+    />
+  );
+}
+
 export function PdfPages({ url, label = "CV" }: { url: string; label?: string }) {
   const [dokumen, setDokumen] = useState<PDFDocumentProxy>();
   const [gagal, setGagal] = useState(false);
@@ -13,13 +88,8 @@ export function PdfPages({ url, label = "CV" }: { url: string; label?: string })
 
     async function muat() {
       try {
-        const { getDocument, GlobalWorkerOptions } = await import("pdfjs-dist");
+        const getDocument = await muatPerenderPdf();
         if (dibatalkan) return;
-
-        GlobalWorkerOptions.workerSrc = new URL(
-          "pdfjs-dist/build/pdf.worker.min.mjs",
-          import.meta.url,
-        ).href;
         tugas = getDocument({ url });
         const pdf = await tugas.promise;
         if (!dibatalkan) setDokumen(pdf);

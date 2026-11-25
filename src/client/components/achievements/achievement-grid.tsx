@@ -4,7 +4,7 @@ import { Award, ExternalLink, FileText } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useRef, useState } from "react";
 
-import { PdfPages } from "@/client/components/public/pdf-pages";
+import { PdfCover, PdfPages } from "@/client/components/public/pdf-pages";
 import { Modal } from "@/client/components/ui/modal";
 import { Badge, ButtonExternal } from "@/client/components/ui/primitives";
 import { formatTanggal } from "@/shared/format";
@@ -49,7 +49,7 @@ export function AchievementGrid({
         </div>
       ) : null}
 
-      <ul className="grid list-none items-start gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <ul className="grid list-none gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {terlihat.map((item) => {
           const Ikon = item.pdf_url ? FileText : Award;
           const info = [item.issuer, item.issued_date ? formatTanggal(item.issued_date) : null]
@@ -63,10 +63,10 @@ export function AchievementGrid({
                   pemicuRef.current = event.currentTarget;
                   setAktif(item);
                 }}
-                className="group block w-full overflow-hidden rounded-card border border-border-subtle bg-surface-raised text-left shadow-card transition-shadow hover:shadow-card-hover"
+                className="group flex h-full w-full flex-col overflow-hidden rounded-card border border-border-subtle bg-surface-raised text-left shadow-card transition-shadow hover:shadow-card-hover"
               >
-                {item.image_url ? (
-                  <span className="relative block h-44 w-full border-b border-border-subtle bg-surface-sunken">
+                <span aria-hidden="true" className="relative grid h-44 w-full shrink-0 place-items-center border-b border-border-subtle bg-surface-sunken">
+                  {item.image_url ? (
                     <Image
                       src={item.image_url}
                       alt=""
@@ -74,20 +74,18 @@ export function AchievementGrid({
                       sizes="(max-width: 639px) 100vw, (max-width: 1279px) 50vw, (max-width: 1535px) 33vw, 25vw"
                       className="object-contain"
                     />
-                  </span>
-                ) : null}
-                <span className="block space-y-2 p-5">
-                  <span className="flex flex-wrap items-center gap-2">
-                    {!item.image_url ? (
-                      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-card bg-accent-soft text-accent-soft-text">
-                        <Ikon className="size-4" aria-hidden="true" />
-                      </span>
-                    ) : null}
-                    <Badge tone="accent">{kategoriSertifikat(item)}</Badge>
-                  </span>
+                  ) : (
+                    <>
+                      <Ikon className="size-8 text-text-muted" />
+                      {item.pdf_url ? <PdfCover key={item.pdf_url} url={item.pdf_url} /> : null}
+                    </>
+                  )}
+                </span>
+                <span className="flex w-full flex-1 flex-col items-start gap-2 p-5">
+                  <Badge tone="accent">{kategoriSertifikat(item)}</Badge>
                   <span className="block font-heading text-base font-bold text-text">{item.title}</span>
                   {info ? <span className="block text-sm text-text-muted">{info}</span> : null}
-                  <span className="block text-sm font-semibold text-accent group-hover:underline">
+                  <span className="mt-auto text-sm font-semibold text-accent group-hover:underline">
                     {item.pdf_url || item.image_url ? "Lihat sertifikat" : "Lihat detail"}
                   </span>
                 </span>
