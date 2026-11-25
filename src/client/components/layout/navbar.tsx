@@ -119,7 +119,7 @@ export function Navbar({
                 preload
                 // Rasio apa pun muat tanpa terpotong atau meregang; pemilik
                 // tidak dipaksa menyiapkan logo persegi.
-                className="size-8 shrink-0 rounded-md object-contain"
+                className="size-8 shrink-0 rounded-md bg-logo-background object-contain p-0.5"
               />
             ) : null}
             <span className="truncate">{identitas.nama}</span>

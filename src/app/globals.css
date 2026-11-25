@@ -80,6 +80,8 @@
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
   --color-surface-sunken: var(--surface-sunken);
+  /* Bidang logo tetap putih agar warna logo terbaca di kedua tema. */
+  --color-logo-background: #ffffff;
 
   --color-border-subtle: var(--border-subtle);
   --color-border-strong: var(--border-strong);

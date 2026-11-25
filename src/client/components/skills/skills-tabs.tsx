@@ -167,9 +167,7 @@ function LogoKeahlian({
 
   if (logoUrl) {
     return (
-      // Ubin putih: latar putih pada logo menyatu dengannya, sehingga tidak
-      // muncul kotak di dalam kotak.
-      <div className={cn(kelas, "bg-surface-raised")}>
+      <div className={cn(kelas, "bg-logo-background")}>
         <Image
           src={logoUrl}
           // Nama alatnya sudah tertulis tepat di bawah logo ini.

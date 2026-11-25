@@ -214,9 +214,7 @@ function LogoInstitusi({
 
   if (logoUrl) {
     return (
-      // Ubin putih: latar putih pada logo menyatu dengannya, sehingga tidak
-      // muncul kotak di dalam kotak.
-      <div className={cn(kelas, "bg-surface-raised")}>
+      <div className={cn(kelas, "bg-logo-background")}>
         <Image
           src={logoUrl}
           // Nama institusinya sudah tertulis sebagai teks di kartu yang sama,
