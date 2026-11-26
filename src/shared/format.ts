@@ -82,6 +82,10 @@ export function formatIpk(gpa: number | null): string | null {
   return gpa.toFixed(2).replace(".", ",");
 }
 
+export function jenjangPerkuliahan(jenjang: string | null | undefined): boolean {
+  return /\b(?:s\s*[-.]?\s*[1-3]|d\s*[-.]?\s*(?:[1-4]|iv|iii|ii|i)|strata|sarjana|diploma|magister|doktor|profesi|bachelor|master|phd)\b/i.test(jenjang ?? "");
+}
+
 /**
  * Bio dan deskripsi disimpan sebagai teks dengan baris baru. Dipecah menjadi
  * paragraf supaya pemisahannya terjaga saat dirender, tanpa pernah menyisipkan

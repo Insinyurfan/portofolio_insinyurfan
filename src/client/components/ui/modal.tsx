@@ -6,6 +6,10 @@ import { createPortal } from "react-dom";
 
 import { cn } from "@/shared/cn";
 
+// Pratinjau galeri bisa dibuka di atas dialog detail.
+const dialogTerbuka: HTMLElement[] = [];
+let overflowHalaman = "";
+
 /**
  * Dialog bersama untuk seluruh situs publik.
  *
@@ -73,23 +77,27 @@ export function Modal({
   useEffect(() => {
     if (!terbuka) return;
 
-    dialogRef.current?.querySelector<HTMLElement>("button, a")?.focus();
+    const dialog = dialogRef.current;
+    if (!dialog) return;
 
-    // Halaman di belakang tidak ikut ter-scroll, dan posisi scroll-nya tetap
-    // setelah modal ditutup.
-    const sebelumnya = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const sebelumnya = dialogTerbuka.at(-1);
+    if (sebelumnya) {
+      sebelumnya.inert = true;
+    } else {
+      overflowHalaman = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+    }
+    dialogTerbuka.push(dialog);
+    dialog.querySelector<HTMLElement>("button, a")?.focus();
 
     function onKeyDown(event: KeyboardEvent) {
+      if (dialogTerbuka.at(-1) !== dialog) return;
       if (event.key === "Escape") {
         event.preventDefault();
         onTutup();
         return;
       }
       if (event.key !== "Tab") return;
-
-      const dialog = dialogRef.current;
-      if (!dialog) return;
 
       const fokusable = dialog.querySelectorAll<HTMLElement>(
         'a[href], button:not([disabled]), [tabindex="0"]',
@@ -112,7 +120,15 @@ export function Modal({
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = sebelumnya;
+      const index = dialogTerbuka.indexOf(dialog);
+      if (index !== -1) dialogTerbuka.splice(index, 1);
+
+      const teratas = dialogTerbuka.at(-1);
+      if (teratas) {
+        teratas.inert = false;
+      } else {
+        document.body.style.overflow = overflowHalaman;
+      }
     };
   }, [terbuka, onTutup]);
 

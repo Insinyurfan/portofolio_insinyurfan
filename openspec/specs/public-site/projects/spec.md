@@ -1,18 +1,18 @@
 # public-site/projects Specification
 
 ## Purpose
-Menetapkan perilaku daftar proyek dengan penyaringan berdasarkan tech stack dan halaman detail per proyek, sebagai bagian paling penting dari portofolio.
+Menetapkan perilaku daftar proyek serta dialog dan halaman detail per proyek, sebagai bagian paling penting dari portofolio.
 
 ## Requirements
 
 ### Requirement: Halaman daftar proyek menampilkan grid
 
-Halaman `/proyek` SHALL menampilkan semua proyek terbit sebagai grid kartu menurut urutan tersimpan. Setiap kartu SHALL menampilkan thumbnail, judul, ringkasan, dan daftar tech stack, serta menautkan ke halaman detail proyek yang sesuai.
+Halaman `/proyek` SHALL menampilkan semua proyek terbit sebagai grid kartu menurut urutan tersimpan. Setiap kartu SHALL menampilkan thumbnail, judul, dan ringkasan. Teknologi ditampilkan di detail proyek.
 
 #### Scenario: Grid proyek dirender
 
 - **WHEN** pengunjung membuka `/proyek` sementara ada beberapa proyek terbit
-- **THEN** semua proyek terbit tampil sebagai kartu menurut urutan tersimpan, masing-masing menautkan ke halaman detailnya
+- **THEN** semua proyek terbit tampil sebagai kartu menurut urutan tersimpan, setiap kartu membuka dialog detailnya
 
 #### Scenario: Thumbnail belum ada
 
@@ -24,51 +24,11 @@ Halaman `/proyek` SHALL menampilkan semua proyek terbit sebagai grid kartu menur
 - **WHEN** tidak ada proyek terbit
 - **THEN** halaman menampilkan empty state berbahasa Indonesia dan tetap dirender dengan status sukses
 
-### Requirement: Daftar proyek dapat disaring menurut tech stack
+### Requirement: Detail proyek terbuka dalam dialog
 
-Halaman `/proyek` SHALL menyediakan kontrol penyaringan yang dibangun dari gabungan seluruh nilai tech stack pada proyek terbit. Setiap pilihan SHALL berupa tautan ke alamatnya sendiri, `/proyek/tech/[tech]`, dan BUKAN parameter kueri pada `/proyek`. Memilih sebuah tech stack SHALL membawa pengunjung ke halaman yang hanya memuat proyek terbit dengan nilai tersebut. SHALL tersedia tautan untuk kembali menampilkan semua proyek. Halaman `/proyek` maupun setiap `/proyek/tech/[tech]` SHALL dapat dirender statis dan di-cache, dan kontrol filternya SHALL tidak memerlukan JavaScript.
+Memilih kartu proyek SHALL membuka detail dalam dialog dengan isi yang bisa digulir. Tombol tutup, klik latar, dan Escape SHALL menutup dialog dan mengembalikan fokus ke kartu. Galeri SHALL memperbesar foto di atas dialog proyek. Menutup satu foto SHALL mengembalikan pengunjung ke detail proyek.
 
-Slug tech stack yang tidak dipakai proyek terbit mana pun SHALL menjawab 404, bukan daftar kosong.
-
-#### Scenario: Menyaring menurut satu tech stack
-
-- **WHEN** pengunjung memilih sebuah tech stack dari kontrol filter
-- **THEN** pengunjung dibawa ke `/proyek/tech/[tech]` yang hanya menampilkan proyek terbit dengan tech stack tersebut, dan filter yang aktif ditandai secara visual beserta `aria-current="page"`
-
-#### Scenario: Mengosongkan filter
-
-- **WHEN** pengunjung memilih pilihan "Semua"
-- **THEN** pengunjung dibawa kembali ke `/proyek` yang menampilkan seluruh proyek terbit
-
-#### Scenario: Halaman terfilter dapat di-cache
-
-- **WHEN** `/proyek` atau `/proyek/tech/[tech]` diminta di produksi
-- **THEN** halaman dilayani dari cache CDN, bukan dirender ulang pada setiap kunjungan
-
-#### Scenario: Slug tech stack tidak dikenal
-
-- **WHEN** pengunjung membuka `/proyek/tech/` dengan slug yang tidak dipakai proyek terbit mana pun
-- **THEN** situs menjawab 404
-
-#### Scenario: Filter berfungsi tanpa JavaScript
-
-- **WHEN** halaman `/proyek` dibuka dengan JavaScript dimatikan
-- **THEN** seluruh pilihan filter tetap dapat ditelusuri dan diaktifkan sebagai tautan biasa
-
-#### Scenario: Filter tidak menghasilkan apa pun
-
-- **WHEN** sebuah filter aktif tidak mencocokkan proyek mana pun
-- **THEN** halaman menampilkan empty state berbahasa Indonesia yang menyarankan mengosongkan filter, dan kontrol filter tetap dapat dipakai
-
-#### Scenario: Pilihan filter dibangun dari data
-
-- **WHEN** kontrol filter dirender
-- **THEN** pilihan yang tersedia hanya tech stack yang benar-benar dipakai oleh proyek terbit, tanpa duplikat dan tanpa daftar yang ditulis di kode
-
-#### Scenario: Filter dapat dioperasikan dengan keyboard
-
-- **WHEN** pengunjung menelusuri kontrol filter hanya dengan keyboard
-- **THEN** setiap pilihan dapat difokus, cincin fokusnya terlihat, dan menekan Enter mengaktifkan filternya
+Tautan langsung ke proyek SHALL dapat dibuka sebagai halaman sendiri. Alamat lama /proyek/tech/[tech] SHALL tetap menampilkan daftar proyek untuk teknologi yang sesuai. Slug teknologi yang tidak dikenal SHALL menjawab 404.
 
 ### Requirement: Halaman detail proyek
 

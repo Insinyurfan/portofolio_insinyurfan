@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { ProjectGrid } from "@/client/components/projects/project-grid";
 import { PageShell } from "@/client/components/ui/primitives";
 import {
-  collectTechStack,
   getPageIntro,
   getProfile,
   getProjects,
@@ -17,36 +16,21 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: "Proyek",
-    description: `Kumpulan proyek yang pernah dikerjakan ${nama}, dapat disaring menurut tech stack.`,
+    description: `Kumpulan proyek yang pernah dikerjakan ${nama}, beserta detail dan dokumentasinya.`,
     alternates: { canonical: "/proyek" },
   };
 }
 
-/**
- * Daftar seluruh proyek.
- *
- * Halaman ini STATIS. Versi sebelumnya membaca `?tech=` dari searchParams,
- * yang membuatnya dirender ulang pada setiap kunjungan dan tidak pernah
- * di-cache CDN. Filter sekarang menjadi bagian alamat
- * (`/proyek/tech/[tech]`), sehingga setiap kombinasi punya halaman statisnya
- * sendiri.
- */
 export default async function ProyekPage() {
-  const intro = await getPageIntro("proyek");
-  const projects = await getProjects();
+  const [intro, projects] = await Promise.all([getPageIntro("proyek"), getProjects()]);
 
   return (
     <PageShell
       hero={intro}
       title="Proyek"
-      description="Proyek yang pernah saya kerjakan. Gunakan filter untuk menyaring menurut tech stack."
+      description="Kumpulan karya digital saya. Buka setiap proyek untuk melihat hasil dan teknologi yang digunakan."
     >
-      <ProjectGrid
-        semuaProyek={projects}
-        terfilter={projects}
-        pilihanTech={collectTechStack(projects)}
-        techAktif={null}
-      />
+      <ProjectGrid projects={projects} />
     </PageShell>
   );
 }

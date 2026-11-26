@@ -1,20 +1,10 @@
 import type { Metadata } from "next";
-import { ArrowLeft, ExternalLink } from "lucide-react";
-import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SiGithub } from "react-icons/si";
 
-import { ProjectGallery } from "@/client/components/projects/project-gallery";
-import {
-  Badge,
-  ButtonExternal,
-  Card,
-  SectionHeading,
-} from "@/client/components/ui/primitives";
-import { Reveal } from "@/client/components/ui/reveal";
+import { ProjectDetails } from "@/client/components/projects/project-details";
 import { absoluteUrl } from "@/shared/env";
-import { keParagraf } from "@/shared/format";
 import { getProjectBySlug, getPublishedProjectSlugs } from "@/server/db/queries";
 
 export const revalidate = 300; // = REVALIDATE di src/shared/constants.ts; Next butuh nilai literal
@@ -84,8 +74,6 @@ export default async function ProyekDetailPage({
   // Slug tidak dikenal, ATAU proyeknya belum terbit → 404, bukan isi proyek.
   if (!project) notFound();
 
-  const paragraf = keParagraf(project.description);
-
   return (
     <article className="wadah py-12 sm:py-16">
       <Link
@@ -95,87 +83,8 @@ export default async function ProyekDetailPage({
         <ArrowLeft className="size-4" aria-hidden="true" />
         Kembali ke daftar proyek
       </Link>
-
-      <header className="mt-6">
-        <h1 className="text-3xl sm:text-4xl">{project.title}</h1>
-
-        {project.summary ? (
-          <p className="prosa mt-3 text-base text-text-muted sm:text-lg">
-            {project.summary}
-          </p>
-        ) : null}
-
-        {project.tech_stack.length > 0 ? (
-          <ul className="mt-5 flex flex-wrap gap-1.5">
-            {project.tech_stack.map((tech) => (
-              <li key={tech}>
-                <Badge tone="accent">{tech}</Badge>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-
-        {/* Tombol untuk tautan yang tidak ada tidak dirender sama sekali. */}
-        {project.demo_url || project.repo_url ? (
-          <div className="mt-6 flex flex-wrap gap-3">
-            {project.demo_url ? (
-              <ButtonExternal href={project.demo_url} variant="primary">
-                <ExternalLink className="size-4" aria-hidden="true" />
-                Lihat demo
-              </ButtonExternal>
-            ) : null}
-
-            {project.repo_url ? (
-              <ButtonExternal href={project.repo_url}>
-                <SiGithub className="size-4" aria-hidden="true" />
-                Lihat repositori
-              </ButtonExternal>
-            ) : null}
-          </div>
-        ) : null}
-      </header>
-
-      {project.thumbnail_url ? (
-        <Reveal className="mt-10">
-          <div className="relative aspect-16/9 w-full overflow-hidden rounded-card-lg border border-border-subtle bg-surface-sunken">
-            <Image
-              src={project.thumbnail_url}
-              alt={`Thumbnail proyek ${project.title}`}
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 1024px"
-              className="object-cover"
-            />
-          </div>
-        </Reveal>
-      ) : null}
-
-      {paragraf.length > 0 ? (
-        <Reveal className="mt-10">
-          <Card>
-            <SectionHeading>Tentang proyek ini</SectionHeading>
-            <div className="prosa space-y-4">
-              {paragraf.map((isi, index) => (
-                <p
-                  key={`${index}-${isi.slice(0, 16)}`}
-                  className="text-base leading-relaxed text-text-muted"
-                >
-                  {isi}
-                </p>
-              ))}
-            </div>
-          </Card>
-        </Reveal>
-      ) : null}
-
-      {/* Tanpa gambar galeri, bagian galeri tidak dirender. */}
-      {project.gallery.length > 0 ? (
-        <section className="mt-12">
-          <SectionHeading>Galeri</SectionHeading>
-
-          <ProjectGallery gambar={project.gallery} judul={project.title} />
-        </section>
-      ) : null}
+      <h1 className="mt-6 mb-8 text-3xl sm:text-4xl">{project.title}</h1>
+      <ProjectDetails project={project} />
     </article>
   );
 }

@@ -1,7 +1,7 @@
 import { Mail, MapPin } from "lucide-react";
 
 import { AchievementGrid } from "@/client/components/achievements/achievement-grid";
-import { EducationCard } from "@/client/components/education/education-card";
+import { EducationCard, EducationMark } from "@/client/components/education/education-card";
 import { ExperienceHome } from "@/client/components/experience/experience-timeline";
 import { ProfileCarousel } from "@/client/components/home/profile-carousel";
 import { SectionBeranda } from "@/client/components/home/section-beranda";
@@ -178,6 +178,7 @@ export default async function BerandaPage() {
           id="pendidikan"
           eyebrow="Riwayat akademik"
           judul="Pendidikan"
+          kontrol={<EducationMark />}
           tautan={{ href: "/pendidikan", label: "Lihat semua" }}
         >
           <ul className="list-none space-y-4 sm:space-y-5">

@@ -30,7 +30,7 @@ import type {
  * Lihat design.md → "Lapisan query khusus server di lib/queries/".
  */
 
-/** Kolom yang dibaca untuk daftar proyek — tanpa deskripsi panjang. */
+/** Daftar proyek juga membawa isi detail yang dibuka di dalam dialog. */
 const PROJECT_CARD_COLUMNS =
   "id, title, slug, summary, tech_stack, thumbnail_url, featured, sort_order, is_published, created_at, updated_at, description, gallery, demo_url, repo_url";
 

@@ -134,6 +134,7 @@ export function PageShell({
   eyebrow,
   jumlah,
   hero,
+  ornamen,
   children,
 }: {
   title: string;
@@ -148,6 +149,7 @@ export function PageShell({
     headline: string | null;
     description: string | null;
   } | null;
+  ornamen?: ReactNode;
   children: ReactNode;
 }) {
   // Nilai dari dashboard menang; yang kosong jatuh ke nilai halaman. Dengan
@@ -163,6 +165,7 @@ export function PageShell({
         headline={judulPembuka}
         description={deskripsiPembuka}
         jumlah={jumlah}
+        ornamen={ornamen}
       />
 
       <div className="mt-10 sm:mt-14">{children}</div>
@@ -183,11 +186,13 @@ function PageHero({
   headline,
   description,
   jumlah,
+  ornamen,
 }: {
   eyebrow?: string;
   headline: string;
   description?: string;
   jumlah?: string;
+  ornamen?: ReactNode;
 }) {
   return (
     <section
@@ -231,9 +236,12 @@ function PageHero({
           </div>
         ) : null}
 
-        <h1 className="font-heading text-4xl font-bold leading-[1.05] tracking-tight text-text sm:text-5xl lg:text-6xl">
-          {headline}
-        </h1>
+        <div className={ornamen ? "flex items-center justify-between gap-4" : undefined}>
+          <h1 className="min-w-0 font-heading text-4xl font-bold leading-[1.05] tracking-tight text-text sm:text-5xl lg:text-6xl">
+            {headline}
+          </h1>
+          {ornamen}
+        </div>
 
         {description ? (
           <p className="prosa mt-5 text-base text-text-muted sm:text-lg">
@@ -247,10 +255,12 @@ function PageHero({
        * Ikon, BUKAN karakter "↘". Sebagian peramban merender karakter itu
        * sebagai emoji berwarna, sehingga panahnya muncul biru mencolok dan
        * merusak warna halaman. */}
-      <ArrowDownRight
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-6 right-6 size-7 text-text-subtle sm:bottom-10 sm:right-10 sm:size-9"
-      />
+      {ornamen ? null : (
+        <ArrowDownRight
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-6 right-6 size-7 text-text-subtle sm:bottom-10 sm:right-10 sm:size-9"
+        />
+      )}
     </section>
   );
 }

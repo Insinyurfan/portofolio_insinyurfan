@@ -82,12 +82,7 @@ export default async function ProyekTechPage({
       title={`Proyek ${tech}`}
       description={`Proyek yang dibangun dengan ${tech}.`}
     >
-      <ProjectGrid
-        semuaProyek={projects}
-        terfilter={projects.filter((p) => p.tech_stack.includes(tech))}
-        pilihanTech={collectTechStack(projects)}
-        techAktif={tech}
-      />
+      <ProjectGrid projects={projects.filter((p) => p.tech_stack.includes(tech))} />
     </PageShell>
   );
 }

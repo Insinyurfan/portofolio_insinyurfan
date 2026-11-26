@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { jenjangPerkuliahan } from "@/shared/format";
 
 /**
  * Skema validasi per entitas.
@@ -152,7 +153,7 @@ export const educationSchema = z
       .union([tahun, z.literal(""), z.null(), z.undefined()])
       .transform((v) => (v === "" || v === undefined ? null : v)),
     gpa: z
-      .union([z.coerce.number().min(0).max(4), z.literal(""), z.null(), z.undefined()])
+      .union([z.literal(""), z.null(), z.undefined(), z.coerce.number().min(0).max(100)])
       .transform((v) => (v === "" || v === undefined ? null : v)),
     description: teksOpsional(2000, "Deskripsi"),
     sort_order: urutan,
@@ -164,6 +165,10 @@ export const educationSchema = z
       message: "Tahun selesai tidak boleh lebih awal daripada tahun mulai.",
       path: ["end_year"],
     },
+  )
+  .refine(
+    (d) => !jenjangPerkuliahan(d.degree) || d.gpa === null || d.gpa <= 4,
+    { message: "IPK maksimal 4,00.", path: ["gpa"] },
   );
 
 // ---------------------------------------------------------------------------

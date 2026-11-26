@@ -19,7 +19,6 @@ const HALAMAN = [
   "/proyek",
   "/sertifikat",
   "/kontak",
-  "/proyek/sistem-informasi-perpustakaan",
 ];
 
 let gagal = 0;
@@ -42,7 +41,12 @@ try {
     const errs = [];
     page.on("pageerror", (e) => errs.push(String(e)));
 
-    for (const path of HALAMAN) {
+    await page.goto(`${BASE}/proyek`, { waitUntil: "domcontentloaded" });
+    const kartuProyek = page.locator("main article a[aria-haspopup=dialog]").first();
+    const detailProyek = (await kartuProyek.count()) ? await kartuProyek.getAttribute("href") : null;
+    const halaman = detailProyek ? [...HALAMAN, detailProyek] : HALAMAN;
+
+    for (const path of halaman) {
       const res = await page.goto(`${BASE}${path}`, { waitUntil: "load" });
       await page.waitForTimeout(250);
 
@@ -128,32 +132,19 @@ try {
     await page.waitForTimeout(400);
     cek("tautan lompat berfungsi", page.url().includes("#konten-utama"));
 
-    // Filter proyek kini berupa TAUTAN ke halaman tersendiri, bukan tombol yang
-    // menyaring di peramban. Itu yang membuat /proyek kembali bisa di-cache
-    // sebagai halaman statis; konsekuensinya status terpilih diumumkan lewat
-    // aria-current, bukan aria-pressed.
+    // Detail proyek bisa dibuka dan ditutup tanpa meninggalkan daftar.
     await page.goto(`${BASE}/proyek`, { waitUntil: "load" });
-    await page.waitForTimeout(500);
-    const tautanFilter = page.getByRole("link", { name: "React", exact: true });
-    await tautanFilter.focus();
-    cek(
-      "tautan filter dapat difokus",
-      await tautanFilter.evaluate((el) => el === document.activeElement),
-    );
-    await page.keyboard.press("Enter");
-    await page.waitForURL(/\/proyek\/tech\//, { timeout: 15000 });
-    await page.waitForTimeout(400);
-    cek(
-      "tautan terfilter punya alamatnya sendiri",
-      new URL(page.url()).pathname === "/proyek/tech/react",
-      new URL(page.url()).pathname,
-    );
-    const filterAktif = page.getByRole("link", { name: "React", exact: true });
-    cek(
-      "status filter terpilih diumumkan lewat aria-current",
-      (await filterAktif.getAttribute("aria-current")) === "page",
-      String(await filterAktif.getAttribute("aria-current")),
-    );
+    cek("daftar proyek tanpa filter teknologi", await page.locator('main a[href^="/proyek/tech/"]').count() === 0);
+    const proyek = page.locator("main article a[aria-haspopup=dialog]").first();
+    if (await proyek.count()) {
+      await proyek.press("Enter");
+      const dialog = page.getByRole("dialog");
+      await dialog.waitFor({ state: "visible", timeout: 15000 });
+      cek("detail proyek terbuka tanpa meninggalkan daftar", new URL(page.url()).pathname === "/proyek");
+      await page.keyboard.press("Escape");
+      await dialog.waitFor({ state: "hidden", timeout: 15000 });
+      cek("fokus kembali ke kartu proyek", await proyek.evaluate((el) => el === document.activeElement));
+    }
 
     // Pratinjau sertifikat: buka dengan keyboard, tutup dengan Escape.
     await page.goto(`${BASE}/sertifikat`, { waitUntil: "load" });
@@ -177,10 +168,10 @@ try {
     await page.waitForTimeout(400);
     await page.getByRole("button", { name: "Buka menu navigasi" }).click();
     await page.waitForTimeout(500);
-    cek("menu mobile terbuka", (await page.locator("#menu-mobile").count()) > 0);
+    cek("menu mobile terbuka", await page.locator("#menu-mobile").isVisible());
     await page.keyboard.press("Escape");
     await page.waitForTimeout(500);
-    cek("Escape menutup menu mobile", (await page.locator("#menu-mobile").count()) === 0);
+    cek("Escape menutup menu mobile", !(await page.locator("#menu-mobile").isVisible()));
     await ctx.close();
   }
 

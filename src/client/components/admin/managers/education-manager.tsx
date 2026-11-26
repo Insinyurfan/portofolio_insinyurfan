@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import type { z } from "zod";
 
 import { FileField } from "@/client/components/admin/file-field";
@@ -22,7 +22,7 @@ import { useAksi } from "@/client/components/admin/use-aksi";
 import { useScrollKeForm } from "@/client/components/admin/use-scroll-ke-form";
 import { simpanPendidikanAction } from "@/server/actions/konten";
 import { educationSchema } from "@/shared/schemas";
-import { formatRentangTahun } from "@/shared/format";
+import { formatRentangTahun, jenjangPerkuliahan } from "@/shared/format";
 import type { Education } from "@/shared/types";
 
 type Nilai = z.input<typeof educationSchema>;
@@ -62,6 +62,7 @@ export function EducationManager({ items }: { items: Education[] }) {
   });
   const { register, handleSubmit, reset, setError, control, formState, getValues } =
     form;
+  const kuliah = jenjangPerkuliahan(useWatch({ control, name: "degree" }));
 
   function buka(item?: Education) {
     reset(
@@ -199,12 +200,12 @@ export function EducationManager({ items }: { items: Education[] }) {
               </Field>
               <Field
                 id="gpa"
-                label="IPK"
-                hint="Opsional, 0–4."
+                label={kuliah ? "IPK" : "Nilai"}
+                hint={kuliah ? "Opsional, skala 0–4." : "Opsional, skala 0–100. Nilai tampil di detail pendidikan."}
                 error={formState.errors.gpa?.message}
               >
                 {(a) => (
-                  <Input {...a} {...register("gpa")} type="number" step="0.01" />
+                  <Input {...a} {...register("gpa")} type="number" min={0} max={kuliah ? 4 : 100} step="0.01" />
                 )}
               </Field>
             </div>

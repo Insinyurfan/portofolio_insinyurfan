@@ -21,7 +21,7 @@ Halaman `/tentang` SHALL menampilkan bio "Tentang Saya", lokasi, dan status terb
 
 ### Requirement: Halaman Pendidikan menampilkan timeline
 
-Halaman `/pendidikan` SHALL menampilkan riwayat pendidikan terbit sebagai timeline menurut urutan tersimpan. Setiap entri SHALL menampilkan institusi, jurusan, jenjang, rentang tahun, deskripsi, dan IPK bila ada.
+Halaman `/pendidikan` SHALL menampilkan riwayat pendidikan terbit menurut urutan tersimpan. Kartu SHALL menampilkan institusi, jurusan, jenjang, rentang tahun, dan deskripsi. Seluruh area kartu SHALL membuka dialog detail. Nilai sekolah tampil di dialog jika tersedia. IPK perkuliahan dapat tampil di kartu dan dialog.
 
 #### Scenario: Timeline pendidikan dirender
 

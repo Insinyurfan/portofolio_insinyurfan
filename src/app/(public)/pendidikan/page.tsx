@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { EducationCard } from "@/client/components/education/education-card";
+import { EducationCard, EducationMark } from "@/client/components/education/education-card";
 import { EmptyState, PageShell } from "@/client/components/ui/primitives";
 import { Reveal } from "@/client/components/ui/reveal";
 import {
@@ -31,6 +31,7 @@ export default async function PendidikanPage() {
       hero={intro}
       eyebrow="Riwayat akademik"
       title="Pendidikan"
+      ornamen={<EducationMark />}
       description="Jenjang yang pernah dan sedang ditempuh, beserta fokus bidang, lokasi, dan capaian di masing-masing."
       // Hitungan disembunyikan saat kosong, supaya tidak muncul "0 jenjang"
       // tepat di atas empty state yang sudah menjelaskan hal yang sama.
